@@ -1,0 +1,44 @@
+channels:
+  - conda-forge
+  - nvidia
+dependencies:
+  - python=3.11
+  - cuda-toolkit=12.*
+  - cudnn=8.9
+  - pip
+  - pip:
+    # JAX ecosystem (v0.4.21) - Core framework
+    - jax==0.4.21
+    - --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+    - jaxlib==0.4.21+cuda12.cudnn89  # CUDA 12.x対応版
+    - flax==0.7.4
+    - optax==0.2.1
+    - chex==0.1.85
+    - dm-tree==0.1.8
+    - ml-dtypes==0.5.3
+    
+    # JAX-based RL/Environment libraries
+    - distrax==0.1.5
+    - gymnax==0.0.6
+    - flashbax==0.1.2
+    - jaxopt==0.8.2
+    - orbax-checkpoint==0.4.4
+    
+    # Machine Learning
+    - tensorflow-probability==0.20.1
+    
+    # Scientific Computing & Data Analysis
+    - numpy==1.26.4
+    - scipy==1.10.1
+    - pandas==2.3.1
+    - matplotlib==3.10.3
+    - seaborn==0.13.2
+    
+    # Configuration & Utilities
+    - PyYAML==6.0.2
+    
+    # Jupyter & Development Environment
+    - jupyter==1.0.0
+    - notebook==7.4.4
+    - ipython==9.4.0
+    - ipykernel==6.30.0
