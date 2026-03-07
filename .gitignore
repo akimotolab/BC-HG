@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Public release data policy:
+# keep only metadata/configs in git; store heavy artifacts externally.
+configurable_mdp/data/**
+!configurable_mdp/data/
+!configurable_mdp/data/README
+!configurable_mdp/data/*/
+!configurable_mdp/data/*/config.yaml
+!configurable_mdp/data/*/figures/
+!configurable_mdp/data/*/figures/**

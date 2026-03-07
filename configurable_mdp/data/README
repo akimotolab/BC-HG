@@ -1,0 +1,50 @@
+# Experimental Data (External Storage)
+
+This directory stores experiment metadata that is tracked in Git.
+Large experimental artifacts (results, trained models, metrics) obtained by the paper authors
+are stored in an external data repository to maintain code repository clarity and comply with GitHub's file size limits.
+
+## What Is Tracked In This Repository
+
+- `configurable_mdp/data/*/config.yaml`
+- `configurable_mdp/data/*/figures/`
+- this `configurable_mdp/data/README`
+
+## What Is Not Tracked In This Repository
+
+Examples of large artifacts moved outside GitHub source history:
+
+- `metrics_*.pkl`
+- `grid_search_*.pkl`
+- `checkpoint_*/*`
+
+## External Data Repository
+
+Fill in the following placeholders when your public dataset is ready:
+
+- Provider: `<Zenodo | Figshare | OSF | Hugging Face Datasets | other>`
+- Dataset URL: `<https://...>`
+- DOI (optional, recommended for papers): `<10.xxxx/...>`
+- Version tag: `<v1.0>`
+
+## How To Download
+
+Run from repository root:
+
+```bash
+./download_data.sh
+```
+
+Environment variables supported by the script:
+
+- `DATA_URL`: URL of an archive (`.tar.gz` or `.zip`) containing `configurable_mdp/data`
+- `DATA_SHA256`: optional SHA-256 checksum for integrity verification
+
+## Recommended Archive Layout
+
+The archive should contain this top-level path:
+
+- `configurable_mdp/data/...`
+
+If your archive instead contains only experiment directories, adjust
+`download_data.sh` accordingly.
