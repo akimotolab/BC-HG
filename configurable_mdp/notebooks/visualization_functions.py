@@ -3,7 +3,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import matplotlib.colors as mpl_colors
 
-from train_stochastic_bilevel_opt_hpgd import upper_level_reward
+from configurable_mdp.train_four_rooms_hpgd import upper_level_reward
 from src.models.IncentiveModel import incentive_transform
 from src.algorithms.value_iteration_and_prediction import (
     general_value_iteration,
