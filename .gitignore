@@ -210,8 +210,11 @@ __marimo__/
 # keep only metadata/configs in git; store heavy artifacts externally.
 configurable_mdp/data/**
 !configurable_mdp/data/
-!configurable_mdp/data/README
 !configurable_mdp/data/*/
 !configurable_mdp/data/*/config.yaml
 !configurable_mdp/data/*/figures/
 !configurable_mdp/data/*/figures/**
+
+markov_game/data/**
+!markov_game/data/**/figures/
+!markov_game/data/**/figures/**

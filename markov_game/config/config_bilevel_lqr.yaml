@@ -1,0 +1,88 @@
+name: ~
+datetime: ~
+seed: [0,1,2,3,4,5,6,7,8,9]
+set_detect_anomaly: False
+gpu_id: ~
+sweep:
+  env: ~
+  leader: ~
+  follower: ~
+
+ctxt:
+  snapshot_mode: gap  # gap / last
+  snapshot_gap: 50
+  archive_launch_repo: False
+
+env:
+  id: LQREnv-v4
+  A: 
+  - [[0.0, 1.0], [0.0, 0.0]]
+  B: 
+  - [[0.0], [0.1]]
+  C: 
+  - [[0.1], [0.0]]
+  Q: 
+  - [[1.0, 0.0], [0.0, 1.0]]
+  R: 
+  - [[1.0]]
+  cost_lambda: 1.0
+  initial_state:
+  - [1.0, 0.0]
+  target_state:
+  - [-0.8, 0.0]
+  xstd:
+  - [0.2, 0.01]
+  
+leader:
+  algo: BCHG_Opt  # Baseline_LQR / BCHG_Opt
+  init_mean_K_1: -2.0
+  init_mean_K_2: -1.0
+  init_std_K_1: 1.0
+  init_std_K_2: 1.0
+  fixed_W: 1e-3
+  qf_hidden_sizes:
+    - [64, 64]
+  replay_buffer_size: 400  # 400 = episode_length(100) * sample_num_eps(4)
+  n_epochs: 500
+  max_total_env_steps: 200000  # 400 * 500
+  sample_num_eps: 4
+  eval_num_eps: 10
+  # For BCHG_Opt
+  buffer_batch_size: 64
+  min_buffer_size: 400  # Steps after which the leader starts updating
+  init_steps: 10000  # Steps until which the leader acts randomly
+  target_update_tau: 1e-2
+  discount: 0.99
+  max_policy_grad_norm: 1.0
+  policy_lr: 1e-1
+  qf_lr: 1e-1
+  wb_follower: true
+  fixed_policy: false
+  actor_update_steps_n: 1
+  critic_update_steps_n: 1
+  batch_size_for_fa_exp: 256
+  batch_size_for_la_exp: 32
+  discount_sampling: true
+  on_policy: true
+  target_policy_smoothing: false
+  reset_leader_qf: false
+  reset_leader_qf_optimizer: false
+  lambda_coef_1: 1.0
+  lambda_coef_2: 1.0
+  use_advantage: true
+  use_advantage_in_influence: false
+  use_closed_form_gradient: false
+  use_K_L2_regularization: false
+  K_L2_reg_coef: 0.0
+  grad_mode: default  # default / weighted_average
+  grad_info: true
+
+follower:
+  algo: MaxEntLQR
+  # For FollowerWrapper
+  fixed_policy: false
+  # For MaxEntLQR
+  discount: 0.95
+  beta: 1e-1
+  max_iterations: 1000
+  tol: 1e-10

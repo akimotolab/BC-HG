@@ -8,7 +8,7 @@ if [[ "${1:-}" == "--dry-run" ]]; then
 fi
 
 if [[ "$#" -gt 0 ]]; then
-    echo "Usage: bash HPGD/exp_4room_subopt.sh [--dry-run]"
+    echo "Usage: bash configurable_mdp/exp_4room_subopt.sh [--dry-run]"
     exit 1
 fi
 
@@ -84,9 +84,9 @@ run_gpu_queue() {
 
     for method in $method_list; do
         for exp in "${exps[@]}"; do
-            experiment_dir="/home/mikoto/workspace/ptia/HPGD/data/${exp}"
-            log_file="HPGD/experiment_${method}_${exp}.log"
-            train_script="HPGD/train_stochastic_bilevel_${method}_subopt.py"
+            experiment_dir="configurable_mdp/data/${exp}"
+            log_file="configurable_mdp/experiment_${method}_${exp}.log"
+            train_script="configurable_mdp/train_stochastic_bilevel_${method}_subopt.py"
 
             if [[ "$DRY_RUN" == true ]]; then
                 echo "[PLAN][GPU ${gpu}] CUDA_VISIBLE_DEVICES=${gpu} python ${train_script} --experiment_dir ${experiment_dir} > ${log_file} 2>&1"

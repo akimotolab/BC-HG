@@ -1,0 +1,77 @@
+name: ~
+datetime: ~
+seed: [0,1,2,3,4,5,6,7,8,9]
+set_detect_anomaly: False
+gpu_id: ~
+sweep:
+  env: ~
+  leader: ['algo']
+  follower: ~
+
+ctxt:
+  snapshot_mode: gap  # gap / last
+  snapshot_gap: 40
+  archive_launch_repo: False
+
+env:
+  id: GuidedCartPole-v1
+  max_leader_action: ~
+  flip_leader_follower: False
+
+leader:
+  algo: BCHG  # Baseline / BaselineDiscrete / BCHG / BCHGDiscrete
+  policy_hidden_sizes:
+    - [256, 256]
+  qf_hidden_sizes:
+    - [256, 256]
+  replay_buffer_size: 500
+  n_epochs: 200
+  max_total_env_steps: 200000
+  eval_num_eps: 5
+  # For AsyncMARL
+  init_steps: 10000
+  update_after: 25000
+  buffer_batch_size: 256
+  update_interval: 10
+  target_update_tau: 1e-2
+  discount: 0.99
+  max_policy_grad_norm: 1.0
+  policy_lr: 1e-4
+  qf_lr: 1e-3
+  wb_follower: True
+  fixed_policy: False
+  # For BCHG
+  noise_sigma: 0.1
+  actor_update_interval: 1
+  batch_size_for_fa_exp: 256
+  discount_sampling: True
+  on_policy: False
+  target_policy_smoothing: False
+  lambda_coef_1: 1.0
+  lambda_coef_2: 1.0
+  grad_mode: default  # default / weighted_average
+  grad_info: True
+  no_guidance: False
+  # For BCHG
+  batch_size_for_la_exp: 32
+  use_advantage: True
+  use_advantage_in_influence: True
+  
+follower:
+  algo: SAC  # SAC / SACDiscrete
+  policy_hidden_sizes:
+    - [256, 256]
+  qf_hidden_sizes:
+    - [256, 256]
+  replay_buffer_size: 1e6
+  batch_size: 1  # Note: one follower update per batch_size
+  # For FollowerWrapper
+  init_steps: 10000
+  fixed_policy: False
+  # For SAC/SACDiscrete
+  gradient_steps_n: 1
+  fixed_alpha: 0.005
+  discount: 0.99
+  buffer_batch_size: 256
+  min_buffer_size: 256
+  target_update_tau: 0.005
