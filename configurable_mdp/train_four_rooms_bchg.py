@@ -791,7 +791,7 @@ if __name__ == "__main__":
     _, env_params, incentive_train_state, _ = carry_out
 
     # Save results
-    method_name = "proposal"
+    method_name = "bchg"
     orbax_checkpointer = orbax.checkpoint.PyTreeCheckpointer()
     orbax_checkpointer.save(
         os.path.join(

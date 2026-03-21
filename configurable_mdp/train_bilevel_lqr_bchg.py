@@ -1005,7 +1005,7 @@ if __name__ == "__main__":
     print("Number of devices: ", jax.local_device_count())
 
     # Read config
-    with open(f"{experiment_dir}/config.yaml", "r") as f:
+    with open(os.path.join(experiment_dir, "config.yaml"), "r") as f:
         config = yaml.safe_load(f)
     print("Config: ", config)
     rng = jax.random.PRNGKey(config["random_seed"])
@@ -1052,7 +1052,7 @@ if __name__ == "__main__":
     print("Basic Env params: ", basic_env_params)
 
     # Method name
-    method_name = "proposal"
+    method_name = "bchg"
 
     # Resume from checkpoint if provided
     if checkpoint is not None:
