@@ -1,73 +1,119 @@
 #!/bin/bash
+set -euo pipefail
 
-# 実行確認
-echo "このスクリプトを実行しますか？"
-read -p "実行する場合は 'y' を入力してください (y/n): " confirm
+DRY_RUN=false
+BACKGROUND=false
 
-case $confirm in
-    [Yy]* )
-        echo "スクリプトを実行します..."
-        ;;
-    [Nn]* )
-        echo "実行をキャンセルしました。"
-        exit 0
-        ;;
-    * )
-        echo "無効な入力です。実行をキャンセルしました。"
-        exit 1
-        ;;
-esac
+SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 
-method=(
-    "baseline" "configurable_mdp" "hpgd_td" "hpgd_oracle" "proposal" "sobirl"
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        --dry-run)
+            DRY_RUN=true
+            ;;
+        --background)
+            BACKGROUND=true
+            ;;
+        *)
+            echo "Usage: bash configurable_mdp/exp_bilevel_lqr.sh [--dry-run] [--background]"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+if [[ "$BACKGROUND" == true && "$DRY_RUN" == true ]]; then
+    echo "[WARN] --dry-run ではバックグラウンド実行しません。"
+    BACKGROUND=false
+fi
+
+if [[ "$BACKGROUND" == true && "${EXP_BILEVEL_LQR_DAEMONIZED:-0}" != "1" ]]; then
+    timestamp="$(date +%Y%m%d_%H%M%S)"
+    log_file="bilevel_lqr_experiments_${timestamp}.log"
+
+    nohup env EXP_BILEVEL_LQR_DAEMONIZED=1 bash "$SCRIPT_PATH" > "$log_file" 2>&1 &
+    echo "バックグラウンド実行を開始しました。"
+    echo "PID: $!"
+    echo "LOG: $log_file"
+    exit 0
+fi
+
+if [[ "$DRY_RUN" == true ]]; then
+    echo "dry-run モード: 実行計画のみ表示します。"
+else
+    echo "スクリプトを実行します..."
+fi
+
+# Methods to run
+methods=(
+    baseline bchg hpgd_td hpgd
 )
-exp=(
-    "experiment_bilevel_lqr__reg_lambda_0_1_steps_10000"
+
+# Experiments to run
+exps=(
+    experiment_bilevel_lqr__reg_lambda_0_1_steps_10000
 )
 
-# gpu:0 - baseline, hogd, sobirl
-nohup bash -c "
+# GPU assignment for each method
+declare -A method_gpu=(
+    [baseline]=0
+    [bchg]=2
+    [hpgd_td]=1
+    [hpgd]=0
+)
 
-    CUDA_VISIBLE_DEVICES=0 python configurable_mdp/train_bilevel_lqr_${method[0]}.py \
-        --experiment_dir configurable_mdp/data/${exp[0]} \
-        > configurable_mdp/experiment_${method[0]}_${exp[0]}.log 2>&1 && \
-    echo 'Experiment (${method[0]} - ${exp[0]}) completed' && \
+declare -A gpu_methods=()
+for method in "${methods[@]}"; do
+    gpu="${method_gpu[$method]:-}"
+    if [[ -z "$gpu" ]]; then
+        echo "[SKIP] GPU未設定のため method=${method} をスキップします"
+        continue
+    fi
+    gpu_methods["$gpu"]+=" $method"
+done
 
-    CUDA_VISIBLE_DEVICES=0 python configurable_mdp/train_bilevel_lqr_${method[1]}.py \
-        --experiment_dir configurable_mdp/data/${exp[0]} \
-        > configurable_mdp/experiment_${method[1]}_${exp[0]}.log 2>&1 && \
-    echo 'Experiment (${method[1]} - ${exp[0]}) completed' && \
+run_gpu_queue() {
+    local gpu="$1"
+    local method_list="$2"
 
-    CUDA_VISIBLE_DEVICES=0 python configurable_mdp/train_bilevel_lqr_${method[5]}.py \
-        --experiment_dir configurable_mdp/data/${exp[0]} \
-        > configurable_mdp/experiment_${method[5]}_${exp[0]}.log 2>&1 && \
-    echo 'Experiment (${method[5]} - ${exp[0]}) completed'
+    echo "[GPU ${gpu}] queue start:${method_list}"
 
-    " >> "configurable_mdp/experiment_gpu0.log" 2>&1 &
+    for method in $method_list; do
+        for exp in "${exps[@]}"; do
+            experiment_dir="configurable_mdp/data/${exp}"
+            log_file="configurable_mdp/experiment_${method}_${exp}.log"
+            train_script="configurable_mdp/train_bilevel_lqr_${method}.py"
 
-# gpu:1 - hpgd_td, proposal
-nohup bash -c "
+            if [[ "$DRY_RUN" == true ]]; then
+                echo "[PLAN][GPU ${gpu}] CUDA_VISIBLE_DEVICES=${gpu} python ${train_script} --experiment_dir ${experiment_dir} > ${log_file} 2>&1"
+            else
+                echo "[RUN][GPU ${gpu}] method=${method}, exp=${exp}"
+                CUDA_VISIBLE_DEVICES="$gpu" python "$train_script" \
+                    --experiment_dir "$experiment_dir" \
+                    > "$log_file" 2>&1
+                echo "[DONE][GPU ${gpu}] ${method} - ${exp}"
+            fi
+        done
+    done
 
-    CUDA_VISIBLE_DEVICES=1 python configurable_mdp/train_bilevel_lqr_${method[2]}.py \
-        --experiment_dir configurable_mdp/data/${exp[0]} \
-        > configurable_mdp/experiment_${method[2]}_${exp[0]}.log 2>&1 && \
-    echo 'Experiment (${method[2]} - ${exp[0]}) completed' && \
+    echo "[GPU ${gpu}] queue finished"
+}
 
-    CUDA_VISIBLE_DEVICES=1 python configurable_mdp/train_bilevel_lqr_${method[4]}.py \
-        --experiment_dir configurable_mdp/data/${exp[0]} \
-        > configurable_mdp/experiment_${method[4]}_${exp[0]}.log 2>&1 && \
-    echo 'Experiment (${method[4]} - ${exp[0]}) completed'
+pids=()
+while IFS= read -r gpu; do
+    if [[ "$DRY_RUN" == true ]]; then
+        run_gpu_queue "$gpu" "${gpu_methods[$gpu]}"
+    else
+        run_gpu_queue "$gpu" "${gpu_methods[$gpu]}" &
+        pids+=("$!")
+    fi
+done < <(printf '%s\n' "${!gpu_methods[@]}" | sort -n)
 
-    " >> "configurable_mdp/experiment_gpu1.log" 2>&1 &
-
-# gpu:2 - hpgd_oracle
-nohup bash -c "
-
-    CUDA_VISIBLE_DEVICES=2 python configurable_mdp/train_bilevel_lqr_${method[3]}.py \
-        --experiment_dir configurable_mdp/data/${exp[0]} \
-        > configurable_mdp/experiment_${method[3]}_${exp[0]}.log 2>&1 && \
-    echo 'Experiment (${method[3]} - ${exp[0]}) completed'
-
-    " >> "configurable_mdp/experiment_gpu2.log" 2>&1 &
-
-echo "Experiments started in background."
+if [[ "$DRY_RUN" == false ]]; then
+    for pid in "${pids[@]}"; do
+        wait "$pid"
+    done
+    echo "全GPUキューの実験が完了しました。"
+else
+    echo "dry-run 完了: 実験は実行していません。"
+fi
