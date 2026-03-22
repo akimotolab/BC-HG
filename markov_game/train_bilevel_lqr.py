@@ -139,9 +139,11 @@ if __name__ == '__main__':
 
     # パラメータを読み込む
     parser = argparse.ArgumentParser(description='Train a model with given config and experiment name.')
-    parser.add_argument('--config', type=str, default='config/config_lqr.yaml', help='Path to the config file.')
+    parser.add_argument(
+        '--config', type=str, default=os.path.join('markov_game', 'config', 'config_bilevel_lqr_bchg.yaml'), 
+        help='Path to the config file.'
+        )
     parser.add_argument('--no_aggregate', action='store_true', help='Do not aggregate the results.')
-    
     args, unknown_args = parser.parse_known_args()
 
     # config.yamlを読み込む
@@ -179,26 +181,23 @@ if __name__ == '__main__':
     else:
         set_gpu_mode(False)
 
-    # MARK: for debug. あとで消す
-    if config['set_detect_anomaly']:
-        torch.autograd.set_detect_anomaly(True)
-
     # parameter の組み合わせでmainを実行
     log_dirs = {}
     exp_num = 0
     datetime = config.get('datetime', None)
+    data_dir = os.path.join('markov_game', 'data', 'local')
     start = time.time()
     for cfg, timestamp in HierarchicalSweeper(config):
         exp_num += 1
         cfg['datetime'] = timestamp if datetime is None else datetime
         ctxt, params = args_for_experiments(cfg)
+        ctxt['log_dir'] = os.path.join(data_dir, ctxt['prefix'], ctxt['name'])
         log_dir = main(ctxt, cfg=params)  # train on each config
         if params['exp_name'] not in log_dirs:
             log_dirs[params['exp_name']] = []
         log_dirs[params['exp_name']].append(log_dir)    
-    
     end = time.time()
-    exp_result_dir = os.path.join(os.getcwd(), 'data', 'local', ctxt['prefix'])
+    exp_result_dir = os.path.join(data_dir, ctxt['prefix'])
     print(f'All the results are saved in {exp_result_dir}.')
 
     # 結果をaggregarteし，かつそれをtensorboardに書き込む
@@ -216,7 +215,8 @@ if __name__ == '__main__':
                                  use_tensorboard=True,
                                  is_separate_logs=True)
             std_log_dir = os.path.join(
-                exp_result_dir, 
+                exp_result_dir,
+                "aggregated",
                 f"{exp_name}_std" if len(exp_name) > 0 else "std"
                 )
             aggregate_progresses(log_dirs=l_dirs, 

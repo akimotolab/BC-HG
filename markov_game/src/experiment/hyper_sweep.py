@@ -1,3 +1,4 @@
+import os
 import itertools
 import multiprocessing
 import random
@@ -67,19 +68,12 @@ def args_for_experiments(args):
                 arg_str = "{:.0e}".format(value) if isinstance(value, float) else str(value) 
                 sweeped_args += f'_{sw_arg}_{arg_str}'
 
-    if ('name' in args 
-        and args['name'] is not None
-        and len(args['name']) > 0):
-        prefix = f"{args['datetime']}_{args['name']}"
-        exp_name = f"{args['name']}{sweeped_args}"
-    else:
-        prefix = args['datetime']
-        exp_name = sweeped_args
-    # Hint: name = exp_name + seed
+    prefix = str(args['name']) if args.get('name') is not None else args['datetime']
+    exp_name = f"{prefix}{sweeped_args}" if len(sweeped_args) > 0 else prefix
     name = f"{exp_name}_seed_{args['seed']}" if len(exp_name) > 0 else f"seed_{args['seed']}"
 
     ctxt = {k:v for k,v in args['ctxt'].items()}
-    ctxt['prefix'] = f'experiment/{prefix}'
+    ctxt['prefix'] = os.path.join('experiment', prefix)
     ctxt['name'] = name
     # Hint: log_dir = data/local/{prefix}/{name} if ctxt['log_dir'] is None
     for k,v in args['ctxt'].items():
