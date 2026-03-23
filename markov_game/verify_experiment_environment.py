@@ -1,5 +1,6 @@
 import importlib
 import importlib.metadata
+from pathlib import Path
 import subprocess
 import sys
 
@@ -24,6 +25,20 @@ def check_import(module_name, label=None):
     except Exception as error:
         print(f"❌ {name}: import failed ({error})")
         return None, error
+
+
+def check_python_version():
+    print("=== Python Version Check ===")
+    warnings = []
+    major, minor = sys.version_info[:2]
+    print(f"Detected Python: {major}.{minor}")
+    if (major, minor) != (3, 8):
+        warning = "Recommended Python is 3.8.x for `markov_game/environment.yaml` compatibility."
+        print(f"⚠️ {warning}")
+        warnings.append(warning)
+    else:
+        print("✅ Python version matches recommended 3.8.x")
+    return warnings
 
 
 def print_core_versions():
@@ -139,6 +154,61 @@ def check_local_training_modules():
     return failures
 
 
+def check_training_script_imports():
+    print("\n=== Training Script Import Check ===")
+    failures = []
+    targets = [
+        "train_discrete_toy",
+        "train_bilevel_lqr",
+    ]
+    for module_name in targets:
+        _, error = check_import(module_name, module_name)
+        if error is not None:
+            failures.append(module_name)
+    return failures
+
+
+def check_required_files():
+    print("\n=== Required File Check ===")
+    failures = []
+    required_paths = [
+        Path("markov_game/environment.yaml"),
+        Path("markov_game/config/config_discrete_toy_bchg.yaml"),
+        Path("markov_game/config/config_bilevel_lqr_bchg.yaml"),
+    ]
+    for path in required_paths:
+        if path.exists():
+            print(f"✅ Found: {path}")
+        else:
+            print(f"❌ Missing: {path}")
+            failures.append(str(path))
+    return failures
+
+
+def check_nvidia_driver_visibility():
+    print("\n=== NVIDIA Driver Visibility Check ===")
+    warnings = []
+    try:
+        result = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True, check=False)
+        if result.returncode == 0:
+            lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+            if lines:
+                print("✅ nvidia-smi is available:")
+                for line in lines:
+                    print(f" - {line}")
+            else:
+                print("⚠️ nvidia-smi is available but no GPUs were listed")
+        else:
+            warning = "nvidia-smi returned non-zero; GPU driver/runtime may be unavailable in this shell."
+            print(f"⚠️ {warning}")
+            warnings.append(warning)
+    except FileNotFoundError:
+        warning = "nvidia-smi command not found; skip if running CPU-only or in restricted container."
+        print(f"⚠️ {warning}")
+        warnings.append(warning)
+    return warnings
+
+
 def check_pip_versions(package_names):
     print("\n=== Pip Package Version Check ===")
     for package_name in package_names:
@@ -168,6 +238,9 @@ def main():
     print(f"Python executable: {sys.executable}")
     print(f"Python version: {sys.version.split()[0]}")
 
+    warnings = []
+    warnings.extend(check_python_version())
+
     loaded, import_failures = print_core_versions()
 
     failures = []
@@ -175,10 +248,19 @@ def main():
     failures.extend(check_torch_runtime(loaded.get("torch")))
     failures.extend(check_garage_torch_api())
     failures.extend(check_local_training_modules())
+    failures.extend(check_training_script_imports())
+    failures.extend(check_required_files())
+
+    warnings.extend(check_nvidia_driver_visibility())
 
     check_pip_versions(["garage", "torch", "tensorflow", "omegaconf"])
 
     print("\n=== Summary ===")
+    if warnings:
+        print("⚠️ Warnings:")
+        for warning in sorted(set(warnings)):
+            print(f" - {warning}")
+
     if failures:
         unique_failures = sorted(set(failures))
         print("❌ Environment verification failed for:")

@@ -1,5 +1,3 @@
-\
-# filepath: /home/mikoto/workspace/ptia/ptia/agents/follower/sac_discrete.py
 """This module creates a SAC-Discrete model in PyTorch."""
 # yapf: disable
 import copy
@@ -18,7 +16,7 @@ from dowel import tabular
 from ..experiment import Trainer
 
 # Assuming CategoricalMLPPolicy and DiscreteMLPQFunction are available and suitable
-# from ptia.policies import CategoricalMLPPolicy (or a similar discrete policy)
+# from src.policies import CategoricalMLPPolicy (or a similar discrete policy)
 # from garage.torch.q_functions import DiscreteMLPQFunction (or a similar discrete Q-function)
 # Users of this class will need to provide appropriate discrete policy and Q-function modules.
 

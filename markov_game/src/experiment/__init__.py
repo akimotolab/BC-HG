@@ -1,6 +1,3 @@
-"""PTIA Base."""
-# yapf: disable
-
 from .trainer import Trainer
 from .algo_arguments import kwargs_from_cfg, get_algo
 from .experiment import wrap_experiment

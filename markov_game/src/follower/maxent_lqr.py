@@ -14,7 +14,7 @@ from garage.torch.policies.stochastic_policy import StochasticPolicy
 from dowel import tabular
 
 # For type hints (not necessary)
-from ptia import Trainer
+from ..experiment import Trainer
 
 class MaxEntLQR(RLAlgorithm):
     name = "MaxEntLQR"

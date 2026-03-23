@@ -1,4 +1,4 @@
-"""Base PTIA Environment API."""
+"""Base Environment API."""
 
 import abc
 from dataclasses import dataclass
