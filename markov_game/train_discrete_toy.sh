@@ -26,7 +26,6 @@ configs=(
 )
 
 # Experiment settings
-exp_name="DiscreteToy"
 datetime=$(date +"%Y%m%d_%H%M%S")
 log_label="$datetime"
 config="${configs[0]}"  # Config file to use
@@ -39,7 +38,8 @@ critic_update_steps_ns=(1 2 5 10 20)
 for actor_update_steps_n in "${actor_update_steps_ns[@]}"; do
     for critic_update_steps_n in "${critic_update_steps_ns[@]}"; do
 
-        log_file="$log_label"_"$exp_name"_"$algo"_"an_$actor_update_steps_n"_cn_"$critic_update_steps_n".log
+        safe_cfg_label=$(echo "$config" | sed 's/\.yaml$//')
+        log_file="$log_label"_"$safe_cfg_label"_an_"$actor_update_steps_n"_cn_"$critic_update_steps_n".log
 
         # Run experiments in the background for all the combinations of parameters
         nohup python markov_game/train_discrete_toy.py \
