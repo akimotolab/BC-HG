@@ -42,7 +42,7 @@ for actor_update_steps_n in "${actor_update_steps_ns[@]}"; do
         log_file="$log_label"_"$exp_name"_"$algo"_"an_$actor_update_steps_n"_cn_"$critic_update_steps_n".log
 
         # Run experiments in the background for all the combinations of parameters
-        nohup python scripts/train_discrete_toy.py \
+        nohup python markov_game/train_discrete_toy.py \
             --config "markov_game/config/$config" \
             --no_aggregate \
             datetime="'$datetime'" \
