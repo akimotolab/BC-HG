@@ -147,6 +147,9 @@ For more details, consult [CUDA—Wikipedia](https://en.wikipedia.org/wiki/CUDA#
 ```bash
 python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
 python -c "import garage; print('garage import ok')"
+
+# Recommended: verify markov_game runtime dependencies for this repository
+python markov_game/verify_experiment_environment.py
 ```
 
 ## Reproducing Experiments (Canonical: `python ...`)
