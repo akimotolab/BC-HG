@@ -1,16 +1,16 @@
-name: ~
+name: BilevelLQR_Baseline_Opt_onpolicy
 datetime: ~
-seed: [0,1,2,3,4,5,6,7,8,9]
+seed: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 set_detect_anomaly: False
 gpu_id: ~
 sweep:
   env: ~
-  leader: ~
+  leader: ['algo', 'actor_update_steps_n', 'replay_buffer_size']
   follower: ~
 
 ctxt:
-  snapshot_mode: gap  # gap / last
-  snapshot_gap: 50
+  snapshot_mode: last  # gap / last
+  snapshot_gap: 1      # Set 1 when snapshot_mode is "last"
   archive_launch_repo: False
 
 env:
@@ -34,9 +34,9 @@ env:
   - [0.2, 0.01]
   
 leader:
-  algo: BCHG_Opt  # Baseline_LQR / BCHG_Opt
-  init_mean_K_1: -2.0
-  init_mean_K_2: -1.0
+  algo: Baseline_Opt  # Baseline_Opt / BCHG_Opt
+  init_mean_K_1: 0.0
+  init_mean_K_2: 0.0
   init_std_K_1: 1.0
   init_std_K_2: 1.0
   fixed_W: 1e-3
@@ -47,36 +47,36 @@ leader:
   max_total_env_steps: 200000  # 400 * 500
   sample_num_eps: 4
   eval_num_eps: 10
-  # For BCHG_Opt
   buffer_batch_size: 64
   min_buffer_size: 400  # Steps after which the leader starts updating
-  init_steps: 10000  # Steps until which the leader acts randomly
+  init_steps: 4000  # Steps until which the leader acts randomly
   target_update_tau: 1e-2
   discount: 0.99
   max_policy_grad_norm: 1.0
+  use_closed_form_gradient: false
   policy_lr: 1e-1
   qf_lr: 1e-1
-  wb_follower: true
-  fixed_policy: false
-  actor_update_steps_n: 1
-  critic_update_steps_n: 1
-  batch_size_for_fa_exp: 256
+  actor_update_steps_n: 10
+  critic_update_steps_n: 5
+  use_advantage: true
   batch_size_for_la_exp: 32
+  use_K_L2_regularization: false
+  K_L2_reg_coef: 0.0
   discount_sampling: true
   on_policy: true
   target_policy_smoothing: false
   reset_leader_qf: false
   reset_leader_qf_optimizer: false
+  wb_follower: true
+  fixed_policy: false
+  grad_info: true
+  # For BCHG_Opt
+  batch_size_for_fa_exp: 256
   lambda_coef_1: 1.0
   lambda_coef_2: 1.0
-  use_advantage: true
   use_advantage_in_influence: false
-  use_closed_form_gradient: false
-  use_K_L2_regularization: false
-  K_L2_reg_coef: 0.0
-  grad_mode: default  # default / weighted_average
-  grad_info: true
-
+  grad_mode: default
+  
 follower:
   algo: MaxEntLQR
   # For FollowerWrapper

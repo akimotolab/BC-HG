@@ -1,0 +1,65 @@
+name: DiscreteToy_BCHGDiscrete_Opt
+datetime: ~
+seed: [0,1,2,3,4,5,6,7,8,9]
+set_detect_anomaly: false
+gpu_id: ~
+sweep:
+  env: ~
+  leader: ['algo', 'actor_update_steps_n', 'critic_update_steps_n']
+  follower: ~
+
+ctxt:
+  snapshot_mode: last  # gap / last
+  snapshot_gap: 1      # Set 1 when snapshot_mode is "last"
+  archive_launch_repo: false
+
+env:
+  id: DiscreteToy4_1b-v1
+leader:
+  algo: BCHGDiscrete_Opt  # BaselineDiscrete_Opt / BCHGDiscrete_Opt / BiACDiscrete_Opt
+  policy_hidden_sizes:
+    - [64, 64]
+  qf_hidden_sizes:
+    - [64, 64]
+  replay_buffer_size: 450
+  n_epochs: 250
+  max_total_env_steps: 225000  # 150 * sample_num_eps * 500
+  sample_num_eps: 3
+  eval_num_eps: 10
+  buffer_batch_size: 64
+  min_buffer_size: 450  # Steps after which the leader starts updating
+  init_steps: 0  # Steps until which uniformly random leader actions are selected
+  target_update_tau: 1e-2
+  discount: 0.99
+  max_policy_grad_norm: ~
+  use_advantage: true
+  policy_lr: 1e-4
+  qf_lr: 1e-3
+  actor_update_steps_n: 1
+  critic_update_steps_n: 5
+  discount_sampling: true
+  on_policy: true
+  target_policy_smoothing: false
+  reset_leader_qf: false
+  reset_leader_qf_optimizer: false
+  grad_info: true
+  wb_follower: true
+  fixed_policy: false
+  # For BCHGDiscrete_Opt
+  batch_size_for_fa_exp: 256
+  lambda_coef_1: 1.0
+  lambda_coef_2: 1.0
+  use_advantage_in_influence: true
+  grad_mode: default  # default / weighted_average
+  # For BiACDiscrete_Opt
+  gradient_steps_n: 1
+  
+follower:
+  algo: SoftQIteration
+  # For FollowerWrapper
+  fixed_policy: false
+  # SoftQIteration
+  discount: 0.99
+  temperature: 0.05
+  max_iterations: 1000
+  tol: 1e-6

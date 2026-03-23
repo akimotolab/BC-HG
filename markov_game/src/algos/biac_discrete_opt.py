@@ -287,7 +287,7 @@ class BiACDiscrete_Opt(RLAlgorithm):
             episodes (EpisodeBatch): Batch of episodes.
 
         """
-        # Update the follower estimators # MARK: あとで実装
+        # Update the follower estimators
         if not self._wb_follower:
             raise NotImplementedError('The follower estimation model is not implemented yet.')
 
