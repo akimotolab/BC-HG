@@ -29,7 +29,7 @@ lower_optimisation:
 # Upper-level optimisation params
 upper_optimisation:
   discount_factor: 0.99
-  incentive_reg_param: [1.0, 2.0, 3.0, 4.0, 5.0]  # Grid search
+  incentive_reg_param: 5.0
   reward_function:
     type: "positive"
     target_state: [8, 4]
