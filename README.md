@@ -99,6 +99,9 @@ conda activate bchg-cmdp
 **Quick check:**
 ```bash
 python -c "import jax; print(jax.devices())"
+
+# Recommended: verify JAX-related runtime dependencies for this repository
+python configurable_mdp/verify_experiment_environment.py
 ```
 
 ### 2) `markov_game` Environment (PyTorch + Garage)
