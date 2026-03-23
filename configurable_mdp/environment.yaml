@@ -10,7 +10,7 @@ dependencies:
     # JAX ecosystem (v0.4.21) - Core framework
     - jax==0.4.21
     - --find-links https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-    - jaxlib==0.4.21+cuda12.cudnn89  # CUDA 12.x対応版
+    - jaxlib==0.4.21+cuda12.cudnn89  # CUDA 12.x compatible build
     - flax==0.7.4
     - optax==0.2.1
     - chex==0.1.85
