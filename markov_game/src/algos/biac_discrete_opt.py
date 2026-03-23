@@ -18,8 +18,8 @@ from ..experiment import Trainer
 
 # yapf: enable
 
-class BiACDiscrete_Opt(RLAlgorithm):
-    name = 'BiACDiscrete_Opt'
+class BiAC_Opt(RLAlgorithm):
+    name = 'BiAC_Opt'
 
     def __init__(
             self,

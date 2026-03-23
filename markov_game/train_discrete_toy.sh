@@ -23,6 +23,8 @@ configs=(
     "config_discrete_toy_bchg.yaml"
     "config_discrete_toy_biac.yaml"
     "config_discrete_toy_baseline.yaml"
+    # "config_discrete_toy_biac_on.yaml"
+    # "config_discrete_toy_baseline_off.yaml"
 )
 
 # Experiment settings

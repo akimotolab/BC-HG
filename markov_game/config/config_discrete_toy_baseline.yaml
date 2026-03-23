@@ -16,7 +16,7 @@ ctxt:
 env:
   id: DiscreteToy4_1b-v1
 leader:
-  algo: BaselineDiscrete_Opt  # BaselineDiscrete_Opt / BCHGDiscrete_Opt / BiACDiscrete_Opt
+  algo: BaselineDiscrete_Opt  # BaselineDiscrete_Opt / BCHGDiscrete_Opt / BiAC_Opt
   policy_hidden_sizes:
     - [64, 64]
   qf_hidden_sizes:
@@ -51,7 +51,7 @@ leader:
   lambda_coef_2: 1.0
   use_advantage_in_influence: true
   grad_mode: default  # default / weighted_average
-  # For BiACDiscrete_Opt
+  # For BiAC_Opt
   gradient_steps_n: 1
   
 follower:
