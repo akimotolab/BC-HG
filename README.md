@@ -63,7 +63,7 @@ python markov_game/train_discrete_toy.py \
 	--config markov_game/config/config_discrete_toy_bchg.yaml
 
 # 3) Monitor with TensorBoard (optional)
-tensorboard --logdir markov_game/data/local/
+tensorboard --logdir markov_game/data/local/experiment/<EXPERIMENT_NAME>
 
 # 4) Open notebook for visualization
 jupyter notebook markov_game/notebooks/plot_notebook_DiscreteToy.ipynb
@@ -71,7 +71,7 @@ jupyter notebook markov_game/notebooks/plot_notebook_DiscreteToy.ipynb
 
 Expected outcome:
 
-- Training logs/results are created under `markov_game/data/local/<EXPERIMENT_NAME>/`.
+- Training logs/results are created under `markov_game/data/local/experiment/<EXPERIMENT_NAME>/`.
 - TensorBoard shows training metrics from the generated log directory.
 - Running the notebook reproduces the corresponding DiscreteToy plots.
 
@@ -173,7 +173,7 @@ python configurable_mdp/train_four_rooms_bchg.py \
 
 You can switch methods by changing the script name (e.g., `train_four_rooms_baseline.py`, `train_four_rooms_hpgd.py`, etc.) and switch paper settings by changing `--experiment_dir`.
 
-#### BilevelLQR
+#### BuildingThermalControl
 
 ```bash
 conda activate bchg-cmdp
@@ -195,7 +195,7 @@ python markov_game/train_discrete_toy.py \
 	--config markov_game/config/config_discrete_toy_bchg.yaml
 ```
 
-#### BuildingThermalControl
+#### BilevelLQR
 
 ```bash
 conda activate bchg-mg
@@ -265,7 +265,7 @@ jupyter notebook configurable_mdp/notebooks/experiment_visualization_four_rooms.
 jupyter notebook configurable_mdp/notebooks/random_search_bilevel_lqr.ipynb
 ```
 
-### BilevelLQR Figures (JAX)
+### BuildingThermalControl Figures (JAX)
 
 ```bash
 conda activate bchg-cmdp
@@ -275,7 +275,7 @@ python configurable_mdp/train_bilevel_lqr_bchg.py --experiment_dir configurable_
 jupyter notebook configurable_mdp/notebooks/experiment_visualization_bilevel_lqr.ipynb
 ```
 
-### DiscreteToy & BuildingThermalControl Figures (PyTorch)
+### DiscreteToy & BilevelLQR Figures (PyTorch)
 
 ```bash
 conda activate bchg-mg
@@ -294,7 +294,7 @@ jupyter notebook markov_game/notebooks/MaxEntLQR.ipynb
 **Note on aggregation:**  
 The `markov_game` scripts auto-aggregate results into CSV and TensorBoard logs during training. If you skip aggregation (`--no_aggregate`), run:
 ```bash
-python markov_game/aggregate_results.py markov_game/data/local/<LOG_DIR>
+python markov_game/aggregate_results.py markov_game/data/local/experiment/<EXPERIMENT_NAME>
 ```
 
 ## Monitoring Training Progress with TensorBoard
@@ -305,7 +305,7 @@ During or after `markov_game` training, visualize metrics (loss, reward, etc.) w
 
 ```bash
 conda activate bchg-mg
-tensorboard --logdir markov_game/data/local/<LOG_DIR>
+tensorboard --logdir markov_game/data/local/experiment/<EXPERIMENT_NAME>
 ```
 
 Then open your browser to `http://localhost:6006/` (default TensorBoard port).
