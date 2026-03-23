@@ -16,7 +16,7 @@ def set_seed(seed, env=None):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
     torch.use_deterministic_algorithms = True
-    # gym環境のseed設定
+    # Set seed for the gym environment
     if env is not None:
         env.seed(seed)
         env.action_space.seed(seed)
@@ -24,18 +24,18 @@ def set_seed(seed, env=None):
 
 def check_all_keys_exist(config_a, config_b):
     """
-    config_aのすべてのkeyがconfig_bに存在するかチェック
-    値がNoneでもkeyが存在すればTrueとする
+    Check whether all keys in config_a exist in config_b.
+    Return True as long as the key exists, even if the value is None.
     """
     def _check_recursive(a_dict, b_dict, path=""):
         for key, value in a_dict.items():
             current_path = f"{path}.{key}" if path else key
             
-            # keyが存在しないかチェック（値がNoneでもOK）
+            # Check whether the key exists (value can be None)
             if key not in b_dict:
                 return False, current_path
             
-            # 値が辞書（階層）の場合は再帰的にチェック
+            # If the value is a nested dictionary, check recursively
             if OmegaConf.is_dict(value):
                 if not OmegaConf.is_dict(b_dict[key]):
                     return False, current_path

@@ -7,10 +7,10 @@ class TabularCategoricalPolicy(StochasticPolicy):
         """
         Args:
             policy_matrix (np.ndarray or torch.Tensor): shape = (num_states, num_leader_actions, num_actions)
-                各状態・リーダー行動ごとのアクション確率分布
-            name (str): ポリシー名
+                Action probability distribution for each state and leader action.
+            name (str): Policy name.
         """
-        # StochasticPolicyの初期化（env_specはNoneでOK、必要なら拡張）
+        # Initialize StochasticPolicy (env_spec can be None; extend if needed)
         super().__init__(env_spec=env_spec, name=name)
         self.num_states = env_spec.observation_space.n
         self.num_actions = env_spec.action_space.n
@@ -23,9 +23,9 @@ class TabularCategoricalPolicy(StochasticPolicy):
 
     def set_policy_matrix(self, policy_matrix):
         """
-        ポリシーマトリックスを更新するメソッド
+        Update the policy matrix.
         Args:
-            policy_matrix (np.ndarray or torch.Tensor): 新しいポリシーマトリックス
+            policy_matrix (np.ndarray or torch.Tensor): New policy matrix.
         """
         self.policy_matrix = policy_matrix
 
@@ -42,25 +42,25 @@ class TabularCategoricalPolicy(StochasticPolicy):
         """
         Args:
             observations (torch.Tensor): shape = (batch_size, obs_dim+leader_action_dim)
-                [state_onehot_vec, leader_action_onehor_vec]のconcatenation
+                Concatenation of [state_onehot_vec, leader_action_onehot_vec].
         Returns:
-            dist (torch.distributions.Categorical): バッチ分のCategorical分布
+            dist (torch.distributions.Categorical): Batch categorical distribution.
             info (dict): {'mode': ..., 'probs': ...}
         """
         if observations[0].shape[0] == self.num_states + self.num_leader_actions:
-            # 状態・リーダー行動を抽出
+            # Extract state and leader action
             state = observations[:, :self.num_states]
-            state = torch.argmax(state, dim=-1).long()  # 状態のone-hotベクトルをインデックスに変換
+            state = torch.argmax(state, dim=-1).long()  # Convert one-hot state vector to index
             leader_action = observations[:, self.num_states:]
-            leader_action = torch.argmax(leader_action, dim=-1).long()  # リーダー行動のone-hotベクトルをインデックスに変換
+            leader_action = torch.argmax(leader_action, dim=-1).long()  # Convert one-hot leader action vector to index
         elif observations[0].shape[0] == 2:
-            state = observations[:, 0].long()  # 状態をインデックスとして取得
+            state = observations[:, 0].long()  # Get state as index
             leader_action = observations[:, 1].long()
         else:
             raise ValueError("Observations must be in the format of [state, leader_action] or one-hot vectors.")
-        # (batch_size, num_actions) の確率テーブルを取得
+        # Get the probability table of shape (batch_size, num_actions)
         probs = self.policy_matrix[state, leader_action]  # (batch_size, num_actions)
-        # 必要ならfloat型に変換
+        # Convert to float if needed
         probs = probs.float() if hasattr(probs, 'float') else torch.from_numpy(probs).float()
         dist = torch.distributions.Categorical(probs=probs)
         mode = torch.argmax(probs, dim=-1)
@@ -68,10 +68,10 @@ class TabularCategoricalPolicy(StochasticPolicy):
 
     @property
     def obs_dim(self):
-        # テーブル型なので特に意味はないが、2（state, leader_action）とする
+        # Not particularly meaningful for tabular form, but set to 2 (state, leader_action)
         return 2
 
     @property
     def action_dim(self):
-        # policy_matrixの最後の次元
+        # Last dimension of policy_matrix
         return self.policy_matrix.shape[-1]

@@ -431,7 +431,7 @@ class SAC(RLAlgorithm):
         policy_loss.backward(retain_graph=True)
         policy_grad = [param.grad.clone().detach() for param in self.policy.parameters() if param.grad is not None]
         policy_grad_norm = torch.sqrt(sum(torch.sum(g ** 2) for g in policy_grad))
-        #policy_grad_norm = torch.nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=1.0) # 勾配をclippingする例
+        #policy_grad_norm = torch.nn.utils.clip_grad_norm_(self.policy.parameters(), max_norm=1.0) # Example of gradient clipping
         self._policy_optimizer.step()
 
         if self._use_automatic_entropy_tuning:

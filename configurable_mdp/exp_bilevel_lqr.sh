@@ -23,7 +23,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [[ "$BACKGROUND" == true && "$DRY_RUN" == true ]]; then
-    echo "[WARN] --dry-run ではバックグラウンド実行しません。"
+    echo "[WARN] --dry-run does not run in background mode."
     BACKGROUND=false
 fi
 
@@ -32,16 +32,16 @@ if [[ "$BACKGROUND" == true && "${EXP_BILEVEL_LQR_DAEMONIZED:-0}" != "1" ]]; the
     log_file="bilevel_lqr_experiments_${timestamp}.log"
 
     nohup env EXP_BILEVEL_LQR_DAEMONIZED=1 bash "$SCRIPT_PATH" > "$log_file" 2>&1 &
-    echo "バックグラウンド実行を開始しました。"
+    echo "Started background execution."
     echo "PID: $!"
     echo "LOG: $log_file"
     exit 0
 fi
 
 if [[ "$DRY_RUN" == true ]]; then
-    echo "dry-run モード: 実行計画のみ表示します。"
+    echo "Dry-run mode: showing execution plan only."
 else
-    echo "スクリプトを実行します..."
+    echo "Executing script..."
 fi
 
 # Methods to run
@@ -66,7 +66,7 @@ declare -A gpu_methods=()
 for method in "${methods[@]}"; do
     gpu="${method_gpu[$method]:-}"
     if [[ -z "$gpu" ]]; then
-        echo "[SKIP] GPU未設定のため method=${method} をスキップします"
+        echo "[SKIP] Skipping method=${method} because GPU is not configured"
         continue
     fi
     gpu_methods["$gpu"]+=" $method"
@@ -113,7 +113,7 @@ if [[ "$DRY_RUN" == false ]]; then
     for pid in "${pids[@]}"; do
         wait "$pid"
     done
-    echo "全GPUキューの実験が完了しました。"
+    echo "All GPU queue experiments have completed."
 else
-    echo "dry-run 完了: 実験は実行していません。"
+    echo "Dry-run complete: no experiments were executed."
 fi

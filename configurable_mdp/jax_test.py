@@ -1,16 +1,16 @@
 import jax
 import jax.numpy as jnp
 
-# 利用可能なデバイスを表示
+# Show available devices
 print("Available devices:", jax.devices())
 
-# デフォルトのバックエンドを表示
+# Show the default backend
 print("Default backend:", jax.default_backend())
 
-# 利用可能なプラットフォームを表示
+# Show available platforms
 print("Available platforms:", [device.platform for device in jax.devices()])
 
-# GPUが利用可能かチェック（エラーを回避）
+# Check whether a GPU is available (avoid errors)
 try:
     gpu_devices = jax.devices('gpu')
     print("GPU available:", len(gpu_devices) > 0)
@@ -18,10 +18,10 @@ try:
 except RuntimeError as e:
     print("GPU not available:", str(e))
 
-# JAXのバージョン確認
+# Check the JAX version
 print("JAX version:", jax.__version__)
 
-# 簡単な計算テスト
+# Simple computation test
 if len(jax.devices()) > 0:
     x = jnp.array([1.0, 2.0, 3.0])
     print(f"Test array device: {x.device()}")

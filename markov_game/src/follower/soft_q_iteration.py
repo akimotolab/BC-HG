@@ -134,7 +134,7 @@ class SoftQIteration(RLAlgorithm):
 
     @property
     def networks(self):
-        return []  # テーブル型なので空
+        return []  # Empty because this is tabular
 
     def to(self, device=None):
         if device is None:

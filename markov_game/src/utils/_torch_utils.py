@@ -458,34 +458,34 @@ def correlation_coefficient(tensor_a, tensor_b):
     Returns:
         torch.Tensor: The correlation coefficient (a scalar tensor).
     """
-    # 1. テンソルを1次元に変換
+    # 1. Flatten tensors to 1D
     a = tensor_a.squeeze()
     b = tensor_b.squeeze()
 
-    # データポイントの数
+    # Number of data points
     n = a.size(0)
 
     if n < 2:
-        # 相関係数を計算するには少なくとも2つのデータポイントが必要
+        # At least two data points are required to compute correlation
         return torch.tensor(float('nan'))
 
-    # 2. 平均値を計算
+    # 2. Compute means
     mean_a = torch.mean(a)
     mean_b = torch.mean(b)
 
-    # 3. 標準偏差を計算 (不偏標準偏差を使用する場合は ddof=1)
+    # 3. Compute standard deviations (use ddof=1 for unbiased std)
     std_a = torch.std(a, unbiased=True)
     std_b = torch.std(b, unbiased=True)
 
-    # 標準偏差が0の場合は相関係数を計算できない（または0やNaNとして扱う）
+    # Correlation cannot be computed when std is 0 (or treat as 0/NaN)
     if std_a == 0 or std_b == 0:
-        return float('nan') # または 0.0 や適切な値を返す
+        return float('nan') # Or return 0.0 or another appropriate value
 
-    # 4. 共分散を計算
+    # 4. Compute covariance
     # cov(A, B) = E[(A - E[A])(B - E[B])]
-    covariance = torch.sum((a - mean_a) * (b - mean_b)) / (n - 1) # 不偏共分散
+    covariance = torch.sum((a - mean_a) * (b - mean_b)) / (n - 1) # Unbiased covariance
 
-    # 5. 相関係数を計算
+    # 5. Compute correlation coefficient
     # corr(A, B) = cov(A, B) / (std(A) * std(B))
     correlation = covariance / (std_a * std_b)
 
@@ -512,12 +512,12 @@ def pad_and_stack(subseq_list, dtype=torch.float32, device=None, with_mask=False
                                      'action': sampled_subsequences['action']}.items()
         }
     """
-    # 次の処理を最適化するためのメソッド
+    # Method to optimize downstream processing
     lengths = [len(subseq) for subseq in subseq_list]
     max_len = max(lengths)
-    # サブシーケンスが2次元以上の場合（例: [T, obs_dim]）、shape情報を取得
+    # If subsequences are 2D or higher (e.g., [T, obs_dim]), get shape info
     sample_shape = np.shape(subseq_list[0])[1:] if len(subseq_list) > 0 else ()
-    # パディング用配列作成
+    # Create array for padding
     padded = np.zeros((len(subseq_list), max_len) + sample_shape, dtype=np.float32)
     if with_mask:
         is_padding = np.zeros((len(subseq_list), max_len), dtype=bool)  # True: padding, False: real

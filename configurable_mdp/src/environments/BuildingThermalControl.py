@@ -305,7 +305,7 @@ class BuildingThermalControl(environment.Environment):
         """
         Compute parametrized A matrix from transition parameters.
         """
-        num_zones = params.A.shape[0]  # 既存のA行列のshapeから取得
+        num_zones = params.A.shape[0]  # Obtain from the shape of the existing A matrix
         insulation_effect = jnp.diag(params.insulation_effect * (1 - params.insulation_level))
         airflow_adjustment_effect = jnp.zeros((num_zones, num_zones))
 
@@ -329,7 +329,7 @@ class BuildingThermalControl_2(BuildingThermalControl):
         """
         Compute parametrized A matrix from transition parameters.
         """
-        num_zones = params.A.shape[0]  # 既存のA行列のshapeから取得
+        num_zones = params.A.shape[0]  # Obtain from the shape of the existing A matrix
         insulation_effect = jnp.diag(params.insulation_effect * (1 - params.insulation_level))
         
         airflow_adjustment_effect = jnp.zeros((num_zones, num_zones))

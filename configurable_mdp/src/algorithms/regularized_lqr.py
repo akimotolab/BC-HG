@@ -128,7 +128,7 @@ def create_regularized_lqr(env: BuildingThermalControl, config: Dict):
             _, powers = jax.lax.scan(step, init, None, length=num)
             return jnp.concatenate([init[None], powers], axis=0)  # shape: (num+1, n, n)
         
-        powers = _matrix_powers(A, A.shape[0]-1)  # 0〜n-1乗
+        powers = _matrix_powers(A, A.shape[0]-1)  # 0 to n-1 powers
         AB_blocks = jax.vmap(lambda Ap: Ap @ B)(powers)
         C = jnp.hstack(AB_blocks)
         rank = jnp.linalg.matrix_rank(C)

@@ -510,17 +510,17 @@ def create_update_step(
             axis=(0, 1),
         )
 
-        # 1. 政策のエントロピーを確認
+        # 1. Check the policy entropy
         policy_entropy = -jnp.sum(policy * jnp.log(policy + 1e-8), axis=-1)
         policy_entropy = jnp.mean(policy_entropy)
 
-        # 2. 勾配の差を直接確認
+        # 2. Directly check the gradient difference
         grad_diff = discounted_rewards_grad - discounted_baseline_rewards_grad
         grad_diff_norm = jnp.linalg.norm(grad_diff)
         rewards_grad_norm = jnp.linalg.norm(discounted_rewards_grad)
         baseline_grad_norm = jnp.linalg.norm(discounted_baseline_rewards_grad)
 
-        # state_indices における policy の確率値の最大値の平均を確認
+        # Check the average of the maximum policy probability over state_indices
         max_action_prob = jnp.mean(jnp.max(policy[state_indices], axis=-1))
         min_action_prob = jnp.mean(jnp.min(policy[state_indices], axis=-1))
         average_UL_q_value = jnp.mean(UL_Q_value)

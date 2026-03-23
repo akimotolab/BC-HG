@@ -38,7 +38,7 @@ register(
     id='DiscreteToy1_1a-v0', 
     entry_point=f'{__name__}.discrete_toy_env:DiscreteToyEnv1_1a',
     max_episode_steps=100,
-    reward_threshold=47.5, # 最適なリーダーの下で最適フォロワーリターンの目安
+    reward_threshold=47.5, # Reference optimal follower return under an optimal leader
 )
 register(
     id='DiscreteToy1_1b-v0', 
@@ -152,7 +152,7 @@ register(
     id='ContinuousToy1_1a-v0', 
     entry_point=f'{__name__}.continuous_toy_env:ContinuousToyEnv1_1a',
     max_episode_steps=100,
-    reward_threshold=47.5, # 最適なリーダーの下で最適フォロワーリターンの目安
+    reward_threshold=47.5, # Reference optimal follower return under an optimal leader
 )
 register(
     id='ContinuousToy1_2c-v0', 

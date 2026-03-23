@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# 実行確認
-echo "このスクリプトを実行しますか？"
-read -p "実行する場合は 'y' を入力してください (y/n): " confirm
+# Execution check
+echo "Do you want to run this script?"
+read -p "Enter 'y' to run (y/n): " confirm
 
 case $confirm in
     [Yy]* )
-        echo "スクリプトを実行します..."
+        echo "Executing script..."
         ;;
     [Nn]* )
-        echo "実行をキャンセルしました。"
+        echo "Execution canceled."
         exit 0
         ;;
     * )
-        echo "無効な入力です。実行をキャンセルしました。"
+        echo "Invalid input. Execution canceled."
         exit 1
         ;;
 esac

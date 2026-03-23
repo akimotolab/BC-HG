@@ -134,9 +134,9 @@ if __name__ == '__main__':
         #multiprocessing.set_start_method('spawn', force=True)
         torch.multiprocessing.set_start_method('spawn', force=True)
     except RuntimeError:
-        pass  # 既に設定されている場合は無視する
+        pass  # Ignore if already configured
 
-    # パラメータを読み込む
+    # Load parameters
     parser = argparse.ArgumentParser(description='Train a model with given config and experiment name.')
     parser.add_argument(
         '--config', type=str, default=os.path.join('markov_game', 'config', 'config_discrete_toy_bchg.yaml'), 
@@ -145,33 +145,33 @@ if __name__ == '__main__':
     parser.add_argument('--no_aggregate', action='store_true', help='Do not aggregate the results.')
     args, unknown_args = parser.parse_known_args()
 
-    # config.yamlを読み込む
+    # Load config.yaml
     config = OmegaConf.load(args.config)
     print(f"Loaded config: {args.config}")
 
-    # config.yamlの内容を上書きする
-    # 上書きしたい内容をコマンドライン引数で指定する
-    # 例: name=experiment_001 leader.policy_lr=1e-4 env.id=GuidedPendulum-v0
+    # Override values from config.yaml
+    # Specify values to override via command-line arguments
+    # Example: name=experiment_001 leader.policy_lr=1e-4 env.id=GuidedPendulum-v0
     try:
         cli_conf = OmegaConf.from_cli(unknown_args)
-        # None, none, NULL, null, ~ を None に変換
+        # Convert None, none, NULL, null, ~ to None
         for k,v in cli_conf.items():
             if isinstance(v, str) and v.lower() in ['none', 'null', '~']:
                 cli_conf[k] = None
-        # キーの存在チェック
+        # Check whether keys exist
         ok, missing_keys = check_all_keys_exist(cli_conf, config)
         if not ok:
             raise ValueError(f"Missing config keys in command line arguments: {missing_keys}")
-        # config を cli_conf で上書き
+        # Override config with cli_conf
         config = OmegaConf.merge(config, cli_conf)
         print("Overwritten by command line arguments (OmegaConf style):")
         print(OmegaConf.to_yaml(cli_conf))
     except ValueError as e:
         print(f"Error parsing OmegaConf style arguments: {e}")
-        # 必要に応じてエラー処理を追加
+        # Add error handling if needed
         sys.exit(1)
 
-    # GPUの設定
+    # GPU settings
     if torch.cuda.is_available():
         if config['gpu_id'] is not None:
             set_gpu_mode(True, gpu_id=config['gpu_id'])
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     else:
         set_gpu_mode(False)
 
-    # parameter の組み合わせでmainを実行
+    # Run main for each parameter combination
     log_dirs = {}
     exp_num = 0
     datetime = config.get('datetime', None)
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     exp_result_dir = os.path.join(data_dir, ctxt['prefix'])
     print(f'All the results are saved in {exp_result_dir}.')
 
-    # 結果をaggregarteし，かつそれをtensorboardに書き込む
+    # Aggregate results and write them to TensorBoard
     if not args.no_aggregate:
         from scripts.aggregate_results import aggregate_progresses
         for exp_name, l_dirs in log_dirs.items():

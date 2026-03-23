@@ -1,73 +1,77 @@
 """
-aggregate_results.py - 学習実験の複数シード実行結果を集約するスクリプト
+aggregate_results.py - Script for aggregating multi-seed training runs.
 
-【概要】
-強化学習の学習実験において、同じ実験設定で異なるシード（ランダムシード）により
-実行された複数の学習結果を集約し、平均値・標準偏差などの統計量を計算するスクリプト。
-結果はCSVファイルとTensorBoardログとして保存される。
+Overview
+This script aggregates reinforcement-learning training results produced with
+the same experiment configuration but different random seeds. It computes
+statistics such as mean and standard deviation, then saves them as CSV files
+and TensorBoard logs.
 
-【主な機能】
-1. aggregate_progresses 関数:
-   - 複数のprogress.csvファイルを読み込み、指定されたモード（average, median, max, min, std）で集約
-   - eval, leader, follower の3つのログを個別に処理（is_separate_logs=True の場合）
-   - 結果をCSVとTensorBoard形式で保存
-   - 全ての入力データが同じ行数を持つことを検証
+Main features
+1. aggregate_progresses function:
+     - Reads multiple progress.csv files and aggregates them by the specified
+         mode (average, median, max, min, std).
+     - Processes eval, leader, and follower logs separately when
+         is_separate_logs=True.
+     - Saves outputs in CSV and TensorBoard formats.
+     - Validates that all input dataframes have the same number of rows.
 
-2. メイン処理:
-   - 指定ディレクトリ直下のサブディレクトリをスキャン
-   - 各ディレクトリのconfig.yamlから実験名（exp_name）を取得
-   - 同じ実験名を持つディレクトリをグループ化
-   - 各実験名ごとに平均値（average）と標準偏差（std）を計算して保存
+2. Main routine:
+     - Scans subdirectories under the specified directory.
+     - Reads experiment name (exp_name) from each directory's config.yaml.
+     - Groups directories by identical experiment name.
+     - Computes and saves average and standard deviation per experiment name.
 
-【ディレクトリ構造の想定】
-入力:
-  log_dir/
-    ├── run_seed_0/  (config.yaml に exp_name が含まれる学習ディレクトリ)
-    │   ├── config.yaml
-    │   ├── eval/progress.csv
-    │   ├── leader/progress.csv
-    │   └── follower/progress.csv
-    ├── run_seed_1/
-    │   ├── config.yaml
-    │   ├── eval/progress.csv
-    │   ├── leader/progress.csv
-    │   └── follower/progress.csv
-    └── run_seed_2/
-        └── ...
+Expected directory structure
+Input:
+    log_dir/
+        ├── run_seed_0/  (training directory whose config.yaml contains exp_name)
+        │   ├── config.yaml
+        │   ├── eval/progress.csv
+        │   ├── leader/progress.csv
+        │   └── follower/progress.csv
+        ├── run_seed_1/
+        │   ├── config.yaml
+        │   ├── eval/progress.csv
+        │   ├── leader/progress.csv
+        │   └── follower/progress.csv
+        └── run_seed_2/
+                └── ...
 
-出力:
-  log_dir/
-    └── aggregated/
-        ├── exp_name_average/
-        │   ├── eval/progress_average.csv
-        │   ├── leader/progress_average.csv
-        │   └── follower/progress_average.csv
-        └── exp_name_std/
-            ├── eval/progress_std.csv
-            ├── leader/progress_std.csv
-            └── follower/progress_std.csv
+Output:
+    log_dir/
+        └── aggregated/
+                ├── exp_name_average/
+                │   ├── eval/progress_average.csv
+                │   ├── leader/progress_average.csv
+                │   └── follower/progress_average.csv
+                └── exp_name_std/
+                        ├── eval/progress_std.csv
+                        ├── leader/progress_std.csv
+                        └── follower/progress_std.csv
 
-【使い方】
-基本:
-  python aggregate_results.py LOG_DIR
+Usage
+Basic:
+    python aggregate_results.py LOG_DIR
 
-例:
-  python aggregate_results.py data/local/experiment/2025_01_27_20_15_23_test
+Example:
+    python aggregate_results.py data/local/experiment/2025_01_27_20_15_23_test
 
-【引数】
-  log_dir: 学習結果が含まれるディレクトリのパス（必須）
-           このディレクトリ直下に複数の学習実行ディレクトリが存在する想定
+Arguments
+    log_dir: Path to the directory containing training results (required).
+                     Assumes multiple training-run subdirectories directly under it.
 
-【注意事項】
-- 各実行ディレクトリには config.yaml が必要（exp_name を取得するため）
-- 同じ実験名を持つディレクトリの progress.csv は同じ行数である必要がある
-- 行数が異なる場合はエラーが発生する
-- 空のCSVファイルが存在する場合もエラーが発生する
-- config.yaml が存在しないディレクトリはスキップされる
+Notes
+- Each run directory must contain config.yaml (to read exp_name).
+- progress.csv files from directories with the same exp_name must have the
+    same row count.
+- A mismatch in row count raises an error.
+- Empty CSV files also raise an error.
+- Directories without config.yaml are skipped.
 
-【evaluate_aggregate.py との違い】
-- aggregate_results.py: 学習時の結果を集約（シンプルな1階層構造）
-- evaluate_aggregate.py: 評価時の結果を集約（再帰的探索、イテレーション別）
+Difference from evaluate_aggregate.py
+- aggregate_results.py: Aggregates training-time results (simple 1-level structure)
+- evaluate_aggregate.py: Aggregates evaluation-time results (recursive search, per iteration)
 """
 
 import os
@@ -148,13 +152,13 @@ def aggregate_progresses(log_dirs: list,
 
 
 if __name__ == '__main__':
-    # log_dir（e.g. 'data/local/experiment/2025_01_27_20_15_23_test'）を引数に取る
+    # Take log_dir (e.g. 'data/local/experiment/2025_01_27_20_15_23_test') as an argument
     parser = argparse.ArgumentParser()
     parser.add_argument('log_dir', type=str, help='Path to the log directory.')
     
     args = parser.parse_args()
 
-    # log_dir傘下のディレクトリのをlog_dirsに追加
+    # Add directories under log_dir to log_dirs
     log_dirs = dict()
     for dir in os.listdir(args.log_dir):
         config_path = os.path.join(args.log_dir, dir, 'config.yaml')

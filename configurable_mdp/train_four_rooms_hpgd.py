@@ -587,7 +587,7 @@ def create_update_step(
             / jnp.clip(num_episodes, a_min=1)
         )
         
-        # MARK: added. state_indices における policy の確率値の最大値の平均を確認
+        # MARK: added. Check the average of the maximum policy probability over state_indices
         max_action_prob = jnp.mean(jnp.max(policy[state_indices], axis=-1))
         min_action_prob = jnp.mean(jnp.min(policy[state_indices], axis=-1))
         average_UL_advantage = jnp.mean(UL_advantage)

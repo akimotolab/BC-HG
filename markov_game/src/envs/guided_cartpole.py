@@ -99,8 +99,8 @@ class GuidedCartPoleEnv(gym.Env):
 
 
         if not flip_leader_follower:
-            # Note: Leaderは所定の風速の風を，水平方向右か左から吹かせるか，もしくは風を止めることができる．
-            # Note: Leaderは風速を[1, 1-]の範囲で変更できる．
+            # Note: The leader can blow wind with a fixed speed from the left or right, or stop the wind.
+            # Note: The leader can vary wind speed within [1, 1-].
             #self.action_space = spaces.Discrete(2) (Original gym version)
             self.action_space = spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32)  # Continuous action space for SAC
             self.leader_action_space = spaces.Box(-1.0, 1.0, shape=(1,), dtype=np.float32)
@@ -255,41 +255,41 @@ class GuidedCartPoleEnv(gym.Env):
             self.axle.set_color(.5, .5, .8)
             self.viewer.add_geom(self.axle)
 
-            # ターゲット領域をラインで示す
+            # Show the target region with lines
             track_interval_start = max(0, (self.target_interval[0] * scale + screen_width / 2.0))
             track_interval_end = min(screen_width, (self.target_interval[1] * scale + screen_width / 2.0))
 
-            # まず、ターゲット領域外の黒色のラインを描画
-            # 左側の黒線
+            # First, draw black lines outside the target region
+            # Left black line
             if track_interval_start > 0:
                 left_track = rendering.Line((0, carty), (track_interval_start, carty))
                 left_track.set_color(0, 0, 0)
                 self.viewer.add_geom(left_track)
 
-            # 右側の黒線
+            # Right black line
             if track_interval_end < screen_width:
                 right_track = rendering.Line((track_interval_end, carty), (screen_width, carty))
                 right_track.set_color(0, 0, 0)
                 self.viewer.add_geom(right_track)
 
-            # ターゲット領域に赤色の帯を描画
-            band_height = 3  # 帯の高さを小さくして細く見せる
+            # Draw a red band in the target region
+            band_height = 3  # Keep the band height small to make it look thin
             red_band = rendering.FilledPolygon([
                 (track_interval_start, carty - band_height),
                 (track_interval_start, carty + band_height),
                 (track_interval_end, carty + band_height),
                 (track_interval_end, carty - band_height)
             ])
-            red_band.set_color(1, 0, 0)  # 赤色
+            red_band.set_color(1, 0, 0)  # Red
             self.viewer.add_geom(red_band)
 
-            # 境界線を描画
+            # Draw boundary lines
             left_boundary = rendering.Line((track_interval_start, carty - 10), (track_interval_start, carty + 10))
-            left_boundary.set_color(1, 0, 0)  # 赤色
+            left_boundary.set_color(1, 0, 0)  # Red
             self.viewer.add_geom(left_boundary)
 
             right_boundary = rendering.Line((track_interval_end, carty - 10), (track_interval_end, carty + 10))
-            right_boundary.set_color(1, 0, 0)  # 赤色
+            right_boundary.set_color(1, 0, 0)  # Red
             self.viewer.add_geom(right_boundary)
 
             # wind visualization
@@ -320,7 +320,7 @@ class GuidedCartPoleEnv(gym.Env):
         arrow_y = carty + cartheight / 2 + polelen + 20
         self.arrowtrans.set_translation(arrow_x, arrow_y)
 
-        # 矢印の大きさを更新
+        # Update arrow size
         wind_velocity = self.leader_action[0] if self.leader_action is not None else 0
         arrow_size = 50 * abs(wind_velocity)
         self.arrow.v = [(-15, 0), (15, 0), (0, arrow_size)]

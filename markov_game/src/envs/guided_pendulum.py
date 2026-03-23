@@ -94,7 +94,7 @@ class GuidedPendulumEnv(gym.Env):
         wind_thacc = wind_torque / (m * l ** 2)
         # Target reward
         minus_thsin = np.sin(th + np.pi)
-        target_reward = np.clip(minus_thsin, -np.inf, 0)  # pendulumが左側にあるとき，負の報酬
+        target_reward = np.clip(minus_thsin, -np.inf, 0)  # Negative reward when the pendulum is on the left side
 
         #newthdot = thdot + (-3 * g / (2 * l) * np.sin(th + np.pi) + 3. / (m * l ** 2) * u) * dt
         newthdot = thdot + (-3 * g / (2 * l) * minus_thsin 
@@ -160,7 +160,7 @@ class GuidedPendulumEnv(gym.Env):
         if self.last_u:
             self.imgtrans.scale = (-self.last_u / 2, np.abs(self.last_u) / 2)
 
-        # 矢印の大きさを更新
+        # Update arrow size
         wind_velocity = self.last_leader_u if self.last_leader_u is not None else 0
         arrow_size = 1.0 * abs(wind_velocity)
         arrow_size = arrow_size if wind_velocity >= 0 else -arrow_size

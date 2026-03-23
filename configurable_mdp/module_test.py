@@ -6,12 +6,12 @@ import optax
 import flax
 
 def get_version(module, module_name):
-    """モジュールのバージョンを取得する関数"""
+    """Get the version of a module."""
     try:
         return getattr(module, '__version__')
     except AttributeError:
         try:
-            # 別の方法でバージョンを取得
+            # Get the version using an alternative method
             import importlib.metadata
             return importlib.metadata.version(module_name.lower())
         except Exception:
@@ -26,24 +26,24 @@ print(f"Flax: {flax.__version__}")
 
 print("\n=== Compatibility Check ===")
 try:
-    # JAX API確認
+    # Check the JAX API
     import jax.numpy as jnp
     x = jnp.array([1, 2, 3])
     print("✅ JAX basic operations work")
     
-    # JAXopt確認
+    # Check JAXopt
     import jaxopt
     solver = jaxopt.GradientDescent(lambda x: jnp.sum(x**2))
     print("✅ JAXopt imports successfully")
     
-    # Orbax確認  
+    # Check Orbax  
     from orbax.checkpoint import PyTreeCheckpointer
     print("✅ Orbax checkpoint imports successfully")
     
 except Exception as e:
     print(f"❌ Error: {e}")
 
-# 追加：pipでインストールされたバージョンを確認
+# Added: check versions installed via pip
 print("\n=== Pip Package Versions ===")
 import subprocess
 try:

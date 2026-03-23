@@ -29,32 +29,32 @@ class DiscreteToyEnvBase(gym.Env):
     def __init__(self):
         super().__init__()
 
-        # 遷移関数　transition[state][leader_action][follower_action]
-        #          = 0 : Sへ遷移
-        #          = 1 : Aへ遷移
-        #          = 2 : Bへ遷移
-        #          = -1 : 現在の状態から遷移しない 
+        # Transition function transition[state][leader_action][follower_action]
+        #          = 0 : transition to S
+        #          = 1 : transition to A
+        #          = 2 : transition to B
+        #          = -1 : stay in the current state
         self.transition = np.ones((3,2,3), dtype=np.int32) * -1
         
-        # 報酬関数 rewards[state][leader_action][follower_action]
+        # Reward function rewards[state][leader_action][follower_action]
         self.rewards = np.zeros((3,2,3))
         self.r_range = (-np.inf, np.inf)
 
-        # ターゲット報酬関数　target_rewards[state][leader_action][follower_action]
+        # Target reward function target_rewards[state][leader_action][follower_action]
         self.target_rewards = np.zeros((3,2,3))
         self.target_r_range = (-np.inf, np.inf)
 
-        # 最適なリーダー方策は，self.key_stateの状態において行動 "1" を選択することとする（例外あり）
+        # The optimal leader policy chooses action "1" at self.key_state (with exceptions)
         self.key_state = None
         self.optimal_action = 1
 
-        # leader_actionのコスト costs[state][leader_action]
+        # Cost of leader_action costs[state][leader_action]
         self.costs = np.zeros((3,2))
 
-        # エピソード長
+        # Episode length
         self._max_episode_steps = 100
 
-        # 決定的最適フォロワー方策のQ関数 opt_ag_qtable[leader_action][state][follower_action] 
+        # Q-function of the deterministic optimal follower policy opt_ag_qtable[leader_action][state][follower_action]
         # ( leader_state = LeaderPolicy[key_state] )
         # The Q-value of the optimal action is 1 and that of the non-optimal is 0.
         self.opt_ag_qtable = np.zeros((2,3,3))

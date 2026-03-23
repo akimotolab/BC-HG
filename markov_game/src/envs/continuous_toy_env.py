@@ -33,28 +33,28 @@ class ContinuousToyEnvBase(gym.Env):
         la_num = len(self.LEADER_ACT_TYPE)  # leader action number
         fa_num = len(self.FOLLOWER_ACT_TYPE)  # follower action number
 
-        # 遷移関数　transition[state][leader_action][follower_action]
-        #          = 0 : Sへ遷移
-        #          = 1 : Aへ遷移
-        #          = 2 : Bへ遷移
-        #          = -1 : 現在の状態から遷移しない 
+        # Transition function transition[state][leader_action][follower_action]
+        #          = 0 : transition to S
+        #          = 1 : transition to A
+        #          = 2 : transition to B
+        #          = -1 : stay in the current state
         self.transition = np.ones((s_num,la_num,fa_num), dtype=np.int32) * -1
         
-        # 報酬関数 rewards[state][leader_action][follower_action]
+        # Reward function rewards[state][leader_action][follower_action]
         self.rewards = np.zeros((s_num,la_num,fa_num), dtype=np.float32)
         self.r_range = (-np.inf, np.inf)
 
-        # ターゲット報酬関数　target_rewards[state][leader_action][follower_action]
+        # Target reward function target_rewards[state][leader_action][follower_action]
         self.target_rewards = np.zeros((s_num,la_num,fa_num), dtype=np.float32)
         self.target_r_range = (-np.inf, np.inf)
 
-        # リーダー行動は，各状態でリーダー行動 "1" が選択される確率を表す連続値である．
-        # リーダー行動 "0"/"1" にしたがって状態遷移や即時報酬が発生する．
-        # 最適なリーダー方策は，状態self.key_stateにおいてリーダー行動self.optimal_actionを確率1.0で選択する方策である．
+        # Leader action is a continuous value representing the probability of choosing leader action "1" at each state.
+        # State transitions and immediate rewards occur according to leader action "0"/"1".
+        # The optimal leader policy selects self.optimal_action with probability 1.0 at state self.key_state.
         self.key_state = None
-        self.optimal_action = None # 0 or 1 (Task によって変更)
+        self.optimal_action = None # 0 or 1 (changed by task)
 
-        # エピソード長
+        # Episode length
         self._max_episode_steps = 100
         
         self.observation_space = akro.from_gym(spaces.Discrete(3))
