@@ -46,7 +46,7 @@ fi
 
 # Methods to run
 methods=(
-    baseline bchg hpgd_td hpgd
+    bchg baseline hpgd hpgd_td
 )
 
 # Experiments to run
@@ -56,10 +56,10 @@ exps=(
 
 # GPU assignment for each method
 declare -A method_gpu=(
+    [bchg]=0
     [baseline]=0
-    [bchg]=2
-    [hpgd_td]=1
     [hpgd]=0
+    [hpgd_td]=0
 )
 
 declare -A gpu_methods=()

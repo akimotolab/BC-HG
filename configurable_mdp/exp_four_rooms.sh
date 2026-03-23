@@ -46,7 +46,7 @@ fi
 
 # Methods to run
 methods=(
-    baseline sobirl hpgd_sarsa hpgd proposal hpgd_oracle
+    bchg baseline sobirl hpgd hpgd_sarsa hpgd_oracle
 )
 # Experiments to run
 exps=(
@@ -69,7 +69,7 @@ declare -A method_gpu=(
     [sobirl]=0
     [hpgd]=0
     [hpgd_sarsa]=1
-    [proposal]=1
+    [bchg]=1
     [hpgd_oracle]=2
 )
 
