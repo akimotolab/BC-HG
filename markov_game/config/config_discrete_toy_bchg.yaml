@@ -36,7 +36,7 @@ leader:
   policy_lr: 1e-4
   qf_lr: 1e-3
   actor_update_steps_n: 1
-  critic_update_steps_n: 5
+  critic_update_steps_n: 1
   discount_sampling: true
   on_policy: true
   target_policy_smoothing: false

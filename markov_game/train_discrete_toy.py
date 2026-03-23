@@ -201,7 +201,7 @@ if __name__ == '__main__':
 
     # Aggregate results and write them to TensorBoard
     if not args.no_aggregate:
-        from scripts.aggregate_results import aggregate_progresses
+        from .aggregate_results import aggregate_progresses
         for exp_name, l_dirs in log_dirs.items():
             average_log_dir = os.path.join(
                 exp_result_dir, 
