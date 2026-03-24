@@ -46,7 +46,6 @@ for actor_update_steps_n in "${actor_update_steps_ns[@]}"; do
         # Run experiments in the background for all the combinations of parameters
         nohup python markov_game/train_discrete_toy.py \
             --config "markov_game/config/$config" \
-            --no_aggregate \
             datetime="'$datetime'" \
             gpu_id="$gpu_id" \
             leader.actor_update_steps_n="$actor_update_steps_n" \

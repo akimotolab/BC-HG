@@ -1,4 +1,4 @@
-name: DiscreteToy_BiAC_Opt_on
+name: DiscreteToy_BiAC_Opt_onpolicy
 datetime: ~
 seed: [0,1,2,3,4,5,6,7,8,9]
 set_detect_anomaly: false
