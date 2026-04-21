@@ -117,10 +117,7 @@ class BCHG(AsyncMARL):
 
         if update_actor:
             # Compute the guide_effect of the previous policy update (must be before the optimize_policy)
-            self._realized_guidance_effect.append(self.compute_realized_guidance_effect())
-
-            # Save the follower's policy at the timing of leader's　policy update (must be after the compute_realized_guidance_effect)
-            self._update_last_follower()
+            self._realized_guidance_effect.append(self.compute_realized_guidance_effect())            
 
         samples = self.replay_buffer.sample_transitions(
             self._buffer_batch_size,
@@ -319,6 +316,7 @@ class BCHG(AsyncMARL):
             baseline_for_benefit = l_q_exp_on_fa / self._batch_size_for_fa_exp
             benefit = qval_of_samples - baseline_for_benefit  # (batch_size, 1)
             benefit = benefit.squeeze(-1)  # (batch_size,)
+            
             # for cumputing the guide_effect
             self._last_benefit.append(benefit.clone().detach())
             self._last_samples.append({'observation': o.copy(), 
@@ -549,12 +547,6 @@ class BCHG(AsyncMARL):
 
             f_policy_input = self.env_spec.get_inputs_for('follower', 'policy', 
                                                           obs=observations, leader_act=leader_acts)
-            
-            if not hasattr(self, '_last_follower_policy') or self._last_follower_policy is None:
-                 self._last_benefit = []
-                 self._last_samples = []
-                 return float('nan')
-            
             last_f_dist, _ = self._last_follower_policy(f_policy_input)
             current_f_dist, _ = self._hat_f_policy(f_policy_input)
             
@@ -571,6 +563,7 @@ class BCHG(AsyncMARL):
             
             self._last_benefit = []
             self._last_samples = []
+            self._update_last_follower()
 
         return corr
 

@@ -256,14 +256,8 @@ class BCHG_Opt(RLAlgorithm):
                     if self._reset_leader_qf_optimizer:
                         reset_optimizer(self._qf_optimizer, self._qf, self._qf_lr)
 
-                    # Compute the guide_effect of the previous update
-                    self._realized_guidance_effect.append(self.compute_realized_guidance_effect())
-
                     self.train_once(trainer=trainer)
-                    trainer.enable_leader_logging = True
-                    
-                    # Save the follower's policy at the leader's　policy update timing
-                    self._update_last_follower()
+                    trainer.enable_leader_logging = True                    
 
                 # Optimize the follower
                 if not trainer.follower.fixed_policy:
@@ -297,6 +291,9 @@ class BCHG_Opt(RLAlgorithm):
         # Update the follower estimators
         if not self._wb_follower:
             raise NotImplementedError('The follower estimation model is not implemented yet.')
+        
+        # Compute the guide_effect of the previous update
+        self._realized_guidance_effect.append(self.compute_realized_guidance_effect())
 
         # Optimize the critic (leader's Q-function)
         for _ in range(self._critic_update_steps_n):
@@ -554,6 +551,7 @@ class BCHG_Opt(RLAlgorithm):
             baseline_for_benefit = l_q_exp_on_fa / self._batch_size_for_fa_exp
             benefit = qval_of_samples - baseline_for_benefit  # (batch_size, 1)
             benefit = benefit.squeeze(-1)  # (batch_size,)
+            
             # for cumputing the guide_effect
             self._last_benefit.append(benefit.clone().detach())
             self._last_samples.append({'observation': o.copy(), 
@@ -808,11 +806,6 @@ class BCHG_Opt(RLAlgorithm):
             f_policy_input = self.env_spec.get_inputs_for('follower', 'policy', 
                                                           obs=observations, leader_act=leader_acts)
             
-            if not hasattr(self, '_last_follower_policy') or self._last_follower_policy is None:
-                 self._last_benefit = []
-                 self._last_samples = []
-                 return float('nan')
-            
             last_f_dist, _ = self._last_follower_policy(f_policy_input)
             current_f_dist, _ = self._hat_f_policy(f_policy_input)
             
@@ -829,6 +822,7 @@ class BCHG_Opt(RLAlgorithm):
             
             self._last_benefit = []
             self._last_samples = []
+            self._update_last_follower()
 
         return corr
 

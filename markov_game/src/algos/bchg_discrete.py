@@ -132,9 +132,6 @@ class BCHGDiscrete(AsyncMARL):
             # Compute the guide_effect of the previous policy update (must be before the optimize_policy)
             self._realized_guidance_effect.append(self.compute_realized_guidance_effect())
 
-            # Save the follower's policy at the timing of leader's　policy update (must be after the compute_realized_guidance_effect)
-            self._update_last_follower()
-
         samples = self.replay_buffer.sample_transitions(
             self._buffer_batch_size,
             replace=self._on_policy,
@@ -357,6 +354,7 @@ class BCHGDiscrete(AsyncMARL):
                 baseline_for_benefit = l_q_exp_on_fa / self._batch_size_for_fa_exp
                 benefit = qval_of_samples - baseline_for_benefit # (batch_size,)
 
+                # For computing realized guidance effect
                 self._last_benefit.append(benefit.clone().detach())
                 self._last_samples.append({'observation': o.copy(), 
                                         'action': fa.copy(), 
@@ -614,6 +612,7 @@ class BCHGDiscrete(AsyncMARL):
             
             self._last_benefit = []
             self._last_samples = []
+            self._update_last_follower()
 
         return corr
     

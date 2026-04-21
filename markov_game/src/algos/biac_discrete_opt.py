@@ -131,11 +131,6 @@ class BiAC_Opt(RLAlgorithm):
             self._hat_f_vf = None
             self._hat_f_qf = None
             self._hat_f_policy = None
-        
-        # For computing realized guidance effect
-        self._last_benefit = []
-        self._last_samples = []
-        self._last_follower_policy = None
 
         # For logging
         self._grad_info = grad_info
@@ -176,7 +171,6 @@ class BiAC_Opt(RLAlgorithm):
             self._hat_f_policy = trainer.follower.policy
             self._hat_f_vf = trainer.follower.make_value_function()
         
-        self._last_follower_policy = copy.deepcopy(self._hat_f_policy)
         self.f_discount = None   
         
         trainer.step_itr = 0  # number of iterations (trainer.obtain_samples() calls)
@@ -248,15 +242,9 @@ class BiAC_Opt(RLAlgorithm):
                     if self._reset_leader_qf_optimizer:
                         reset_optimizer(self._qf_optimizer, self._qf, self._qf_lr)
 
-                    # Compute the guide_effect of the previous update
-                    self._realized_guidance_effect.append(self.compute_realized_guidance_effect())
-
                     for _ in range(self._gradient_steps_n):
                         self.train_once(trainer=trainer)
-                    trainer.enable_leader_logging = True
-                    
-                    # Save the follower's policy at the leader's　policy update timing
-                    self._update_last_follower()
+                    trainer.enable_leader_logging = True                    
 
                 # Train the follower
                 if not trainer.follower.fixed_policy:
@@ -504,55 +492,6 @@ class BiAC_Opt(RLAlgorithm):
                 grad_cosine_similarity=0.0,
             )
         return actor_loss.detach(), info
-    
-    def compute_realized_guidance_effect(self, trainer=None):
-        """Compute the correlation coefficient between the benefit and the log ratio 
-           of the probability difference in the follower's policy as the guide effect.
-           Needs adjustment for discrete leader actions / stochastic policy.
-        """
-
-        if not hasattr(self, '_last_benefit') or len(self._last_benefit) == 0:
-            return 0.0
-        
-        with torch.no_grad():
-            benefit = torch.cat(self._last_benefit) # (N,)
-
-            obs_list, follower_act_list, leader_act_list = [], [], []
-            for sample_batch in self._last_samples:
-                obs_list.append(sample_batch['observation'])
-                follower_act_list.append(sample_batch['action'])
-                leader_act_list.append(sample_batch['leader_action'])
-
-            observations = np.concatenate(obs_list, axis=0) # (N,)
-            leader_acts = np.concatenate(leader_act_list, axis=0) # (N,)
-            follower_acts = as_torch(follower_act_list).view(-1, 1).squeeze(-1) # (N,)
-
-            f_policy_input = self.env_spec.get_inputs_for('follower', 'policy', 
-                                                          obs=observations, leader_act=leader_acts)
-            
-            if not hasattr(self, '_last_follower_policy') or self._last_follower_policy is None:
-                 self._last_benefit = []
-                 self._last_samples = []
-                 return float('nan')
-            
-            last_f_dist, _ = self._last_follower_policy(f_policy_input)
-            current_f_dist, _ = self._hat_f_policy(f_policy_input)
-            
-            # log_prob of follower_act under current and last follower policies
-            log_prob_current_f = current_f_dist.log_prob(follower_acts) # (N,)
-            log_prob_last_f = last_f_dist.log_prob(follower_acts)       # (N,)
-
-            log_ratio_follower_policy = log_prob_current_f - log_prob_last_f # (N,)
-
-            if log_ratio_follower_policy.sum() == 0:
-                corr = 0.0
-            else:
-                corr = correlation_coefficient(benefit, log_ratio_follower_policy)
-            
-            self._last_benefit = []
-            self._last_samples = []
-
-        return corr
             
     def log_statistics(self, trainer, prefix='Leader'):        
         tabular = trainer.leader_tabular
@@ -646,14 +585,6 @@ class BiAC_Opt(RLAlgorithm):
                                     self.policy.parameters()):
                 t_param.data.copy_(t_param.data * (1.0 - self._tau) +
                                 param.data * self._tau)
-            
-    def _update_last_follower(self):
-        """Update the last follower policy to compute the guide effect."""
-        last = [self._last_follower_policy]
-        current = [self._hat_f_policy]
-        for l, c in zip(last, current):
-            for l_param, c_param in zip(l.parameters(), c.parameters()):
-                l_param.data.copy_(c_param.data)
                 
     def to(self, device=None):
         """Put all the networks within the model on device.
