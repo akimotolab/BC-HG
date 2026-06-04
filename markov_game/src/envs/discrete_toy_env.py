@@ -493,11 +493,11 @@ class DiscreteToyEnv3_2(DiscreteToyEnvBase):
         self.opt_ag_qtable[1,1,0] = 1
         self.opt_ag_qtable[1,2,0] = 1
 
-class DiscreteToyEnv4_1a(DiscreteToyEnvBase):
+class DiscreteToyEnv4(DiscreteToyEnvBase):
     """
     optimal action=0
     leader action=0 -> best response return (follower, leader)=(100, 50)
-    leader action=1 -> best response return (follower, leader)=(75, -75)
+    leader action=1 -> best response return (follower, leader)=(75, 0)
     """
     def __init__(self, R=1.0):
         super().__init__()
@@ -515,8 +515,8 @@ class DiscreteToyEnv4_1a(DiscreteToyEnvBase):
         self.r_range = (-1, max(1, R))
 
         self.target_rewards[0,:,1] = 1
-        self.target_rewards[0,:,2] = -1
-        self.target_r_range = (-1, 1)
+        self.target_rewards[0,:,2] = 0
+        self.target_r_range = (0, 1)
 
         self._max_episode_steps = 150
 
@@ -529,14 +529,3 @@ class DiscreteToyEnv4_1a(DiscreteToyEnvBase):
         self.opt_ag_qtable[1,0,2] = 1
         self.opt_ag_qtable[1,1,0] = 1
         self.opt_ag_qtable[1,2,0] = 1
-
-class DiscreteToyEnv4_1b(DiscreteToyEnv4_1a):
-    """
-    optimal action=0
-    leader action=0 -> best response return (follower, leader)=(100, 50)
-    leader action=1 -> best response return (follower, leader)=(75, 0)
-    """
-    def __init__(self, R=1.0):
-        super().__init__(R)
-        self.target_rewards[0,:,2] = 0
-        self.target_r_range = (0, 1)

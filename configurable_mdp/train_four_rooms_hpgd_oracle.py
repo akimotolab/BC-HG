@@ -1,7 +1,7 @@
 """HPGD (using oracle)
     - Upper-level Q and value are estimated from Monte Carlo discounted returns.
     - Oracle-generated trajectories with uniform initial-state sampling are used
-      for LL advantage estimation and for UL Q/V estimation in the guidance term.
+      for LL advantage estimation and for UL Q/V estimation in the indirect term.
     - On-policy trajectories are still used for the UL reward-gradient term.
 """
 

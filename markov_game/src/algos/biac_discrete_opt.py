@@ -1,4 +1,3 @@
-"""This modules creates a MADDPG model in PyTorch."""
 # yapf: disable
 import copy
 import numpy as np
@@ -20,6 +19,21 @@ from ..experiment import Trainer
 
 class BiAC_Opt(RLAlgorithm):
     name = 'BiAC_Opt'
+
+    """BiAC_Opt Algorithm
+
+    BiAC is a centralized-learning method proposed in "Bi-Level Actor-Critic for Multi-Agent Coordination" (Yue Zhang et al.).
+    This implementation is adapted to our decentralized setting.
+    The core idea of BiAC is to update the leader and follower critics according to the Stackelberg equilibrium of the stage game induced by the Q-functions at the next state:
+    
+    Q_i'(s, a, b) \gets (1 - \alpha)  Q_i(s, a, b) + \alpha (r_i(s, a, b) + \gamma_i Q_i(s', a^*, b^*(a^*)))~(i\in\{L,F\}),
+
+    where b^*(a') := \argmax_{b'}Q_F(s', a', b') and a^* := \argmax_{a'}Q_L(s', a', b^*(a'))).
+    Namely, for each state s', the action pair (a^∗,b^∗(a^∗)) is computed as the Stackelberg equilibrium of the bimatrix game defined by (Q_L(s', \cdot, \cdot), Q_F(s', \cdot, \cdot)), and the critics are updated using the corresponding equilibrium values.
+    In our implementation, the critic update rule is modified accordingly, and the follower Q-function Q_F is replaced with the follower's optimal Q-function Q_F^{\theta\dagger}
+    The actor is updated using only the direct-gradient term, in the same manner as BaselineDiscrete_Opt.
+    
+    """
 
     def __init__(
             self,
@@ -169,7 +183,7 @@ class BiAC_Opt(RLAlgorithm):
         # when the follower is white-box
         if self._wb_follower:
             self._hat_f_policy = trainer.follower.policy
-            self._hat_f_vf = trainer.follower.make_value_function()
+            self._hat_f_vf = trainer.follower.make_value_function()  # Assume the leader policy is stochastic
         
         self.f_discount = None   
         
@@ -438,7 +452,7 @@ class BiAC_Opt(RLAlgorithm):
                                                        obs=o_flat_tensor, follower_act=fa)
         qvals_all_leader_acts_actor = self._qf(l_q_input_actor)
         
-        # First term
+        # Direct term
         la_as_idx_from_buffer = as_torch(la).long()  # la is (batch_size,) or (batch_size, 1)
         if la_as_idx_from_buffer.ndim == 1:
             la_as_idx_from_buffer = la_as_idx_from_buffer.unsqueeze(-1)
@@ -457,7 +471,6 @@ class BiAC_Opt(RLAlgorithm):
         else:
             actor_loss_1 = -(la_log_probs_of_samples * qval_of_samples).mean()
 
-        # only the first term optimized for short execution time
         actor_loss = self.lambda_coef_1 * actor_loss_1
         self._policy_optimizer.zero_grad()
         actor_loss.backward(retain_graph=self._grad_info)

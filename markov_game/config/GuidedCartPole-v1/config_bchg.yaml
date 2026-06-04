@@ -1,4 +1,4 @@
-name: ~
+name: GuidedCartPole-v1_BCHG_Continuous_Determistic
 datetime: ~
 seed: [0,1,2,3,4,5,6,7,8,9]
 set_detect_anomaly: False

@@ -270,13 +270,24 @@ def log_performance(tabular, itr, batch, discount, prefix='Evaluation'):
     target_returns = []
     undiscounted_returns = []
     undiscounted_t_returns = []
+    cum_log_probs = []
     termination = []
     success = []
     for eps in batch.split():
+        # Returns (follower and leader(target))
         returns.append(discount_cumsum(eps.rewards, discount_follower))
         target_returns.append(discount_cumsum(eps.env_infos['target_reward'], discount_leader))
         undiscounted_returns.append(sum(eps.rewards))
         undiscounted_t_returns.append(sum(eps.env_infos['target_reward']))
+
+        # Follower action log probabilities
+        if 'probs' in eps.agent_infos:
+            probs_all = eps.agent_infos['probs']  # shape = (episode_length, num_actions)
+            probs = probs_all[np.arange(probs_all.shape[0]), eps.actions]
+            log_probs = np.log(probs + 1e-10)  # shape = (episode_length,)
+            cum_log_probs.append(discount_cumsum(log_probs, discount_follower))
+
+        # Termination and success
         termination.append(
             float(
                 any(step_type == StepType.TERMINAL
@@ -286,6 +297,7 @@ def log_performance(tabular, itr, batch, discount, prefix='Evaluation'):
 
     average_discounted_return = np.mean([rtn[0] for rtn in returns])
     average_discounted_t_return = np.mean([rtn[0] for rtn in target_returns])
+    average_discounted_log_prob = np.mean([lp[0] for lp in cum_log_probs]) if cum_log_probs else np.nan
 
     performance = dict(
         AverageReturn=np.mean(undiscounted_returns),
@@ -303,6 +315,7 @@ def log_performance(tabular, itr, batch, discount, prefix='Evaluation'):
         tabular.record('StdReturn', np.std(undiscounted_returns))
         tabular.record('MaxReturn', np.max(undiscounted_returns))
         tabular.record('MinReturn', np.min(undiscounted_returns))
+        tabular.record('AverageDiscountedLogProb', average_discounted_log_prob)
         tabular.record('AverageDiscountedTargetReturn', average_discounted_t_return)
         tabular.record('AverageTargetReturn', performance['AverageTargetReturn'])
         tabular.record('StdTargetReturn', performance['StdTargetReturn'])

@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from collections import deque
 from garage.torch import global_device
 from garage.torch.policies.stochastic_policy import StochasticPolicy
 
@@ -35,7 +34,7 @@ class FollowerWrapper:
                 action = torch.argmax(action, dim=-1).unsqueeze(-1)  # (batch_size, 1)
                 q_val = q_val.gather(1, action)  # (batch_size, 1)
                 return q_val  # (batch_size, 1)
-        elif self.algo_name in ['SoftQIteration', 'SoftQIterationSubopt']:
+        elif self.algo_name in ['SoftQIteration', 'SoftQIteration_Subopt']:
             def q_function(observation: torch.Tensor, action: torch.Tensor = None):
                 state = observation[:, :self.algo.num_states]
                 state = torch.argmax(state, dim=-1).long()
@@ -96,7 +95,7 @@ class FollowerWrapper:
                 val = self.beta * torch.logsumexp(q_val / self.beta, dim=-1)  # (batch_size,)
                 val = val.unsqueeze(-1)  # (batch_size, 1)
                 return val  # (batch_size, 1)
-        elif self.algo_name in ['SoftQIteration', 'SoftQIterationSubopt']:
+        elif self.algo_name in ['SoftQIteration', 'SoftQIteration_Subopt']:
             def value_function(observation: torch.Tensor):
                 state = observation[:, :self.algo.num_states]
                 state = torch.argmax(state, dim=-1).long()
@@ -118,7 +117,7 @@ class FollowerWrapper:
         return value_function
 
     def log_statistics(self, *args, **kwargs):
-        if self.algo_name in ['SAC', 'SACDiscrete', 'SoftQIteration', 'SoftQIterationSubopt', 'MaxEntLQR']:
+        if self.algo_name in ['SAC', 'SACDiscrete', 'SoftQIteration', 'SoftQIteration_Subopt', 'MaxEntLQR']:
             self.algo.episode_rewards = np.array(self.stats['episode_rewards'])
             self.algo._log_statistics(*args, **kwargs)
         else:
@@ -137,7 +136,7 @@ class FollowerWrapper:
 
     @property
     def policy(self):
-        if self.algo_name in ['SAC', 'SACDiscrete', 'SoftQIteration', 'SoftQIterationSubopt', 'MaxEntLQR']:
+        if self.algo_name in ['SAC', 'SACDiscrete', 'SoftQIteration', 'SoftQIteration_Subopt', 'MaxEntLQR']:
             return self.algo.policy
         else:
             raise NotImplementedError(f"Algorithm {self.algo_name} not supported.")
@@ -150,7 +149,7 @@ class FollowerWrapper:
     def beta(self) -> float:
         if self.algo_name in ['SAC', 'SACDiscrete']:
             return self.algo._log_alpha.exp().item()
-        elif self.algo_name in ['SoftQIteration', 'SoftQIterationSubopt']:
+        elif self.algo_name in ['SoftQIteration', 'SoftQIteration_Subopt']:
             return self.algo._temperature
         elif self.algo_name == 'MaxEntLQR':
             return self.algo._beta

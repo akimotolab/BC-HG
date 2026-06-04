@@ -1,4 +1,4 @@
-name: BilevelLQR_BCHG_Opt
+name: LQREnv-v4_Baseline_Opt_onpolicy
 datetime: ~
 seed: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
 set_detect_anomaly: False
@@ -34,7 +34,7 @@ env:
   - [0.2, 0.01]
   
 leader:
-  algo: BCHG_Opt  # Baseline_Opt / BCHG_Opt
+  algo: Baseline_Opt  # Baseline_Opt / BCHG_Opt
   init_mean_K_1: 0.0
   init_mean_K_2: 0.0
   init_std_K_1: 1.0

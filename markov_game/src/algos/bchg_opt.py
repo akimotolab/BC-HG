@@ -1,4 +1,3 @@
-"""This modules creates a MADDPG model in PyTorch."""
 # yapf: disable
 import copy
 import numpy as np
@@ -22,6 +21,14 @@ from ..experiment import Trainer
 
 class BCHG_Opt(RLAlgorithm):
     name = 'BCHG_Opt'
+
+    """BCHG_Opt Algorithm.
+    
+    BCHG_Opt (Boltzmann Covariance HyperGradient - Continuous - Optimal) is a hierarchical multi-agent reinforcement learning algorithm.
+    This algorithm is designed to update the leader under a follower policy that closely approximates the optimal response throughout learning.
+    Before each leader update, the follower is optimized by invoking train(), and interaction samples are subsequently collected in the form of trajectories for hypergradient estimation.
+    Assuming a continuous leader action space and a stochastic leader policy, BCHG_Opt estimates the corresponding hypergradient and updates the leader while accounting for changes in the follower's optimal response.
+    """
 
     def __init__(
             self,
@@ -181,7 +188,7 @@ class BCHG_Opt(RLAlgorithm):
         # when the follower is white-box
         if self._wb_follower:
             self._hat_f_policy = trainer.follower.policy
-            self._hat_f_vf = trainer.follower.make_value_function()
+            self._hat_f_vf = trainer.follower.make_value_function()  # Assume the leader policy is stochastic
         
         self._last_follower_policy = copy.deepcopy(self._hat_f_policy)
         self.f_discount = None   
@@ -448,7 +455,7 @@ class BCHG_Opt(RLAlgorithm):
         actor_loss = torch.tensor([0.0])
         info = dict()
 
-        # --- First term --- #
+        # --- Direct term --- #
 
         l_q_input_from_buffer = self.env_spec.get_inputs_for('leader', 'qf', 
                                                              obs=o, 
@@ -531,7 +538,7 @@ class BCHG_Opt(RLAlgorithm):
 
             return actor_loss.detach(), info
 
-        # --- Second term --- #
+        # --- Indirect term --- #
 
         # Benefit calculation
         with torch.no_grad():
@@ -944,7 +951,7 @@ class BCHG_Opt(RLAlgorithm):
         info = dict()
         gradient = {'K': torch.zeros_like(self.policy.K), 'W': torch.zeros_like(self.policy.W)}
 
-        # --- First term --- #
+        # --- Direct term --- #
 
         l_q_input_from_buffer = self.env_spec.get_inputs_for('leader', 'qf', 
                                                              obs=o, 
@@ -1030,7 +1037,7 @@ class BCHG_Opt(RLAlgorithm):
 
             return actor_loss_1.detach(), info
 
-        # --- Second term --- #
+        # --- Indirect term --- #
 
         # Benefit calculation
         with torch.no_grad():

@@ -1,4 +1,3 @@
-"""This modules creates a BCHG model in PyTorch."""
 # yapf: disable
 import copy
 import time
@@ -15,22 +14,27 @@ from ..utils import correlation_coefficient
 
 
 class BCHG(AsyncMARL):
-    """BCHG Algorithm.
+    """BCHG Algorithm (deterministic leader policy).
 
     BCHG (Boltzmann Covariance HyperGradient) is a hierarchical multi-agent reinforcement learning algorithm.
-    It features a leader-follower structure, where the leader optimizes its policy while considering the probabilistic actions of the follower.
+    It features a leader-follower structure, where the leader optimizes its policy while accounting for the follower's stochastic actions.
+    In particular, this algorithm estimates the hypergradient for deterministic leader policies.
     This implementation uses PyTorch and includes a replay buffer, target networks, and actor-critic optimization.
+
     Main arguments:
         actor_update_interval (int): Interval for updating the actor (leader policy).
         batch_size_for_fa_exp (int): Number of samples for expectation calculation of follower actions.
+        batch_size_for_la_exp (int): Number of samples for expectation calculation of leader actions.
         discount_sampling (bool): Whether to perform discount sampling.
         on_policy (bool): Whether to use on-policy learning.
-        lambda_coef_1 (float): Weight for the first term of the actor loss.
-        lambda_coef_2 (float): Weight for the second term of the actor loss.
+        target_policy_smoothing (bool): Whether to apply target policy smoothing.
+        use_advantage (bool): Whether to use advantage in the actor loss.
+        use_advantage_in_influence (bool): Whether to use advantage in the influence calculation.
+        lambda_coef_1 (float): Weight for the direct term of the actor loss.
+        lambda_coef_2 (float): Weight for the indirect term of the actor loss.
         grad_mode (str): Gradient calculation mode ('default' or 'weighted_average').
         grad_info (bool): Whether to record gradient information.
-        no_guidance (bool): Whether to disable the guidance term.
-        name (str): Name of the algorithm.
+        no_guidance (bool): Whether to disable the indirect term in the actor loss, reducing to a standard policy gradient method.
         Other arguments are inherited from the parent class AsyncMARL.
 
     """
@@ -233,7 +237,7 @@ class BCHG(AsyncMARL):
         actor_loss = torch.tensor([0.0])
         info = dict()
 
-        # --- First term --- #
+        # --- Direct term --- #
 
         l_q_input_from_buffer = l_q_input_from_buffer.detach()
         la_flat_tensor = la_flat_tensor.detach()
@@ -296,7 +300,7 @@ class BCHG(AsyncMARL):
 
             return qval_loss.detach(), target_y, qval.detach(), actor_loss.detach(), info
 
-        # --- Second term --- #
+        # --- Indirect term --- #
 
         # Benefit calculation
         with torch.no_grad():

@@ -5,10 +5,9 @@ Reference: "Reinforcement Learning with Deep Energy-Based Policies" (Haarnoja et
 import numpy as np
 import torch
 from torch import inverse, slogdet, cholesky
-from akro import Discrete
 from collections import deque
 from garage.np.algos import RLAlgorithm
-from garage.torch import global_device, as_torch
+from garage.torch import global_device
 from garage.torch.policies.stochastic_policy import StochasticPolicy
 
 from dowel import tabular

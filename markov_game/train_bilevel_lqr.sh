@@ -18,17 +18,19 @@ case $confirm in
         ;;
 esac
 
-# markov_game/config/config_bilevel_lqr_*.yaml
+# markov_game/config/LQREnv-v4/config_*.yaml
 configs=(
-    "config_bilevel_lqr_bchg.yaml"
-    "config_bilevel_lqr_baseline_on.yaml"
-    "config_bilevel_lqr_baseline_off.yaml"
+    "config_bchg.yaml"
+    "config_baseline_onpolicy.yaml"
+    "config_baseline_offpolicy.yaml"
 )
+cfg_idx=0  # Config file index to use
 
 # Experiment settings
 datetime=$(date +"%Y%m%d_%H%M%S")
 log_label="$datetime"
-config="${configs[0]}"  # Config file to use
+config="${configs[cfg_idx]}"  # Config file to use
+seed="[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]"
 gpu_id=0  # GPU ID to use (e.g., 0, 1, 2, ...)
 
 # Leader grid search parameters
@@ -41,8 +43,9 @@ for actor_update_steps_n in "${actor_update_steps_ns[@]}"; do
 
     # Run experiments in the background for all the combinations of parameters
     nohup python markov_game/train_bilevel_lqr.py \
-        --config "markov_game/config/$config" \
+        --config "markov_game/config/LQREnv-v4/$config" \
         datetime="'$datetime'" \
+        seed="$seed" \
         gpu_id="$gpu_id" \
         leader.actor_update_steps_n="$actor_update_steps_n" \
         > "$log_file" 2>&1 &

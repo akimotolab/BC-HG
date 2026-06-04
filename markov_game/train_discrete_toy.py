@@ -139,7 +139,7 @@ if __name__ == '__main__':
     # Load parameters
     parser = argparse.ArgumentParser(description='Train a model with given config and experiment name.')
     parser.add_argument(
-        '--config', type=str, default=os.path.join('markov_game', 'config', 'config_discrete_toy_bchg.yaml'), 
+        '--config', type=str, default=os.path.join('markov_game', 'config', 'DiscreteToy4_R1-v0', 'config_bchg.yaml'), 
         help='Path to the config file.'
         )
     parser.add_argument('--no_aggregate', action='store_true', help='Do not aggregate the results.')

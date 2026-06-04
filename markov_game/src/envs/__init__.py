@@ -119,29 +119,15 @@ register(
     reward_threshold=72.5,
 )
 register(
-    id='DiscreteToy4_1a-v0', 
-    entry_point=f'{__name__}.discrete_toy_env:DiscreteToyEnv4_1a',
+    id='DiscreteToy4_R1-v0', 
+    entry_point=f'{__name__}.discrete_toy_env:DiscreteToyEnv4',
     max_episode_steps=150,
     reward_threshold=97.5,
     kwargs={'R': 1.0},
 )
 register(
-    id='DiscreteToy4_1a-v1', 
-    entry_point=f'{__name__}.discrete_toy_env:DiscreteToyEnv4_1a',
-    max_episode_steps=150,
-    reward_threshold=145,
-    kwargs={'R': 2.0},
-)
-register(
-    id='DiscreteToy4_1b-v0', 
-    entry_point=f'{__name__}.discrete_toy_env:DiscreteToyEnv4_1b',
-    max_episode_steps=150,
-    reward_threshold=97.5,
-    kwargs={'R': 1.0},
-)
-register(
-    id='DiscreteToy4_1b-v1', 
-    entry_point=f'{__name__}.discrete_toy_env:DiscreteToyEnv4_1b',
+    id='DiscreteToy4_R2-v0', 
+    entry_point=f'{__name__}.discrete_toy_env:DiscreteToyEnv4',
     max_episode_steps=150,
     reward_threshold=145,
     kwargs={'R': 2.0},

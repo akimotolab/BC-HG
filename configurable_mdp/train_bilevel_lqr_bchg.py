@@ -2,7 +2,7 @@
     - Upper-level Q function is estimated by TD fitting on trajectory data.
     - Upper-level value is estimated as the expectation of the learned Q under
       the current lower-level policy (Monte Carlo action sampling).
-    - The guidance term uses Benefit = Q - V.
+    - The indirect term uses Benefit = Q - V.
     - Value estimators are reused as carried states, but the fitted model in each
       outer iteration is not written back to carry.
 """

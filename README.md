@@ -58,22 +58,22 @@ Use this path if you want the shortest reproducible run in the Markov-game setti
 conda env create -n bchg-mg -f markov_game/environment.yaml
 conda activate bchg-mg
 
-# 2) Run one BC-HG experiment (DiscreteToy)
+# 2) Run one BC-HG experiment (e.g., DiscreteToy4_R1-v0)
 python markov_game/train_discrete_toy.py \
-	--config markov_game/config/config_discrete_toy_bchg.yaml
+	--config markov_game/config/DiscreteToy4_R1-v0/config_bchg.yaml
 
 # 3) Monitor with TensorBoard (optional)
 tensorboard --logdir markov_game/data/local/experiment/<EXPERIMENT_NAME>
 
 # 4) Open notebook for visualization
-jupyter notebook markov_game/notebooks/plot_notebook_DiscreteToy.ipynb
+jupyter notebook markov_game/notebooks/plot_notebook_DiscreteToy4_R1-v0.ipynb
 ```
 
 Expected outcome:
 
 - Training logs/results are created under `markov_game/data/local/experiment/<EXPERIMENT_NAME>/`.
 - TensorBoard shows training metrics from the generated log directory.
-- Running the notebook reproduces the corresponding DiscreteToy plots.
+- Running the notebook reproduces the corresponding DiscreteToy4_R1-v0 plots.
 
 ## Repository Structure
 
@@ -191,8 +191,13 @@ You can switch methods similarly (e.g., `train_bilevel_lqr_baseline.py`, `train_
 ```bash
 conda activate bchg-mg
 
+# (DiscreteToy4_R1-v0)
 python markov_game/train_discrete_toy.py \
-	--config markov_game/config/config_discrete_toy_bchg.yaml
+	--config markov_game/config/DiscreteToy4_R1-v0/config_bchg.yaml
+
+# (DiscreteToy4_R2-v0)
+python markov_game/train_discrete_toy.py \
+	--config markov_game/config/DiscreteToy4_R2-v0/config_bchg.yaml
 ```
 
 #### BilevelLQR
@@ -201,14 +206,14 @@ python markov_game/train_discrete_toy.py \
 conda activate bchg-mg
 
 python markov_game/train_bilevel_lqr.py \
-	--config markov_game/config/config_bilevel_lqr_bchg.yaml
+	--config markov_game/config/LQREnv-v4/config_bchg.yaml
 ```
 
 Both scripts accept OmegaConf-style overrides from CLI, e.g.:
 
 ```bash
 python markov_game/train_discrete_toy.py \
-	--config markov_game/config/config_discrete_toy_bchg.yaml \
+	--config markov_game/config/DiscreteToy4_R1-v0/config_bchg.yaml \
 	leader.actor_update_steps_n=5 leader.critic_update_steps_n=2
 ```
 
@@ -281,12 +286,12 @@ jupyter notebook configurable_mdp/notebooks/experiment_visualization_bilevel_lqr
 conda activate bchg-mg
 
 # Collect data:
-python markov_game/train_discrete_toy.py --config markov_game/config/config_discrete_toy_bchg.yaml
-python markov_game/train_bilevel_lqr.py --config markov_game/config/config_bilevel_lqr_bchg.yaml
+python markov_game/train_discrete_toy.py --config markov_game/config/DiscreteToy4_R1-v0/config_bchg.yaml
+python markov_game/train_bilevel_lqr.py --config markov_game/config/LQREnv-v4/config_bchg.yaml
 # or: bash markov_game/train_discrete_toy.sh && bash markov_game/train_bilevel_lqr.sh
 
 # Visualize (note: data is in markov_game/data/local/):
-jupyter notebook markov_game/notebooks/plot_notebook_DiscreteToy.ipynb
+jupyter notebook markov_game/notebooks/plot_notebook_DiscreteToy4_R1-v0.ipynb
 jupyter notebook markov_game/notebooks/plot_notebook_LQR.ipynb
 jupyter notebook markov_game/notebooks/MaxEntLQR.ipynb
 ```

@@ -20,7 +20,7 @@ esac
 
 # Environment
 env_id=DiscreteToy4_R1-v0  # DiscreteToy4_R1-v0 / DiscreteToy4_R2-v0
-    
+
 # markov_game/config/$env_id/config_*.yaml
 configs=(
     "config_bchg.yaml"
@@ -38,24 +38,44 @@ config="${configs[cfg_idx]}"  # Config file to use
 seed="[0,1,2,3,4,5,6,7,8,9]"
 gpu_id=0  # GPU ID to use (e.g., 0, 1, 2, ...)
 
-# Leader grid search parameters
-actor_update_steps_ns=(1 2 5 10 20)
-critic_update_steps_ns=(1 2 5 10 20)
+# Overwrite config parameters
+algos=(
+    "BCHGDiscrete_Subopt"
+    "BiAC_Subopt"
+    "BaselineDiscrete_Subopt"
+    "BiAC_Subopt"
+    "BaselineDiscrete_Subopt"
+)
+algo=${algos[cfg_idx]}
+sweep_follower="['stop_q_iteration','reset_q']"
+algo_follower=SoftQIteration_Subopt
+stop_q_iterations=(1 2 5 10 50 100)
+reset_qs=(True False)  # True: Reset-Q, False: Carry-Q
 
-for actor_update_steps_n in "${actor_update_steps_ns[@]}"; do
-    for critic_update_steps_n in "${critic_update_steps_ns[@]}"; do
+for stop_q_iteration in "${stop_q_iterations[@]}"; do
+    for reset_q in "${reset_qs[@]}"; do
+
+        if [ "$reset_q" = "True" ]; then
+            name=${env_id}_${algos[cfg_idx]}_reset_q
+        else
+            name=${env_id}_${algos[cfg_idx]}_carry_q
+        fi
 
         safe_cfg_label=$(echo "$config" | sed 's/\.yaml$//')
-        log_file="$log_label"_"$env_id"_"$safe_cfg_label"_an_"$actor_update_steps_n"_cn_"$critic_update_steps_n".log
+        log_file="$log_label"_"$env_id"_"$safe_cfg_label"_stop_"$stop_q_iteration"_reset_"$reset_q".log
 
         # Run experiments in the background for all the combinations of parameters
         nohup python markov_game/train_discrete_toy.py \
             --config "markov_game/config/$env_id/$config" \
+            name="$name" \
             datetime="'$datetime'" \
             seed="$seed" \
             gpu_id="$gpu_id" \
-            leader.actor_update_steps_n="$actor_update_steps_n" \
-            leader.critic_update_steps_n="$critic_update_steps_n" \
+            sweep.follower="$sweep_follower" \
+            leader.algo="$algo" \
+            follower.algo="$algo_follower" \
+            follower.stop_q_iteration="$stop_q_iteration" \
+            follower.reset_q="$reset_q" \
             > "$log_file" 2>&1 &
     done
 done

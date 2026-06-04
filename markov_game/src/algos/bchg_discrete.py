@@ -1,4 +1,3 @@
-"""This modules creates a STDPGDiscrete model in PyTorch."""
 # yapf: disable
 import numpy as np
 import torch
@@ -18,36 +17,25 @@ from ..experiment import Trainer
 class BCHGDiscrete(AsyncMARL):
     """BCHGDiscrete Algorithm.
 
-    BCHGDiscrete (Boltzmann Covariance HyperGradient - Discrete) is
-    a reinforcement learning algorithm designed for hierarchical multi-agent
-    systems with a leader using a stochastic policy over discrete actions.
-    It adapts the BCHG algorithm.
+    BCHGDiscrete (Boltzmann Covariance HyperGradient - Discrete) is is a hierarchical multi-agent reinforcement learning algorithm with a leader-follower structure.
+    The leader optimizes its policy while accounting for the follower's stochastic actions.
+    The core component of BCHG is a hypergradient estimator for stochastic leader policies with discrete action spaces.
+    This implementation is based on PyTorch and incorporates a replay buffer, target networks, and actor-critic optimization.
 
-    Args:
-        env_spec (EnvSpec): Environment specification.
-        policy (garage.torch.policies.Policy): Leader's policy network (must output a distribution).
-        qf (object): Leader's Q-value function network (must output Q-values for all discrete leader actions).
-        replay_buffer (ReplayBuffer): Buffer for storing experience tuples.
-        steps_per_epoch (int): Number of training steps per epoch.
-        n_train_steps (int): Number of optimization steps per iteration.
-        buffer_batch_size (int): Batch size for sampling from the replay buffer.
-        target_update_tau (float): Soft update parameter for target networks.
-        discount (float): Discount factor for future rewards.
-        policy_weight_decay (float): L2 regularization for the policy network.
-        qf_weight_decay (float): L2 regularization for the Q-value network.
-        policy_optimizer (Union[type, tuple[type, dict]]): Optimizer for the policy.
-        qf_optimizer (Union[type, tuple[type, dict]]): Optimizer for the Q-value function.
-        policy_lr (float): Learning rate for the policy network.
-        qf_lr (float): Learning rate for the Q-value network.
-        clip_pos_returns (bool): Whether to clip positive returns.
-        clip_return (float): Range for clipping return values.
-        reward_scale (float): Scaling factor for rewards.
+    Main arguments:
+        actor_update_interval (int): Interval for updating the actor (leader policy).
         batch_size_for_fa_exp (int): Batch size for follower action expectation.
         discount_sampling (bool): Whether to use discount sampling.
+        on_policy (bool): Whether to use on-policy learning.
+        target_policy_smoothing (bool): Whether to apply smoothing to the target policy.
         lambda_coef_1 (float): Coefficient for balancing actor loss terms.
         lambda_coef_2 (float): Coefficient for balancing actor loss terms.
+        use_advantage (bool): Whether to use advantage in the direct term of the actor loss.
+        use_advantage_in_influence (bool): Whether to use advantage in the influence calculation.
         grad_mode (str): Gradient computation mode ('default' or 'weighted_average').
         grad_info (bool): Whether to log gradient-related metrics.
+        no_guidance (bool): Whether to disable the indirect term in the actor loss, reducing to a standard policy gradient method.
+        Other arguments are inherited from the parent class AsyncMARL.
 
     """
     name = 'BCHGDiscrete'
@@ -276,7 +264,7 @@ class BCHGDiscrete(AsyncMARL):
                                                         obs=o_flat_tensor, follower_act=fa)
             qvals_all_leader_acts_actor = self._qf(l_q_input_actor)
             
-            # --- First term --- #
+            # --- Direct term --- #
 
             la_as_idx_from_buffer = la_as_idx_from_buffer.detach()
             la_log_probs_of_samples = la_actor_dist.log_prob(la_as_idx_from_buffer.squeeze(-1))
@@ -296,7 +284,7 @@ class BCHGDiscrete(AsyncMARL):
                 actor_loss_1 = -(la_log_probs_of_samples * qval_of_samples).mean()
 
             if self._no_guidance:
-                # only the first term optimized for short execution time
+                # only the direct term optimized for short execution time
                 actor_loss = self.lambda_coef_1 * actor_loss_1
                 self._policy_optimizer.zero_grad()
                 actor_loss.backward(retain_graph=self._grad_info)
@@ -332,7 +320,7 @@ class BCHGDiscrete(AsyncMARL):
                     )
                 return qval_loss.detach(), target_y, qval.detach(), actor_loss.detach(), info
 
-            # --- Second term --- #
+            # --- Indirect term --- #
 
             # Benefit calculation
             with torch.no_grad():

@@ -1,4 +1,3 @@
-"""This modules creates a MADDPG model in PyTorch."""
 # yapf: disable
 import copy
 import numpy as np
@@ -20,6 +19,14 @@ from ..experiment import Trainer
 
 class BCHGDiscrete_Opt(RLAlgorithm):
     name = 'BCHGDiscrete_Opt'
+
+    """BCHGDiscrete_Opt Algorithm.
+    
+    BCHGDiscrete_Opt (Boltzmann Covariance HyperGradient - Discrete - Optimal) is a hierarchical multi-agent reinforcement learning algorithm.
+    This algorithm is designed for settings in which the follower is assumed to closely approximate its optimal response at every leader update.
+    The algorithm alternates between follower optimization and leader optimization: before each leader update, the follower is optimized by invoking train(), and interaction samples are subsequently collected in the form of trajectories.
+    Assuming a discrete leader action space and a stochastic leader policy, BCHGDiscrete_Opt estimates the corresponding hypergradient and updates the leader while accounting for changes in the follower's optimal response.
+    """
 
     def __init__(
             self,
@@ -170,10 +177,10 @@ class BCHGDiscrete_Opt(RLAlgorithm):
         # when the follower is white-box        
         if self._wb_follower:
             self._hat_f_policy = trainer.follower.policy
-            self._hat_f_vf = trainer.follower.make_value_function()
+            self._hat_f_vf = trainer.follower.make_value_function()  # Assume the leader policy is stochastic
         
         self._last_follower_policy = copy.deepcopy(self._hat_f_policy)
-        self.f_discount = None   
+        self.f_discount = None
         
         trainer.step_itr = 0  # number of iterations (trainer.obtain_samples() calls)
         trainer.step_episode = {}
@@ -441,7 +448,7 @@ class BCHGDiscrete_Opt(RLAlgorithm):
                                                        obs=o_flat_tensor, follower_act=fa)
         qvals_all_leader_acts_actor = self._qf(l_q_input_actor)
         
-        # First term
+        # Direct term
         la_as_idx_from_buffer = as_torch(la).long()  # la is (batch_size,) or (batch_size, 1)
         if la_as_idx_from_buffer.ndim == 1:
             la_as_idx_from_buffer = la_as_idx_from_buffer.unsqueeze(-1)
@@ -461,7 +468,7 @@ class BCHGDiscrete_Opt(RLAlgorithm):
             actor_loss_1 = -(la_log_probs_of_samples * qval_of_samples).mean()
 
         if self._no_guidance:
-            # only the first term optimized for short execution time
+            # only the direct term optimized for short execution time
             actor_loss = self.lambda_coef_1 * actor_loss_1
             self._policy_optimizer.zero_grad()
             actor_loss.backward(retain_graph=self._grad_info)
@@ -497,7 +504,7 @@ class BCHGDiscrete_Opt(RLAlgorithm):
                 )
             return actor_loss.detach(), info
 
-        # Second term
+        # Indirect term
         # Benefit calculation
         with torch.no_grad():
             f_p_input_from_buffer = self.env_spec.get_inputs_for('follower', 'policy', 

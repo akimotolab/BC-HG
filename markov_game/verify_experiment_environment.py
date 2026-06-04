@@ -173,8 +173,9 @@ def check_required_files():
     failures = []
     required_paths = [
         Path("markov_game/environment.yaml"),
-        Path("markov_game/config/config_discrete_toy_bchg.yaml"),
-        Path("markov_game/config/config_bilevel_lqr_bchg.yaml"),
+        Path("markov_game/config/DiscreteToy4_R1-v0/config_bchg.yaml"),
+        Path("markov_game/config/DiscreteToy4_R2-v0/config_bchg.yaml"),
+        Path("markov_game/config/LQREnv-v4/config_bchg.yaml"),
     ]
     for path in required_paths:
         if path.exists():

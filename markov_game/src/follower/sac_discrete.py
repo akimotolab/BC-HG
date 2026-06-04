@@ -8,7 +8,6 @@ import torch.nn.functional as F
 from garage import StepType
 from garage.np.algos import RLAlgorithm
 from garage.torch import as_torch_dict, global_device
-from garage.experiment.deterministic import get_seed
 
 from dowel import tabular
 

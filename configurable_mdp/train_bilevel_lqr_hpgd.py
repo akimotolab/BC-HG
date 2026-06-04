@@ -1,5 +1,5 @@
 """HPGD (Hyper Policy Gradient Descent)
-    - Upper-level Q signal in the guidance term is computed from Monte Carlo returns
+    - Upper-level Q signal in the indirect term is computed from Monte Carlo returns
       on sampled trajectories.
     - Upper-level value-gradient term is estimated via TD-style value fitting.
     - Lower-level advantage-gradient uses a learned value-gradient estimator.

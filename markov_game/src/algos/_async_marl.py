@@ -1,4 +1,3 @@
-"""This modules creates a MADDPG model in PyTorch."""
 # yapf: disable
 import abc
 import copy
@@ -19,7 +18,7 @@ from ..policies import JointPolicy
 
 class AsyncMARL(RLAlgorithm):
     """
-    Base class for Asynchronous Multi-Agent Reinforcement Learning (AsyncMARL) algorithms.
+    Base class for Asynchronous (Two-Timescale) Multi-Agent Reinforcement Learning (AsyncMARL) algorithms.
 
     Args:
         env_spec (EnvSpec): Environment specification.
@@ -163,17 +162,14 @@ class AsyncMARL(RLAlgorithm):
         """
         if self._wb_follower:
             self._hat_f_policy = trainer.follower.policy
-            if self.name in ['Baseline', 'Baseline_STDPG']:
+            if self.name in ['Baseline', 'BaselineDiscrete']:
                 self._hat_f_qf = None
-            elif self.name in ['BCHG']:  # deterministic leader policy
+            elif self.name in ['BCHG']:  # When leader policy is deterministic 
                 self._hat_f_qf = trainer.follower.make_q_function()
-            elif self.name in ['STDPG', 'STDPGDiscrete']:  # stochastic leader policy
+            elif self.name in ['BCHGDiscrete']:  # When leader policy is stochastic
                 self._hat_f_vf = trainer.follower.make_value_function()
-            elif self.name in ['STMADDPG']:
-                self._hat_f_qf = trainer.follower.make_q_function()
-                self._hat_f_p_optimizer = trainer.follower.policy_optimizer
             else:
-                raise NotImplementedError(f'AsyncMARL algorithm {self.name} is not supported.')
+                raise NotImplementedError(f'AsyncMARL algorithm {self.name} does not specify the type of follower estimators to use.')
         
         self._last_follower_policy = copy.deepcopy(self._hat_f_policy)      
         self.f_discount = None  
