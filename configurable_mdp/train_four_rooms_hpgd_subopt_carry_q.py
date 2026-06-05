@@ -1,7 +1,8 @@
-"""HPGD (Hyper Policy Gradient Descent)
-    - Upper-level Q and value are estimated from Monte Carlo discounted returns.
-    - Lower-level advantage-gradient is estimated from Monte Carlo discounted
-      return gradients and combined with the UL reward-gradient term.
+"""
+HPGD (Hyper Policy Gradient Descent)
+    - Upper-level Q function estimation by Monte Carlo returns
+    - Upper-level value estimation by Monte Carlo returns
+    - Note: These Q and value estimations are the same as in proposal_0
 """
 
 import argparse
@@ -33,7 +34,7 @@ from src.environments.utils import (
 from src.models.IncentiveModel import create_incentive_train_state, incentive_transform
 
 from src.algorithms.value_iteration_and_prediction import (
-    general_value_iteration,
+    general_value_iteration_return_intermediate,
     initial_value_prediction,
 )
 from src.algorithms.utils import Transition, make_env_step_fn
@@ -304,7 +305,7 @@ def create_update_step(
     )
 
     def update_step(carry, reg_lambda: float) -> Tuple:
-        (rng, env_params_train_carry, incentive_train_state_carry) = carry
+        (rng, env_params_train_carry, incentive_train_state_carry, q_carry) = carry
 
         # Realize stochasticity in the environment
         rng, _rng = jax.random.split(rng)
@@ -320,7 +321,7 @@ def create_update_step(
         )
 
         # Calculate best-response
-        q_final, _ = general_value_iteration(
+        q_final, q_subopt, _ = general_value_iteration_return_intermediate(
             env,
             env_params_train_carry,
             gamma=config_lower_level["discount_factor"],
@@ -329,10 +330,46 @@ def create_update_step(
             regularization=config_lower_level["regularization"],
             reg_lambda=reg_lambda,
             return_q_value=True,
+            stop_policy_iter=config_lower_level["stop_policy_iter"],
+            arr_init=q_carry,
         )
+
         policy = regularized_softmax(
+            q_subopt[xi_idx], reg_lambda
+        )  # Shape: (n_states, n_actions)
+        policy_opt = regularized_softmax(
             q_final[xi_idx], reg_lambda
         )  # Shape: (n_states, n_actions)
+        policy_pre = regularized_softmax(
+            q_carry[xi_idx], reg_lambda
+        )  # Shape: (n_states, n_actions)
+
+        # Evaluate each policy (with the regularized initial value)
+        V_LL, _ = initial_value_prediction(
+            env,
+            env_params_fixed_xi,
+            gamma=config_lower_level["discount_factor"],
+            n_policy_iter=config_lower_level["n_policy_iter"],
+            n_value_iter=config_lower_level["n_value_iter"],
+            policy=jnp.expand_dims(policy, 0),
+            regularization=config_lower_level["regularization"],
+            reg_lambda=reg_lambda,
+            return_q_value=False,
+        )
+        V_LL_opt, _ = initial_value_prediction(
+            env,
+            env_params_fixed_xi,
+            gamma=config_lower_level["discount_factor"],
+            n_policy_iter=config_lower_level["n_policy_iter"],
+            n_value_iter=config_lower_level["n_value_iter"],
+            policy=jnp.expand_dims(policy_opt, 0),
+            regularization=config_lower_level["regularization"],
+            reg_lambda=reg_lambda,
+            return_q_value=False,
+        )
+        # Compute the normalized/relative optimality gap for the current policy
+        relative_optimality_gap = (V_LL_opt - V_LL) / (jnp.abs(V_LL_opt) + 1e-8)
+
         train_state = TrainState.create(
             apply_fn=lambda params, obs: apply_greedy_policy(params, obs, env.coords),
             params={"best_response_policy": policy},
@@ -580,21 +617,57 @@ def create_update_step(
                 env_p.incentive_params, s, a, config
             ),
         )  # Shape: ()
+        V_UL_opt, _ = initial_value_prediction(
+            env,
+            env_params_fixed_xi,
+            gamma=config_upper_level["discount_factor"],
+            n_policy_iter=config_lower_level["n_policy_iter"],
+            n_value_iter=config_lower_level["n_value_iter"],
+            policy=jnp.expand_dims(policy_opt, 0),
+            external_reward=lambda s, a, env_p: upper_level_reward(
+                env_p.incentive_params, s, a, config
+            ),
+        )  # Shape: ()
         num_episodes = jnp.sum(traj_batch.done)
         average_episode_length = (
             traj_batch.done.shape[0]
             * traj_batch.done.shape[1]
             / jnp.clip(num_episodes, a_min=1)
         )
-        
-        # MARK: added. Check the average of the maximum policy probability over state_indices
+        # MARK: added
+        # state_indices における policy の確率値の最大値の平均を確認
         max_action_prob = jnp.mean(jnp.max(policy[state_indices], axis=-1))
         min_action_prob = jnp.mean(jnp.min(policy[state_indices], axis=-1))
         average_UL_advantage = jnp.mean(UL_advantage)
-        return (rng, env_params_train_carry, incentive_train_state_carry), {
+
+        policy_kl_divergence = jnp.mean(
+            jnp.sum(
+                policy
+                * (
+                    jnp.log(policy + 1e-16)
+                    - jnp.log(policy_opt + 1e-16)
+                ),
+                axis=-1,
+            )
+        )
+        policy_kl_divergence_pre = jnp.mean(
+            jnp.sum(
+                policy_pre
+                * (
+                    jnp.log(policy_pre + 1e-16)
+                    - jnp.log(policy_opt + 1e-16)
+                ),
+                axis=-1,
+            )
+        )
+
+        info = {
             "xi_idx": xi_idx,
             "UL_initial_value_estimate": UL_initial_value_estimate,
             "UL_initial_value": V_UL,
+            "UL_initial_value_opt": V_UL_opt,
+            "LL_initial_value": V_LL,
+            "LL_initial_value_opt": V_LL_opt,
             "num_episodes": num_episodes,
             "average_episode_length": average_episode_length,
             "policy_grad_norm": jnp.linalg.norm(br_response_grad),
@@ -602,7 +675,15 @@ def create_update_step(
             "max_action_prob": max_action_prob,
             "min_action_prob": min_action_prob,
             "average_UL_advantage": average_UL_advantage,
+            "relative_optimality_gap": relative_optimality_gap,
+            "kl_optimality_gap": policy_kl_divergence,
+            "kl_optimality_gap_normalized": policy_kl_divergence / (policy_kl_divergence_pre + 1e-8),
         }
+
+        # Update q_carry for next iteration
+        q_carry = q_subopt
+
+        return (rng, env_params_train_carry, incentive_train_state_carry, q_carry), info
 
     return update_step
 
@@ -663,9 +744,13 @@ if __name__ == "__main__":
         update_step = create_update_step(env, config_exp)
         n_iter = config_exp["upper_optimisation"]["num_outer_iter"]
         reg_lambda = config["lower_optimisation"]["reg_lambda"] * jnp.power(lower_optimisation_reg_lambda_decay, jnp.arange(n_iter))
+        n_states, n_actions = env.coords.shape[0], env.action_space().n
+        n_goals = env.available_goals.shape[0]  # Number of available goals
+        rng, _rng_q_init = jax.random.split(rng)
+        q_carry = jax.random.normal(_rng_q_init, (n_goals, n_states, n_actions))  # Initialize q_carry with Gaussian noise
         return jax.lax.scan(
             update_step,
-            (rng, env_params_exp, incentive_train_state_exp),
+            (rng, env_params_exp, incentive_train_state_exp, q_carry),
             reg_lambda,
             n_iter,
         )
@@ -717,7 +802,7 @@ if __name__ == "__main__":
     print(
         f"Experiment runtime: {(run_time) / 60:.2f} minutes and {(run_time) % 60:.2f} seconds"
     )
-    _, env_params, incentive_train_state = carry_out
+    _, env_params, incentive_train_state, _ = carry_out
 
     # Save results
     method_name = "hpgd"

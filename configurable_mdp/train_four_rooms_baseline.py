@@ -433,7 +433,7 @@ def create_update_step(
             gamma=config_upper_level["discount_factor"],
             n_policy_iter=config_lower_level["n_policy_iter"],
             n_value_iter=config_lower_level["n_value_iter"],
-            policy=policy,
+            policy=jnp.expand_dims(policy, 0),
             external_reward=lambda s, a, env_p: upper_level_reward(
                 env_p.incentive_params, s, a, config
             ),

@@ -1,9 +1,3 @@
-"""HPGD (Hyper Policy Gradient Descent)
-    - Upper-level Q and value are estimated from Monte Carlo discounted returns.
-    - Lower-level advantage-gradient is estimated from Monte Carlo discounted
-      return gradients and combined with the UL reward-gradient term.
-"""
-
 import argparse
 import os
 
@@ -33,7 +27,7 @@ from src.environments.utils import (
 from src.models.IncentiveModel import create_incentive_train_state, incentive_transform
 
 from src.algorithms.value_iteration_and_prediction import (
-    general_value_iteration,
+    general_value_iteration_return_intermediate,
     initial_value_prediction,
 )
 from src.algorithms.utils import Transition, make_env_step_fn
@@ -218,6 +212,82 @@ def calculate_discounted_rewards(
     return discounted_rewards
 
 
+def calculate_discounted_baseline_rewards(
+    reward_function_params,
+    reward_function,
+    traj_batch: Transition,
+    discount_factor: float,
+    n_envs: int,
+    policy: jnp.ndarray,
+    state_coords: jnp.ndarray
+) -> jnp.ndarray:
+    """
+    Calculate the discounted baseline rewards for a trajectory batch using policy expectations
+    :param reward_function_params:
+    :param reward_function:
+    :param traj_batch:
+    :param discount_factor:
+    :param n_envs:
+    :param policy: shape = (n_states, n_actions) - action probability distribution for each state
+    :param state_coords: shape = (n_states, 2) - coordinates of all states
+    :return: Discounted baseline rewards, Shape: (n_steps, num_envs)
+    """
+    # Get number of actions from policy shape
+    n_actions = policy.shape[1]
+    
+    # Create action indices for all possible actions
+    all_actions = jnp.arange(n_actions)  # [0, 1, 2, ..., n_actions-1]
+
+    def _get_discounted_baseline_reward(
+        rolling_discounted_rewards: jnp.ndarray,
+        transition: Transition,
+    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        
+        # For each environment, compute expected reward under policy
+        def compute_expected_reward_for_env(state):
+            """Compute expected reward for a single state across all actions"""
+            
+            # Find state index by matching position coordinates
+            pos = state.pos  # Shape: (2,)
+            matches = jnp.all(
+                jnp.equal(pos[None, :], state_coords), axis=1
+            )  # Shape: (n_states,)
+            state_idx = jnp.argmax(matches)  # Get index of matching state
+            
+            # Compute rewards for all actions from this state
+            rewards_all_actions = jax.vmap(
+                lambda action: reward_function(reward_function_params, state, action)
+            )(all_actions)  # Shape: (n_actions,)
+            
+            # Get policy probabilities for this state
+            action_probs = policy[state_idx]  # Shape: (n_actions,)
+            
+            # Compute expected reward
+            expected_reward = jnp.sum(action_probs * rewards_all_actions)
+            return expected_reward
+        
+        # Compute expected rewards for all environments
+        expected_rewards = jax.vmap(compute_expected_reward_for_env)(
+            transition.state
+        )  # Shape: (num_envs,)
+        
+        done = transition.done.astype(jnp.float32)  # Shape: (num_envs,)
+        rolling_discounted_rewards = (
+            expected_rewards + discount_factor * rolling_discounted_rewards * (1 - done)
+        )  # Calculate discounted reward, Shape: (num_envs,)
+        
+        return rolling_discounted_rewards, rolling_discounted_rewards
+
+    _, discounted_baseline_rewards = jax.lax.scan(
+        _get_discounted_baseline_reward,
+        jnp.zeros(n_envs),
+        traj_batch,
+        reverse=True,
+    )  # Shape: (n_steps, num_envs)
+    
+    return discounted_baseline_rewards
+
+
 def estimate_value_function(
     traj_batch: Transition,
     discounted_rewards: jnp.ndarray,
@@ -304,7 +374,7 @@ def create_update_step(
     )
 
     def update_step(carry, reg_lambda: float) -> Tuple:
-        (rng, env_params_train_carry, incentive_train_state_carry) = carry
+        (rng, env_params_train_carry, incentive_train_state_carry, q_carry) = carry
 
         # Realize stochasticity in the environment
         rng, _rng = jax.random.split(rng)
@@ -320,7 +390,7 @@ def create_update_step(
         )
 
         # Calculate best-response
-        q_final, _ = general_value_iteration(
+        q_final, q_subopt, _ = general_value_iteration_return_intermediate(
             env,
             env_params_train_carry,
             gamma=config_lower_level["discount_factor"],
@@ -329,10 +399,44 @@ def create_update_step(
             regularization=config_lower_level["regularization"],
             reg_lambda=reg_lambda,
             return_q_value=True,
+            stop_policy_iter=config_lower_level["stop_policy_iter"],
+            arr_init=q_carry,
         )
+
         policy = regularized_softmax(
+            q_subopt[xi_idx], reg_lambda
+        )  # Shape: (n_states, n_actions)
+        policy_opt = regularized_softmax(
             q_final[xi_idx], reg_lambda
         )  # Shape: (n_states, n_actions)
+        policy_pre = regularized_softmax(
+            q_carry[xi_idx], reg_lambda
+        )  # Shape: (n_states, n_actions)
+
+        # Evaluate each policy (with the regularized initial value)
+        V_LL, _ = initial_value_prediction(
+            env,
+            env_params_fixed_xi,
+            gamma=config_lower_level["discount_factor"],
+            n_policy_iter=config_lower_level["n_policy_iter"],
+            n_value_iter=config_lower_level["n_value_iter"],
+            policy=jnp.expand_dims(policy, 0),  # Shape: (1, n_states, n_actions)
+            regularization=config_lower_level["regularization"],
+            reg_lambda=reg_lambda,
+        )
+        V_LL_opt, _ = initial_value_prediction(
+            env,
+            env_params_fixed_xi,
+            gamma=config_lower_level["discount_factor"],
+            n_policy_iter=config_lower_level["n_policy_iter"],
+            n_value_iter=config_lower_level["n_value_iter"],
+            policy=jnp.expand_dims(policy_opt, 0),  # Shape: (1, n_states, n_actions)
+            regularization=config_lower_level["regularization"],
+            reg_lambda=reg_lambda,
+        )
+        # Compute the normalized/relative optimality gap for the current policy
+        relative_optimality_gap = (V_LL_opt - V_LL) / (jnp.abs(V_LL_opt) + 1e-8)
+
         train_state = TrainState.create(
             apply_fn=lambda params, obs: apply_greedy_policy(params, obs, env.coords),
             params={"best_response_policy": policy},
@@ -369,131 +473,108 @@ def create_update_step(
             config_upper_level["num_steps_per_update"],
         )  # Shape: (num_steps_per_update, num_envs, n_obs/n_state/None)
 
-        def get_uniform_initialized_traj_batch(train_state) -> Transition:  # changed: add argument "train_state"
-            """
-            Get the trajectory batch with uniform initialization
-            """
-            _rng_rollout_uniform_split, _rng_init = jax.random.split(
-                _rng_rollout_uniform
-            )
-            random_idx = jax.random.choice(
-                _rng_init,
-                env_params_fixed_xi.state_initialization_params.shape[0],
-            )
-            logit_single_random = jnp.log(
-                jnp.full_like(env_params_fixed_xi.state_initialization_params, 1e-16)
-                .at[random_idx]
-                .set(1.0)
-            )
-            initialization_logits = jax.lax.select(
-                config_upper_level["advantage_gradient_sampling"] == "uniform",
-                jnp.ones_like(
-                    env_params_fixed_xi.state_initialization_params
-                ),  # Uniform sampling
-                logit_single_random,  # Single random initialization
-            )
-            env_params_fixed_xi_uniform_init = env_params_fixed_xi.replace(
-                state_initialization_params=initialization_logits
-            )
-            obsv_uniform, env_state_uniform = jax.vmap(env.reset, in_axes=(0, None))(
-                _rng_reset_uniform,
-                env_params_fixed_xi_uniform_init,
-            )
-            env_step_carry_state_uniform = (
-                train_state,
-                env_params_fixed_xi_uniform_init,
-                env_state_uniform,
-                obsv_uniform,
-                _rng_rollout_uniform_split,
-            )
-            _, traj_batch_uniform = jax.lax.scan(
-                _env_step,
-                env_step_carry_state_uniform,
-                None,
-                config_upper_level["num_steps_per_update"],
-            )  # Shape: (num_steps_per_update, num_envs, n_obs/n_state/None)
-            return traj_batch_uniform
-
-        # If the advantage gradient sampling is uniform, initialize the trajectory batch with uniform initialization and sample a new batch
-        traj_batch_advantage = jax.lax.cond(
-            config_upper_level["advantage_gradient_sampling"]
-            in ["uniform", "uniform_single"],
-            get_uniform_initialized_traj_batch,
-            lambda _: traj_batch,
-            operand=train_state,  # changed: add operand
-        )
-
         # GRADIENT CALCULATION
-        # LL ADVANTAGE
+        # LL GRADIENT
         discounted_rewards_grad = jax.jacfwd(
             calculate_discounted_rewards,
         )(
             env_params_fixed_xi.incentive_params,
             lambda param, s, a: env.incentive_function(s, a, param),
-            traj_batch_advantage,
-            config_lower_level["discount_factor"],
+            traj_batch,
+            1.0,  # discount factor = 1.0
             config_upper_level["num_envs"],
-        )  # (n_steps, n_envs, |params|)
+        )
         discounted_rewards_grad = discounted_rewards_grad["params"][
             "weights"
         ]  # (n_steps, n_envs, |params|)
-        LL_value_grad, _, _ = estimate_value_function(
-            traj_batch_advantage,
-            discounted_rewards_grad,
-            env.coords,
-            env.action_space().n,
-            "value",
-        )  # (n_coords, |params|)
-        LL_Q_grad, state_indices, action_indices = estimate_value_function(
-            traj_batch_advantage,
-            discounted_rewards_grad,
-            env.coords,
-            env.action_space().n,
-            "Q",
-        )  # (n_coords, n_actions, |params|)
-        LL_advantage_grad = LL_Q_grad - jnp.expand_dims(
-            LL_value_grad, 1
-        )  # (n_coords, n_actions, |params|)
-
-        # Mask gradient back to traj_batch_advantage dimensions
-        LL_advantage_grad = LL_advantage_grad[state_indices, action_indices, :].reshape(
-            config_upper_level["num_steps_per_update"],
+        discounted_baseline_rewards_grad = jax.jacfwd(
+            calculate_discounted_baseline_rewards,
+        )(
+            env_params_fixed_xi.incentive_params,
+            lambda param, s, a: env.incentive_function(s, a, param),
+            traj_batch,
+            1.0,  # discount factor = 1.0
             config_upper_level["num_envs"],
-            -1,
-        )  # (n_steps, n_envs, |params|)
-
+            policy,
+            env.coords,
+        )
+        discounted_baseline_rewards_grad = discounted_baseline_rewards_grad["params"][
+            "weights"
+        ]  # (n_steps, n_envs, |params|)
         # Calculate upper-level discounted rewards ~ Q(s, a)
         UL_discounted_rewards = calculate_discounted_rewards(
             env_params_fixed_xi.incentive_params,
             lambda p, s, a: upper_level_reward(p, s, a, config),
-            traj_batch_advantage,
+            traj_batch,
             config_upper_level["discount_factor"],
             config_upper_level["num_envs"],
         )  # (n_steps, n_envs)
-        UL_value, _, _ = estimate_value_function(
-            traj_batch_advantage,
-            UL_discounted_rewards,
-            env.coords,
-            env.action_space().n,
-            "value",
-        )  # (n_states, )
         UL_Q_value, state_indices, action_indices = estimate_value_function(
-            traj_batch_advantage,
+            traj_batch,
             UL_discounted_rewards,
             env.coords,
             env.action_space().n,
             "Q",
-        )
-        UL_advantage = UL_Q_value - jnp.expand_dims(
-            UL_value, 1
         )  # (n_states, n_actions)
-        UL_advantage = UL_advantage[state_indices, action_indices].reshape(
+        UL_Q_value = UL_Q_value[state_indices, action_indices].reshape(
             config_upper_level["num_steps_per_update"],
             config_upper_level["num_envs"],
-        )
+        )  # (n_steps, n_envs)
         br_response_grad = (
-            LL_advantage_grad * jnp.expand_dims(UL_advantage, -1) / reg_lambda
+            (discounted_rewards_grad - discounted_baseline_rewards_grad) * jnp.expand_dims(UL_Q_value, -1) / reg_lambda
         )  # (n_steps, n_envs, |params|)
+        br_response_grad = jnp.nanmean(
+            jnp.where(jnp.expand_dims(traj_batch.t == 1, 2), br_response_grad, jnp.nan),
+            axis=(0, 1),
+        )
+
+        # 1. 政策のエントロピーを確認
+        policy_entropy = -jnp.sum(policy * jnp.log(policy + 1e-8), axis=-1)
+        policy_entropy = jnp.mean(policy_entropy)
+
+        # 2. 勾配の差を直接確認
+        grad_diff = discounted_rewards_grad - discounted_baseline_rewards_grad
+        grad_diff_norm = jnp.linalg.norm(grad_diff)
+        rewards_grad_norm = jnp.linalg.norm(discounted_rewards_grad)
+        baseline_grad_norm = jnp.linalg.norm(discounted_baseline_rewards_grad)
+
+        # state_indices における policy の確率値の最大値の平均を確認
+        max_action_prob = jnp.mean(jnp.max(policy[state_indices], axis=-1))
+        min_action_prob = jnp.mean(jnp.min(policy[state_indices], axis=-1))
+        average_UL_q_value = jnp.mean(UL_Q_value)
+
+        policy_kl_divergence = jnp.mean(
+            jnp.sum(
+                policy
+                * (
+                    jnp.log(policy + 1e-16)
+                    - jnp.log(policy_opt + 1e-16)
+                ),
+                axis=-1,
+            )
+        )
+        policy_kl_divergence_pre = jnp.mean(
+            jnp.sum(
+                policy_pre
+                * (
+                    jnp.log(policy_pre + 1e-16)
+                    - jnp.log(policy_opt + 1e-16)
+                ),
+                axis=-1,
+            )
+        )
+
+        info_update = {
+            "policy_entropy": policy_entropy,
+            "grad_diff_norm": grad_diff_norm,
+            "rewards_grad_norm": rewards_grad_norm,
+            "baseline_grad_norm": baseline_grad_norm,
+            "max_action_prob": max_action_prob,
+            "min_action_prob": min_action_prob,
+            "average_UL_q_value": average_UL_q_value
+        }
+
+        # UL GRADIENT
         UL_discounted_rewards_grad = jax.jacfwd(
             calculate_discounted_rewards,
         )(
@@ -518,34 +599,12 @@ def create_update_step(
             config_upper_level["num_envs"],
             -1,
         )  # (n_steps, n_envs, |params|)
-
-        # Shift the time grid, originally when traj_batch.done then traj_batch.t == 0
-        time_grid = jnp.where(
-            traj_batch_advantage.done[1:],
-            traj_batch_advantage.t[:-1],
-            traj_batch_advantage.t[1:] - 1,
-        )
-        time_grid = jnp.concatenate(
-            [jnp.zeros((1, config_upper_level["num_envs"])), time_grid], axis=0
-        )
-        traj_batch_advantage_discount_factor = jnp.power(
-            config_upper_level["discount_factor"],
-            time_grid,  # Adjust counting since it starts from 1
-        )[
-            :, :, None
-        ]  # (n_steps, n_envs, 1)
-        n_episodes_advantage = jnp.sum(traj_batch_advantage.done)
-        br_response_grad = (
-            jnp.sum(
-                br_response_grad * traj_batch_advantage_discount_factor, axis=(0, 1)
-            )
-            / jnp.clip(n_episodes_advantage, a_min=1)  # MARK: modified: avoid division by zero
-        )  # Average over num episode finished
         UL_reward_grad = jnp.nanmean(
             jnp.where(jnp.expand_dims(traj_batch.t == 1, 2), UL_value_grad, jnp.nan),
             axis=(0, 1),
         )
-        grad = UL_reward_grad + br_response_grad  # (|params|)
+
+        grad = UL_reward_grad + br_response_grad  # (|params|). UL_reward_grad: 2nd term, br_response_grad: 1st term (eq. 8)
 
         # Update the parameters
         # Overall negative for gradient ascent, negate reward_loss_grad due to lower-level maximization
@@ -580,29 +639,46 @@ def create_update_step(
                 env_p.incentive_params, s, a, config
             ),
         )  # Shape: ()
+        V_UL_opt, _ = initial_value_prediction(
+            env,
+            env_params_fixed_xi,
+            gamma=config_upper_level["discount_factor"],
+            n_policy_iter=config_lower_level["n_policy_iter"],
+            n_value_iter=config_lower_level["n_value_iter"],
+            policy=jnp.expand_dims(policy_opt, 0),
+            external_reward=lambda s, a, env_p: upper_level_reward(
+                env_p.incentive_params, s, a, config
+            ),
+        )  # Shape: ()
         num_episodes = jnp.sum(traj_batch.done)
         average_episode_length = (
             traj_batch.done.shape[0]
             * traj_batch.done.shape[1]
             / jnp.clip(num_episodes, a_min=1)
         )
-        
-        # MARK: added. Check the average of the maximum policy probability over state_indices
-        max_action_prob = jnp.mean(jnp.max(policy[state_indices], axis=-1))
-        min_action_prob = jnp.mean(jnp.min(policy[state_indices], axis=-1))
-        average_UL_advantage = jnp.mean(UL_advantage)
-        return (rng, env_params_train_carry, incentive_train_state_carry), {
+
+        info = {
             "xi_idx": xi_idx,
             "UL_initial_value_estimate": UL_initial_value_estimate,
             "UL_initial_value": V_UL,
+            "UL_initial_value_opt": V_UL_opt,
+            "LL_initial_value": V_LL,
+            "LL_initial_value_opt": V_LL_opt,
             "num_episodes": num_episodes,
             "average_episode_length": average_episode_length,
+            "grad_norm": jnp.linalg.norm(grad),
             "policy_grad_norm": jnp.linalg.norm(br_response_grad),
             "UL_reward_grad_norm": jnp.linalg.norm(UL_reward_grad),
-            "max_action_prob": max_action_prob,
-            "min_action_prob": min_action_prob,
-            "average_UL_advantage": average_UL_advantage,
+            "relative_optimality_gap": relative_optimality_gap,
+            "kl_optimality_gap": policy_kl_divergence,
+            "kl_optimality_gap_normalized": policy_kl_divergence / (policy_kl_divergence_pre + 1e-8),
         }
+        info.update(info_update)
+
+        # Update q_carry for next iteration
+        q_carry = q_subopt
+
+        return (rng, env_params_train_carry, incentive_train_state_carry, q_carry), info
 
     return update_step
 
@@ -621,6 +697,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     experiment_dir = args.experiment_dir
+    print("Advantage gradient sampling: ", args.advantage_gradient_sampling)
     print("Output directory: ", experiment_dir)
     print("Device used: ", jax.devices())
 
@@ -663,9 +740,13 @@ if __name__ == "__main__":
         update_step = create_update_step(env, config_exp)
         n_iter = config_exp["upper_optimisation"]["num_outer_iter"]
         reg_lambda = config["lower_optimisation"]["reg_lambda"] * jnp.power(lower_optimisation_reg_lambda_decay, jnp.arange(n_iter))
+        n_states, n_actions = env.coords.shape[0], env.action_space().n
+        n_goals = env.available_goals.shape[0]  # Number of available goals
+        rng, _rng_q_init = jax.random.split(rng)
+        q_carry = jax.random.normal(_rng_q_init, (n_goals, n_states, n_actions))  # Initialize q_carry with Gaussian noise
         return jax.lax.scan(
             update_step,
-            (rng, env_params_exp, incentive_train_state_exp),
+            (rng, env_params_exp, incentive_train_state_exp, q_carry),
             reg_lambda,
             n_iter,
         )
@@ -717,12 +798,10 @@ if __name__ == "__main__":
     print(
         f"Experiment runtime: {(run_time) / 60:.2f} minutes and {(run_time) % 60:.2f} seconds"
     )
-    _, env_params, incentive_train_state = carry_out
+    _, env_params, incentive_train_state, _ = carry_out
 
     # Save results
-    method_name = "hpgd"
-    if config['upper_optimisation']['advantage_gradient_sampling'] != "on_policy":  # "uniform" or "uniform_single"
-        method_name += f"_{config['upper_optimisation']['advantage_gradient_sampling']}"
+    method_name = "sobirl"
     orbax_checkpointer = orbax.checkpoint.PyTreeCheckpointer()
     orbax_checkpointer.save(
         os.path.join(

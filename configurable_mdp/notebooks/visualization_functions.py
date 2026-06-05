@@ -172,6 +172,8 @@ def plot_UL_rewards(
     yscale="linear",  # "linear", "log"
     statistic="mean",  # "mean", "median"
     alpha=0.8,
+    fill_alpha=0.2,
+    distinct_fill_between_edge=False,  # Added: whether to plot edge for fill_between
     show_legend=True,  # Added: control whether to show the legend
     separated_in_seeds=False,  # Added: whether data is separated in seeds
 ):
@@ -243,13 +245,24 @@ def plot_UL_rewards(
                 zorder=zorder[label] if zorder is not None else None,
                 alpha=alpha if not separated_in_seeds else alpha / 2.0,
             )
+            fill_kwargs = {
+                "alpha": fill_alpha,
+                "color": algo_colors[label] if algo_colors is not None else None,
+                "zorder": zorder[label] if zorder is not None else None,
+            }
+            if distinct_fill_between_edge:
+                fill_kwargs.update(
+                    {
+                        "linewidth": linewidth,
+                        "edgecolor": algo_colors[label] if algo_colors is not None else None,
+                        "linestyle": line_styles.get(label, "-"),
+                    }
+                )
             current_ax.fill_between(
                 x,
                 LCB[i],
                 UCB[i],
-                alpha=0.2,
-                color=algo_colors[label] if algo_colors is not None else None,
-                zorder=zorder[label] if zorder is not None else None,
+                **fill_kwargs,
             )
 
     for key, value in UL_rewards.items():
