@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# Usage: bash configurable_mdp/exp_four_rooms.sh [--dry-run] [--background]
+
 # Methods to run
 methods=(
     bchg baseline sobirl hpgd hpgd_sarsa hpgd_oracle
@@ -26,8 +28,8 @@ exps=(
 declare -A method_gpu=(
     [baseline]=0
     [sobirl]=0
-    [hpgd]=0
-    [hpgd_sarsa]=1
+    [hpgd]=1
+    [hpgd_sarsa]=0
     [bchg]=1
     [hpgd_oracle]=2
 )

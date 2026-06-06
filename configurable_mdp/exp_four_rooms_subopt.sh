@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# Usage: bash configurable_mdp/exp_four_rooms_subopt.sh [--dry-run] [--background]
+
 # Methods to run
 methods=(
     bchg baseline sobirl hpgd hpgd_sarsa hpgd_oracle

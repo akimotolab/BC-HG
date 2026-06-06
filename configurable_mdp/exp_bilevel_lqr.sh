@@ -1,9 +1,29 @@
 #!/bin/bash
 set -euo pipefail
 
+# Usage: bash configurable_mdp/exp_bilevel_lqr.sh [--dry-run] [--background]
+
+# Methods to run
+methods=(
+    bchg baseline hpgd hpgd_td
+)
+
+# Experiments to run
+exps=(
+    experiment_bilevel_lqr_reg_lambda_0_1_steps_10000
+)
+
+# GPU assignment for each method
+declare -A method_gpu=(
+    [bchg]=0
+    [baseline]=0
+    [hpgd]=0
+    [hpgd_td]=0
+)
+
+# Runtime options
 DRY_RUN=false
 BACKGROUND=false
-
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 
 while [[ "$#" -gt 0 ]]; do
@@ -29,7 +49,7 @@ fi
 
 if [[ "$BACKGROUND" == true && "${EXP_BILEVEL_LQR_DAEMONIZED:-0}" != "1" ]]; then
     timestamp="$(date +%Y%m%d_%H%M%S)"
-    log_file="bilevel_lqr_experiments_${timestamp}.log"
+    log_file="configurable_mdp/exp_bilevel_lqr_${timestamp}.log"
 
     nohup env EXP_BILEVEL_LQR_DAEMONIZED=1 bash "$SCRIPT_PATH" > "$log_file" 2>&1 &
     echo "Started background execution."
@@ -44,24 +64,7 @@ else
     echo "Executing script..."
 fi
 
-# Methods to run
-methods=(
-    bchg baseline hpgd hpgd_td
-)
-
-# Experiments to run
-exps=(
-    experiment_bilevel_lqr__reg_lambda_0_1_steps_10000
-)
-
-# GPU assignment for each method
-declare -A method_gpu=(
-    [bchg]=0
-    [baseline]=0
-    [hpgd]=0
-    [hpgd_td]=0
-)
-
+# Group methods by their assigned GPU
 declare -A gpu_methods=()
 for method in "${methods[@]}"; do
     gpu="${method_gpu[$method]:-}"
@@ -99,6 +102,7 @@ run_gpu_queue() {
     echo "[GPU ${gpu}] queue finished"
 }
 
+# Run experiments in parallel on different GPUs
 pids=()
 while IFS= read -r gpu; do
     if [[ "$DRY_RUN" == true ]]; then
