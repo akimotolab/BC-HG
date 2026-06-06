@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if ! command -v yq >/dev/null 2>&1; then
+    echo "Error: yq is not installed."
+    echo "Please install yq before running this script."
+    exit 1
+fi
+
 # Execution check
 echo "Do you want to run this script?"
 read -p "Enter 'y' to run (y/n): " confirm
@@ -31,10 +37,12 @@ configs=(
 )
 cfg_idx=0  # Config file index to use
 
+config="${configs[cfg_idx]}"  # Config file to use
+config_path="markov_game/config/${env_id}/${config}"
+
 # Experiment settings
 datetime=$(date +"%Y%m%d_%H%M%S")
 log_label="$datetime"
-config="${configs[cfg_idx]}"  # Config file to use
 seed="[0,1,2,3,4,5,6,7,8,9]"
 gpu_id=0  # GPU ID to use (e.g., 0, 1, 2, ...)
 
@@ -47,6 +55,7 @@ algos=(
     "BaselineDiscrete_Subopt"
 )
 algo=${algos[cfg_idx]}
+on_policy=$(yq '.leader.on_policy' "$config_path" | tr '[:upper:]' '[:lower:]')
 sweep_follower="['stop_q_iteration','reset_q']"
 algo_follower=SoftQIteration_Subopt
 stop_q_iterations=(1 2 5 10 50 100)
@@ -55,10 +64,18 @@ reset_qs=(True False)  # True: Reset-Q, False: Carry-Q
 for stop_q_iteration in "${stop_q_iterations[@]}"; do
     for reset_q in "${reset_qs[@]}"; do
 
+        name=${env_id}_${algo}
+        if [ "$algo" != "BCHGDiscrete_Subopt" ]; then
+            if [ "$on_policy" = "true" ]; then
+                name=${name}_onpolicy
+            else
+                name=${name}_offpolicy
+            fi
+        fi
         if [ "$reset_q" = "True" ]; then
-            name=${env_id}_${algos[cfg_idx]}_reset_q
+            name=${name}_reset_q
         else
-            name=${env_id}_${algos[cfg_idx]}_carry_q
+            name=${name}_carry_q
         fi
 
         safe_cfg_label=$(echo "$config" | sed 's/\.yaml$//')
@@ -66,7 +83,7 @@ for stop_q_iteration in "${stop_q_iterations[@]}"; do
 
         # Run experiments in the background for all the combinations of parameters
         nohup python markov_game/train_discrete_toy.py \
-            --config "markov_game/config/$env_id/$config" \
+            --config "$config_path" \
             name="$name" \
             datetime="'$datetime'" \
             seed="$seed" \

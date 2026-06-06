@@ -89,28 +89,30 @@ def aggregate_progresses(log_dirs: list,
                         use_tensorboard=True,
                         is_separate_logs=True):
     data_list = []
+    data_path_list = []
     save_log_list = []
     tensorboard_dirs = []
 
     separate_logs = ['eval', 'leader', 'follower'] if is_separate_logs else ['']
     for l in separate_logs:
         data = []
+        data_path = []
         for log_dir in log_dirs:  
             path = os.path.join(log_dir, l, 'progress.csv')
             try:
                 df = pd.read_csv(path)
-                print(f"Read from {path}")
+                # print(f"\033[1;30mRead from\033[0m {path}")
             except pd.errors.EmptyDataError:
                 df = pd.DataFrame()
-                raise ValueError(
-                    f"No data found in {path}. Using empty DataFrame instead."
-                    )
+                warnings.warn(f"\033[33mNo data found in {path}. Using empty DataFrame instead.\033[0m")
             data.append(df)
+            data_path.append(path)
         if not all([len(d) == len(data[0]) for d in data]):
             raise ValueError(
                 f"DataFrames have different numbers of rows for {aggregate_log_dir}"
                 )
         data_list.append(data)
+        data_path_list.append(data_path)
         save_log = os.path.join(aggregate_log_dir, l, f'progress_{mode}.csv')
         save_log_list.append(save_log)
         tensorboard_dirs.append(os.path.join(aggregate_log_dir, l))
@@ -118,7 +120,7 @@ def aggregate_progresses(log_dirs: list,
     for dir in tensorboard_dirs:
         os.makedirs(dir, exist_ok=True)
 
-    for d, sd, td in zip(data_list, save_log_list, tensorboard_dirs):
+    for d, dp, sd, td in zip(data_list, data_path_list, save_log_list, tensorboard_dirs):
         data_concat = pd.concat(d)
         if data_concat.empty:
             continue
@@ -132,8 +134,13 @@ def aggregate_progresses(log_dirs: list,
             progress_agregate = data_concat.groupby(groupby).min().reset_index()
         elif mode == 'std':
             progress_agregate = data_concat.groupby(groupby).std().reset_index()
+            if progress_agregate.isna().any().any():
+                warnings.warn(f"\033[33mNaN detected in std for {sd}\033[0m")
+                progress_agregate = progress_agregate.fillna(0)
 
-        print(f"Write to {sd}")
+        for path in dp:
+            print(f"\033[1;30mRead from\033[0m {path}")
+        print(f"\033[1;36mWrite to\033[0m {sd}")
         progress_agregate.to_csv(sd, index=False)
 
         if use_tensorboard:
@@ -163,7 +170,7 @@ if __name__ == '__main__':
     for dir in os.listdir(args.log_dir):
         config_path = os.path.join(args.log_dir, dir, 'config.yaml')
         if not os.path.isfile(config_path):
-            print(f"Skipping {dir} as config.yaml is not found.")
+            print(f"\033[33mSkipping {dir} as config.yaml is not found.\033[0m")
             continue
         with open(config_path, 'r') as file:
             cfg = yaml.safe_load(file)
@@ -189,5 +196,3 @@ if __name__ == '__main__':
                              use_tensorboard=True,
                              is_separate_logs=True)
         print("Succeeded !")
-
-
