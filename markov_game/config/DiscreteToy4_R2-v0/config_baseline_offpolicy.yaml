@@ -5,7 +5,7 @@ set_detect_anomaly: false
 gpu_id: ~
 sweep:
   env: ['id']
-  leader: ['algo', 'actor_update_steps_n', 'critic_update_steps_n']
+  leader: ['algo', 'actor_update_steps_n', 'critic_update_steps_n', 'replay_buffer_size']
   follower: ~
 
 ctxt:

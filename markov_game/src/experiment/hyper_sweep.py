@@ -55,12 +55,14 @@ def args_for_experiments(args):
     sweeped_args = ''
     for k, sw_args in args['sweep'].items():
         if sw_args is not None and len(sw_args) > 0:
+            if len(sweeped_args) > 0:
+                sweeped_args += '_'
             if k == "env":
-                sweeped_args += f'_E'
+                sweeped_args += f'E'
             elif k == "leader":
-                sweeped_args += f'_L'
+                sweeped_args += f'L'
             elif k == "follower":
-                sweeped_args += f'_F'
+                sweeped_args += f'F'
             else:
                 raise ValueError(f"Unknown sweep key: {k}") 
             for sw_arg in sw_args:
@@ -69,13 +71,15 @@ def args_for_experiments(args):
                 sweeped_args += f'_{sw_arg}_{arg_str}'
 
     prefix = str(args['name']) if args.get('name') is not None else args['datetime']
-    exp_name = f"{prefix}{sweeped_args}" if len(sweeped_args) > 0 else prefix
-    name = f"{exp_name}_seed_{args['seed']}" if len(exp_name) > 0 else f"seed_{args['seed']}"
+    exp_name = f"exp_{sweeped_args}" if len(sweeped_args) > 0 else "exp"
+    name = f"{exp_name}_seed_{args['seed']}"
 
     ctxt = {k:v for k,v in args['ctxt'].items()}
     ctxt['prefix'] = os.path.join('experiment', prefix)
     ctxt['name'] = name
-    # Hint: log_dir = data/local/{prefix}/{name} if ctxt['log_dir'] is None
+    # Hint: log_dir = data/local/experiment/{prefix}/{name} if ctxt['log_dir'] is None
+    # e,g, log_dir = data/local/experiment/DiscreteToy4_R1-v0_BCHGDiscrete_Opt/exp_E_DiscreteToy4_R1-v0_L_algo_BCHGDiscrete_Opt_actor_update_steps_n_10_critic_update_steps_n_1_replay_buffer_size_450_seed_*
+    #      (when using markov_game/config/DiscreteToy4_R1-v0/config_bchg.yaml)
     for k,v in args['ctxt'].items():
         _ = ctxt.pop(k) if v is None else None  # Remove ctxt if not set, so default values are used instead of None
     args['exp_name'] = exp_name

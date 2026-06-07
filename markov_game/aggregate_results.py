@@ -25,17 +25,17 @@ Main features
 Expected directory structure
 Input:
     log_dir/
-        ├── run_seed_0/  (training directory whose config.yaml contains exp_name)
+        ├── exp_name_seed_0/  (training directory whose config.yaml contains exp_name)
         │   ├── config.yaml
         │   ├── eval/progress.csv
         │   ├── leader/progress.csv
         │   └── follower/progress.csv
-        ├── run_seed_1/
+        ├── exp_name_seed_1/
         │   ├── config.yaml
         │   ├── eval/progress.csv
         │   ├── leader/progress.csv
         │   └── follower/progress.csv
-        └── run_seed_2/
+        └── exp_name_seed_2/
                 └── ...
 
 Output:
