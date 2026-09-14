@@ -1,0 +1,2279 @@
+%%=============================================================================
+% 研究会テンプレート
+% 作成日 2023年 4月12日
+%%=============================================================================
+
+\documentclass[a4paper,10pt,dvipdfmx]{jsarticle}
+%\documentclass[xelatex,ja=standard,jafont=noto]{bxjsarticle}
+
+% パッケージの読み込み
+\usepackage{packages}
+% スタイルの定義
+\usepackage{style}
+
+%%=============================================================================
+% Referenceルール
+%%=============================================================================
+
+% 図：\label{fig:<id>} - \Cref{fig:<id>}
+% ※ \labrl{} は \caption{} の下
+
+% 表：\label{tb:<id>} - \Cref{tb:<id>}
+
+% 式：\label{eq:<id>} - \Cref{eq:<id>}
+
+% 定理等：\label{thrm:<id>} - Cref{thrm:<id>}
+
+% アルゴリズム：\label{algo:<id>} - Cref{algo:<id>}
+
+
+%%=============================================================================
+% 数式環境ルール
+%%=============================================================================
+
+% 一行で番号付き
+% \begin{equation} - \end{equation}
+
+% 一行で番号無し
+% \begin{equation*} - \end{equation*}
+
+% 複数行で各行番号付き
+% \begin{equations} \begin{align} - \end{align} \end{equations}
+
+% 複数行で各行同一番号個別アルファベット付き
+% \begin{subequations} \begin{align} - \end{split} \end{subequations}c
+
+% 複数行で同一番号
+% \begin{equation} \begin{split} -  \end{split} \end{equation}
+
+% 複数行で同一番号その2（番号が最下行）
+% \begin{multline} - \end{multline}
+
+% Definition環境
+% \begin{definition} - \end{definition}
+
+
+%%=============================================================================
+% 文書本体
+%%=============================================================================
+
+% ヘッダの右端
+\rhead{博士研究まとめ~~\today~~工藤ミコト}
+
+
+% タイトル
+\title{博士研究まとめ}
+\date{\today}
+\author{工藤 ミコト}
+
+\begin{document}
+\maketitle
+
+% 概要
+\begin{abstract}
+\end{abstract}
+
+\tableofcontents % 目次の生成
+
+% 本文
+\section{Introduction}
+
+\begin{itemize}
+    \item マルチエージェントは現実の様々な状況をモデル化する．
+    \begin{itemize}
+        \item e.g.) 企業間の競争，将棋対戦，サッカーのチームワーク，システムへの攻撃，様々な人間関係．
+    \end{itemize}
+    \item これらは複数のエージェント（i.e., 行動主体）がそれぞれ個別の目的を持つような，マルチエージェントの意思決定問題と見ることができる．
+    \begin{itemize}
+        \item より具体的に言うと次のような状況として抽象化できる：各エージェントはそれぞれ方策（or 戦略）を持ち，その方策にしたがって行動を選択する．各エージェントは最も性能の良い方策，すなわち自分の目的を最もよく達成する方策の獲得を目指す．ここで，方策性能はその方策自身と他の全エージェントの方策，および環境（〜など）に依存する値である．
+        %\item 以降，方策性能（「利得」と言ってもよい）は，その方策自身と他の全エージェントの方策および環境によって定義される値であるとし，それがエージェントの目的の達成度に対応すると認めることにする．
+    \end{itemize}
+    \item 各エージェントの方策性能ができる限り最大化され，それ以上は変化しない安定した状態は「均衡」と呼ばれる．よく知られているのはNash均衡．
+    \item マルチエージェント意思決定問題の均衡を定義するためには，「方策性能」を定義するだけでなく，エージェント間の「関係」も定義する必要がある．
+    \begin{itemize}
+        \item 例えば，Nash均衡はエージェント間の関係が対称であるとしたときの均衡と考えることができる．
+        \item エージェント間が対称であるような具体例：じゃんけんプレイヤー，将棋で対戦する2人，競争的な市場での企業群．
+    \end{itemize}
+    \item 我々は非対称なエージェント関係である，leader-follower 関係に着目する．
+    \begin{itemize}
+        \item leaderとfollower という2人のエージェントを考える．
+        \item Followerは，与えられたleaderの方策の下で自分の方策性能の最大化を目指すエージェントである．
+        \item Leaderは，上記のようなfollowerの下で自分の方策性能の最大化を目指すエージェントである．
+        %\item 例えば，以下のような関係がleader-followerである：
+    \end{itemize}
+    \item Leader-follower関係での均衡はStackelberg均衡と呼ばれる．
+    \begin{itemize}
+        \item Stackelberg均衡はbi-level optimizationの最適解として表現可能であり，いくつかの工夫によってユニークな解として定義することができる．（上半連続性によって存在も保証できると考えられる）
+    \end{itemize}
+    \item 我々の研究目標は，状態遷移がマルコフ性を持つような2エージェント環境でStackelberg均衡を求めるアルゴリズムの開発である．
+    \begin{itemize}
+        \item 「状態遷移がマルコフ性を持つような2エージェント環境」は 2-player Markov game と呼ばれる（詳細は下記）．
+    \end{itemize}
+    \item 2-player Markov game の Stackelberg 均衡は，長期的な視点での目的達成を目指すleaderとfollowerの均衡と解釈することができる．これは例えば以下のようなタスクの最適解となる：
+    \begin{itemize}
+        \item 強化学習エージェント（follower）の学習結果を攻撃者（leader）が別のものに誘導するための最適なpoisoning方策の獲得．
+        \item （上とは逆に）適応的な攻撃者（follower）の攻撃に対して最もロバストな方策の学習（学習者がleader）．
+        \item 共進化的なアルゴリズムの安定化・効率化 (co-evolution\cite{Yang2023-tf}, Actor-Critic\cite{Zheng2022-xj}, Model-based RL\cite{Rajeswaran-ym})
+        \item Safe auto-driving in the simulation\cite{Zhang2020-hw,Zheng2024-in}
+    \end{itemize}
+    \item 2-player Markov game における Stackelberg 均衡を求める既存手法はとして価値反復法\cite{Bucarey2022-ro,Zhang2020-hw}や方策反復法\cite{Kudo2024-cu}があるが，これらは均衡への収束が保証されていないか限定的な設定でのみ収束が保証される．また他にも方策勾配を近似する近似手法\cite{Yang2023-tf,Rajeswaran-ym}が存在するが，これらは理論的な裏付けが与えられておらず，かつさらなる網羅的な実験評価が必要な手法である．なお\cite{Zheng2022-xj}は目的関数がActor-Criticに特化している．
+    \item 我々は\Cref{sec:ST-SPG}と\Cref{sec:ST_SPG_QRF}で2つの異なる問題設定でStacklberg均衡を定義し，方策勾配を厳密に導出する．そしてそれらを解くための新たな方策勾配アルゴリズムを提案する．
+\end{itemize}
+
+\section{Preliminaries}
+
+\subsection{2-Player Markov Game}
+
+\begin{itemize}
+    \item Markov Game は Markov Decision Process (MDPs) のマルチエージェントへの拡張である．
+    \item 2-player Markov Game: $(\mathcal{S}, (\mathcal{A},\mathcal{B}), p, \rho_0, (r_1,r_2), (\gamma_1,\gamma_2),(f,g))$.
+    \begin{itemize}
+        \item $\mathcal{S}$：状態空間
+        \item $\mathcal{A, B}$：行動空間（$\mathcal{A}$: leader, $\mathcal{B}$: follower）
+        \item $p: \mathcal{S}\x\mathcal{A}\x\mathcal{B}\to\Delta(\mathcal{S})$：状態遷移関数（$\Delta(\mathcal{S})$は$\mathcal{S}$上の確率分布の集合）
+        \item $\rho_0\in\Delta(\mathcal{S})$：初期状態分布
+        \item $r_1,r_2:\mathcal{S}\x\mathcal{A}\x\mathcal{B}\to\R$：報酬関数（1: leader, 2: follower）
+        \item $\gamma_1,\gamma_2\in[0,1)$：割引率
+    \end{itemize}
+    \item leader方策$f:\mathcal{S}\to\Delta(\mathcal{A})$，follower方策$g:\mathcal{S}\to\Delta(\mathcal{B})$（$g:\mathcal{S}\x\mathcal{A}\to\Delta(\mathcal{B})$の場合もある）
+\end{itemize}
+
+\subsection{Policy Gradient Theorem in Single-Agent MDPs}
+
+\begin{itemize}
+    \item エージェントが1人（i.e., single-agent MDPs $(\mathcal{S}, \mathcal{A}, p, \rho_0, r, \gamma,\pi_{\theta})$）の場合には，方策性能$J(\theta)$ は
+    \begin{align}
+        J(\theta):=\E^{\pi_{\theta}}\left[\sum_{t=0}^\infty\gamma^tr(s_t,a_t)\right]
+    \end{align}
+    と定義される．この右辺は割引累積期待報酬と呼ばれる．ここで，$\E^{\pi}[\cdot]$は方策$\pi_{\theta}$に従って行動したときの軌跡$\tau:=(s_0,a_0,s_1,a_1,...)\sim \rho(\tau)$についての期待値であり，
+    \begin{subequations}
+    \begin{align}
+        \rho(\tau)&=\rho_0(s_0)\pi_{\theta}(a_0|s_0)p(s_1|s_0,a_0)\pi_{\theta}(a_1|s_1)p(s_2|s_1,a_1)\pi_{\theta}(a_2|s_2)\dots\\
+        &=\rho_0(s_0)\pi_{\theta}(a_0|s_0)\prod_{t=0}^\infty p(s_{t+1}|s_t,a_t)\pi_{\theta}(a_{t+1}|s_{t+1}).
+    \end{align}
+    \end{subequations}
+    \item $J(\theta)$の$\theta$についての勾配$\nabla_{\theta}J(\theta)$は以下の方策勾配定理によって計算できる：
+    \begin{theorem}[方策勾配定理\cite{Sutton1999-su,Sutton2018-jf}]\label{thrm:PGT}
+        \begin{align}
+            \nabla_{\theta_1}J(\theta)&=\E^{\pi_{\theta}}\left[\sum_{t=0}^\infty\gamma^t\nabla_{\theta_1}\log \pi_{\theta}(a_t|s_t)(Q^{\pi_{\theta}}(s_t,a_t)-b(s))\right]\\
+            &=(1-\gamma)^{-1}\E_{d_{\gamma}^{\theta}}^{\pi_{\theta}}\left[\nabla_{\theta_1}\log \pi_{\theta}(a|s)(Q^{\pi_{\theta}}(s,a)-b(s))\right],
+        \end{align}
+        ここで$b:\mathcal{S}\to\R$は任意の状態の関数．
+    \end{theorem}
+    \begin{itemize}
+        \item $Q^{\pi_{\theta}}(s,a)$はQ関数：$Q^{\pi_{\theta}}(s,a):=\E^{\pi_{\theta}}\left[\sum_{t=0}^\infty\gamma^tr(s_t,a_t)\right|s_0=s,a_0=a]$
+        \item $\E_{d_{\gamma}^{\theta}}^{\pi_{\theta}}[\cdot]$は割引累積期待状態訪問分布$d_{\gamma}^{\theta}(s)$と$\pi_{\theta}(a|s)$にしたがう$(s,a)$についての期待値である．
+        \begin{itemize}
+            \item $d_{\gamma}^{\theta}$は次のように定義される：$d_{\gamma}^{\theta}(s):=(1-\gamma)\sum_{t=0}^\infty\gamma^t\rho_t^{\theta}(s_t)$, where
+            \begin{align}
+                &\rho_0^{\theta}(s):=\rho_0(s),\\
+                &\begin{multlined}
+                    \rho_t^{\theta}(s):=\left\{\int_{s_k\in\mathcal
+                    S}\int_{a_k\in\mathcal{A}}\right\}_{k=0}^{t-1}\rho_0(s_0)\pi_{\theta}(a_0|s_0)\prod_{k=1}^{t-1}p(s_{k}|s_{k-1},a_{k-1})\pi_{\theta}(a_k|s_k)\\
+                    \cdot p(s|s_{t-1},a_{t-1})\{\rmd s_k\rmd a_k\}_{k=0}^{t-1}\quad(t\ge 1).
+                \end{multlined}
+            \end{align}
+        \end{itemize}
+    \end{itemize}
+    \item 以降のsectionで$J, \E^\pi, Q^\pi, d_{\gamma}^{\theta}$らは2エージェントへ拡張される．
+\end{itemize}
+
+
+\subsection{Expectation on the Occupancy Functions}\label{sec:occupancy_func_and_expectation}
+
+\begin{itemize}
+    \item 方策$f_{\theta_1},g_{\theta_2}$にしたがうとき，タイムステップ$t\in\N$で状態$s\in\mathcal{S}$を訪問する確率$\rho_t^\theta(s)$を以下のような漸化式で定義する：
+    \begin{align}
+            \rho_0^\theta(s):=\rho_0(s),\quad
+            \rho_{t+1}^\theta(s):=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\rho_t^\theta(s_t)f_{\theta_1}(a_t|s_t)g_{\theta_2}(b_t|s_t,a_t)p(s|s_t,a_t,b_t)\rmd s_t\rmd a_t\rmd b_t.
+    \end{align}
+    \begin{itemize}
+        \item $t\ge 1$に限っては以下のように定義することもできる：
+        \begin{align}
+            &\begin{multlined}
+                \rho_t^\theta(s):=\left\{\int_{s_k\in\mathcal
+                S}\int_{a_k\in\mathcal{A}}\int_{b_k\in\mathcal{B}}\right\}_{k=0}^{t-1}\rho_0(s_0)f_{\theta_1}(a_0|s_0)g_{\theta_2}(b_0|s_0,a_0)\\
+                \cdot\left(\prod_{k=1}^{t-1}p(s_{k}|s_{k-1},a_{k-1},b_{k-1})f_{\theta_1}(a_k|s_k)g_{\theta_2}(b_k|s_k,a_k)\right)p(s|s_{t-1},a_{t-1},b_{t-1})\{\rmd s_k\rmd a_k\rmd b_k\}_{k=0}^{t-1},\\
+                \rho_{t+1}^\theta(s):=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\rho_t^\theta(s_t)f_{\theta_1}(a_t|s_t)g_{\theta_2}(b_t|s_t,a_t)p(s|s_t,a_t,b_t)\rmd s_t\rmd a_t\rmd b_t.
+            \end{multlined}
+        \end{align}
+    \end{itemize}
+    \item また，初期状態を$s\in\mathcal{S}$に固定したときの状態$\dot{s}\in\mathcal{S}$への条件付き訪問分布$\rho_t^\theta(\dot{s}|s)$を以下のように定義する：
+    \begin{subequations}
+    \begin{align}
+        &\rho_0^\theta(\dot{s}|s):=\delta(\dot{s}-s)=
+        \begin{cases}
+            \infty & (\dot{s}=s)\\
+            0 & (\mathrm{otherwise})
+        \end{cases},\\
+        &\rho_1^\theta(\dot{s}|s):=\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s,a)p(\dot{s}|s,a,b)\rmd a\rmd b,\\
+        &\rho_{t+1}^\theta(\dot{s}|s):=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\rho_t^\theta(s_t|s)f_{\theta_1}(a_t|s_t)g_{\theta_2}(b_t|s_t,a_t)p(\dot{s}|s_t,a_t,b_t)\rmd s_t\rmd a_t\rmd b_t.
+    \end{align}
+    \end{subequations}
+    \begin{itemize}
+        \item なお，
+        \begin{align}
+            \rho_{t+1}^\theta(\dot{s}|s)=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s,a)p(s'|s,a,b)\rho_t^\theta(\dot{s}|s')\rmd s'\rmd a\rmd b\label{eq:alt_def_rho}
+        \end{align}
+        であることが数学的帰納法から示せるので，\Cref{eq:alt_def_rho}を定義としてもよい．
+    \end{itemize}
+    \item 状態占有関数 (occupancy function) を以下のように定義する：
+    \begin{gather}
+        d_{\gamma_i}^{\theta}(s):=(1-\gamma_i)\sum_{t=0}^\infty \gamma_i^t\rho_t^\theta(s),\quad
+        d_{\gamma_i}^{\theta}(\dot{s}|s):=(1-\gamma_i)\sum_{t=0}^\infty \gamma_i^t\rho_t^\theta(\dot{s}|s).
+    \end{gather}
+    \begin{itemize}
+        \item なお，$\int_{\mathcal{S}}\rho_0(s)\rho_t^{\theta}(\dot{s}|s)\rmd s=\rho_t^{\theta}(\dot{s})$であることが数学的帰納法によって示せるので，$$\int_{\mathcal{S}}\rho_0(s)d_{\gamma_i}^{\theta}(\dot{s}|s)\rmd s=d_{\gamma_i}^{\theta}(\dot{s})$$が成り立つ．
+    \end{itemize}
+
+    \item Occupancy function $d_{\gamma_i}^{\theta}$ と方策$(f_{\theta_1},g_{\theta_2})$の下での期待値の記法を以下のように定義する：
+    \begin{align}
+        &\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)]:=\E_{s\sim d_{\gamma_i}^{\theta},a\sim f_{\theta}(\cdot|s),b\sim g_{\theta_2}(\cdot|s,a)}[h(s,a,b)],\\
+        &\begin{multlined}
+            \E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s_0=s]
+            :=\E_{\dot{s}\sim d_{\gamma_i}^{\theta}(\cdot|s),\dot{a}\sim f_{\theta}(\cdot|\dot{s}),\dot{b}\sim g_{\theta_2}(\cdot|\dot{s},\dot{a})}[h(\dot{s},\dot{a},\dot{b})],
+        \end{multlined}\\
+        &\begin{multlined}
+            \E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s_0=s,a_0=a,b_0=b]\\:= (1-\gamma_i)h(s,a,b)+\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s_0=s']\right],
+        \end{multlined},
+    \end{align}
+    where $ h:\mathcal{S}\x\mathcal{A}\x\mathcal{B}\to\R$ is an arbitrary function.
+    \item 都度，簡単のため，以下のように略す：
+    \begin{align}
+        &\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s]:=E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)|s_0=s],\\
+        &\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s,a,b]:=E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)|s_0=s,a_0=a,b_0=b].
+    \end{align}
+    \item 以上で定義した期待値演算子について，以下が成り立つ：
+    \begin{gather}
+        \E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s]=\E_{a\sim f_{\theta_1}(\cdot|s),b\sim g_{\theta_2}(\cdot|s,a)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s,a,b]\right]\\
+        \E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_i^th(s_t,a_t,b_t)\right]=(1-\gamma_i)^{-1}\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)],\\
+        V_{i}^{f_{\theta_1}g_{\theta_2}}(s)=(1-\gamma_i)^{-1}\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[r_i(\dot{s},\dot{a},\dot{b})|s],\\
+        Q_i^{f_{\theta_1}g_{\theta_2}}(s,a,b)=(1-\gamma_i)^{-1}\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[r_i(\dot{s},\dot{a},\dot{b})|s,a,b]
+    \end{gather}
+    \begin{itemize}
+        \item 解釈としては，$\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[r_i(s,a,b)]$は方策$(f_{\theta_1},g_{\theta_2})$で行動選択しつつ毎ステップ確率$1-\gamma_i$でエピソードが終了する条件で収集した履歴に含まれる状態行動組$(s,a,b)$でについてとった期待値である．また$\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[r_i(\dot{s},\dot{a},\dot{b})|s]$や$\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[r_i(\dot{s},\dot{a},\dot{b})|s,a,b]$は初期状態行動を$(s)$や$(s,a,b)$に固定したうえで上記の方法で収集した軌跡に含まれる状態行動組$(\dot{s},\dot{a},\dot{b})$についてとった期待値である．
+        \item 1つ目の式の証明には\Cref{eq:alt_def_rho}を用いる．
+    \end{itemize}
+    \item 諸性質
+    \begin{lemma}\label{thrm:lemma_exp_ocup}
+        \begin{align}
+        &\mathrm{(a)}\quad\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s'\right]\right]=\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]-(1-\gamma_i)h(s,a,b).\label{eq:rewrite_exp_ocup_a}\\
+        &\begin{multlined}
+            \mathrm{(b)}\quad\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\gamma_i\E_{s'\sim p(\cdot|\dot{s},\dot{a},\dot{b}),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}[h(s',a',b')]\middle|s\right]\\
+            =\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s\right]-\E_{a\sim f_{\theta_1}(\cdot|s),b\sim g_{\theta_2}(\cdot|s,a)}\left[h(s,a,b)\right].
+        \end{multlined}\label{eq:rewrite_exp_ocup_b}\\
+        &\begin{multlined}
+            \mathrm{(c)}\quad\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\gamma_i\E_{s'\sim p(\cdot|\dot{s},\dot{a},\dot{b}),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}[h(s',a',b')]\middle|s,a,b\right]\\
+            =\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s,a,b]-(1-\gamma_i)h(s,a,b).
+        \end{multlined}\label{eq:rewrite_exp_ocup_c}
+    \end{align}
+    \end{lemma}
+    \begin{proof}
+        See \Cref{sec:proof_lemma_exp_ocup}.
+    \end{proof}
+
+    \item なお，以上で示したことはfollower方策が$g_{\theta_2}:\mathcal{S}\to\mathcal{B}$の場合でも成り立つ．
+\end{itemize}
+
+
+\section{Method 1: Stackelberg Stochastic Policy Gradient}\label{sec:ST-SPG}
+
+\subsection{Problem Setting}
+
+\begin{itemize}
+    \item 2-player Markov Game $(\mathcal{S}, (\mathcal{A},\mathcal{B}), p, \rho_0, (r_1,r_2), (\gamma_1,\gamma_2),(f,g))$においてStackelberg均衡を求める問題を考える．
+    \item フォロワーの方策は状態$s\in\mathcal{S}$を入力に取るとする．
+    \item Black-boxな環境を考える．すなわち状態遷移関数と初期状態分布が未知で，状態遷移の結果訪れた状態のみ観測できるとする．なお，報酬関数もblack-boxでよい．
+    \item 以下の仮定を置く：
+    \begin{assumption}\label{thrm:Cq_assumption}
+        ある自然数$q\ge 1$が存在し，リーダーとフォロワーの目的関数$J_1, J_2$（後述）は$C^q$級である．
+    \end{assumption}
+    \begin{itemize}
+        \item なお，本手法の基礎となるFiezら et. al.\cite{Fiez2020-lu}の全微分勾配法はフォロワーの最適反応の唯一性を必要としないため，最適反応の唯一性の仮定は置かない．
+    \end{itemize}
+\end{itemize}
+
+\subsection{Formulation}
+
+\begin{itemize}
+    \item 2-player Markov Game: $(\mathcal{S}, (\mathcal{A},\mathcal{B}), p, \rho_0, (r_1,r_2), (\gamma_1,\gamma_2),(f,g))$
+    \item Leader方策$f_{\theta_1}:\mathcal{S}\to\Delta(\mathcal{A})$，follower方策$g_{\theta_2}:\mathcal{S}\to\Delta(\mathcal{B})$
+    \begin{itemize}
+        \item $\theta_1\in\Theta_1, \theta_2\in\Theta_2$. $\theta:=(\theta_1,\theta_2)$.
+    \end{itemize}
+    \item 方策性能$J_i(\theta_1,\theta_2)~(i\in\{1,2\})$:
+    \begin{align}
+        J_i(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_i^tr_i(s_t,a_t,b_t)\right].
+    \end{align}
+    \item 定式化：
+    \begin{subequations}
+    \begin{gather}
+        \max_{\theta_1,\theta_2\in\Theta_1\x\Theta_2} J_1(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right]\label{eq:formula_SSPG_a}\\
+        \mathrm{subject~to}\quad \theta_2\in\argmax_{\theta_2'\in\Theta_2} J_2(\theta_1,\theta_2'):=\E^{f_{\theta_1}g_{\theta_2'}}\left[\sum_{t=0}^\infty \gamma_2^tr_2(s_t,a_t,b_t)\right].\label{eq:formula_SSPG_b}
+    \end{gather}\label{eq:formula_SSPG}
+    \end{subequations}
+    \begin{itemize}
+        \item この最適解$(\theta_1^*,\theta_2^*)$が (strong) Stackelberg 均衡である．我々の目標はこの$(\theta_1^*,\theta_2^*)$を求めることである．
+    \end{itemize}
+    \item 価値関数$V_i^{f_{\theta_1}g_{\theta_2}}:\mathcal{S}\to\R$，Q関数$Q_i^{f_{\theta_1}g_{\theta_2}}:\mathcal{S}\x\mathcal{A}\x\mathcal{B}\to\R~(i\in\{1,2\})$を定義する：
+    \begin{gather}
+        V_i^{f_{\theta_1}g_{\theta_2}}(s):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_i^tr_i(s_t,a_t,b_t)\middle|s_0=s\right],\\
+        Q_i^{f_{\theta_1}g_{\theta_2}}(s,a,b):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_i^tr_i(s_t,a_t,b_t)\middle|s_0=s,a_0=a,b_0=b\right].
+    \end{gather}
+\end{itemize}
+
+
+\subsection{Total Derivatives and Differential Stackelberg Equlibria}
+
+\begin{itemize}
+    \item \Cref{eq:formula_SSPG}の最適化問題はbi-level最適化になっている．
+    \item Fiez et. al.\cite{Fiez2020-lu}は一般のbi-level最適化について，リーダーの目的関数の全微分を用いる勾配降下法が局所Stackelberg均衡へ収束することを示している．
+    \begin{itemize}
+        \item {\bf Formulation:}
+        \begin{align}
+            &\min_{s_i\in X_1} f_1(x_1,x_2)\enspace\st\enspace\ x_2\in\argmax_{y\in X_2}f_2(x_1,y), &(\mathrm{L})\\
+            &\min_{x_2\in X_2}f_2(x_1,x_2). &(\mathrm{F})
+        \end{align}
+        \item {\bf Assumption 1.} 目的関数$f_i:X\to\R~(i\in\{1,2\})$は$C^q~(q\ge 2)$級：$f_i\in C^q(X,\R)~\exists q\ge 2~\forall i\in\{1,2\}$.
+        \item {\bf Differential Stackelberg Equilibrium:} $x^*=(x_1^*,x_2^*)\in X$ is a DSE if $\nabla f_1(x^*)=0, \nabla_{x_2}f_2(x^*)=0, \nabla^2f_1(x^*)>0,$ and $\nabla_{x_2}^2f_2(x^*)>0$.
+        \item {\bf $\tau$-Stackelberg update:}
+        \begin{gather}
+            x_{k+1}=x_{k}-\alpha_1\omega_{S_{\tau}}(x_k),\\
+            \where x_k=(x_1^{(k)},x_2^{(k)}),\quad\omega_{S_{\tau}}(x_k)=(\nabla f_1(x_k),\tau\nabla_{x_2}f_2(x_k)),\quad\tau =\dfrac{\alpha_2}{\alpha_1}.
+        \end{gather}
+        \item $\nabla f_1$は上記の式(L)の制約条件の下での$f_1$の$x_1$についての全微分であり，陰関数定理を利用して計算する．
+        \item 収束性：
+        \begin{itemize}
+            \item[1.] Zero-sum $(f_2=-f_1)$の場合，$\alpha_1\le 1/L$ where $\max\{\mathrm{spec}(S_1(J(x)))~\cup~\mathrm{spec}(-\tau\nabla_{x_2}^2f(x))\}\le L$ならば， $x$が$\tau$-Etackelberg updates の安定臨界点（stable critical point）であることと$x$が Differential Stackleberg Equilibrium であることは同値（Proposition 5）．
+            \begin{itemize}
+                \item $J(x)$は$\omega(x):=(\nabla_{x_1}f_1(x),\nabla_{x_2}f_2(x))$のJacobi行列:
+                \begin{gather}
+                    J(x):=
+                    \begin{pmatrix}
+                        \nabla_{x_1}^2 f_1(x) & \nabla_{x_1x_2} f_1(x) \\
+                        \nabla_{x_2x_1} f_2(x) & \nabla_{x_2}^2 f_2(x).
+                    \end{pmatrix}
+                \end{gather}
+                \item $S_1(J(x))$は$J(x)$のシューア補行列：$S_1(J(x)=\nabla_{x_1}^2f(x)-\nabla_{x_2x_1}f(x)\T(\nabla_{x_2}^2f(x))^{-1}\nabla_{x_2x_1}f(x)$.
+                \item $\mathrm{spec}(A)$は行列Aのスペクトル
+                \item したがって$L$は$S_1(J(x))$と$-\tau\nabla_{x_2}^2f(x)$の固有値の上界である．
+            \end{itemize}
+            
+            \item[2.] General-sum の場合，$\omega_{S_{\tau}}$が L-Lipschitz かつ $\alpha_1<1/L$ならば，$\tau$-Stackelberg updates が $\dot{x}=-\omega_{S_{\tau}}$の saddle points に収束する確率は0である（Theorem 4）．
+            \item[3.] Zero-sum の場合，$\omega_{S_{\tau}}$がL-Lipschitz $\iff \max\{\mathrm{spec}(S_1(J(x)))~\cup~\mathrm{spec}(-\tau\nabla_{x_2}^2f(x))\}\le L$ なので，$\alpha_1<1/L$となるように$\alpha_1$を選べば，上記の命題より，$\tau$-Stackelberg updates の臨界点はほとんど確実にDSEである．
+        \end{itemize}
+    \end{itemize}
+    \item 我々の考えるgeneral-sum Markov gameにおいて，$\tau$-Stackelberg updatesは局所均衡であるDSEおよび\Cref{eq:formula_SSPG}で定義される（strong）Stackelberg均衡への収束は保証しない．ただ上記のようによい性質も持つため，我々も
+    $J_1(\theta_1,\theta_2)$の全微分による勾配法を考える．
+\end{itemize}
+
+\subsection{Stackelberg Stochastic Policy Gradient}\label{sec:total_dev_PG}
+
+
+\begin{itemize}
+    \item 提案手法の更新式：
+    \begin{subequations}
+    \begin{align}
+        &\theta_1^{(t+1)}\gets \theta_1^t+\alpha^1\nabla J_1(\theta_1^t,\theta_2^t),\\
+        &\theta_2^{(t+1)}\gets \theta_2+\alpha^2\nabla_{\theta_2} J_2(\theta_1^t,\theta_2^t).
+    \end{align}
+    \end{subequations}
+    \item 陰関数定理によって$\nabla J_1$を書き下す．
+    \begin{itemize}
+        \item \Cref{thrm:Cq_assumption}より$\nabla_{\theta_2}J_2$は連続微分可能である．このとき，$\nabla_{\theta_2}J_2(\theta_1',\theta_2')=0$かつ$\mathrm{det}\nabla_{\theta_2}^2J_2(\theta_1',\theta_2')\neq 0$を満たす$(\theta_1',\theta_2')\in\Theta_1\x\Theta_2$が存在するならば，陰関数定理より，$(\theta_1',\theta_2')$の開近傍$\Theta_1'\x\Theta_2'\subset\Theta_1\x\Theta_2$内の各点$(\theta_1,\theta_2)\in\Theta_1'\x\Theta_2'$で，
+        $$\nabla_{\theta_2}J_2(\theta_1,\theta_2)\iff \theta_2=\theta_2^*(\theta_1)$$
+        を満たすような連続微分可能関数$\theta_2^*:\Theta_1\to\Theta_2$が一意に存在し，
+        $$\nabla_{\theta_1}\theta_2^*(\theta_1)=-(\nabla_{\theta_2}^2J_2(\theta_1,\theta_2))^{-1}\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)|_{\theta_2=\theta_2^*(\theta_1)}$$
+        が成り立つ．
+        \item \Cref{eq:formula_SSPG_b}の制約条件を満たす$(\theta_1',\theta_2')$は$\nabla_{\theta_2}J_2(\theta_1',\theta_2')=0$を満たす．ここで$\mathrm{det}\nabla_{\theta_2}^2J_2(\theta_1',\theta_2')\neq 0$を仮定すれば，$\nabla_{\theta_2}J_2(\theta_1,\theta_2)=0$を満たすような近傍の点$(\theta_1,\theta_2)$において
+        \begin{subequations}
+        \begin{align}
+            \nabla J_1(\theta_1,\theta_2)&=\nabla_{\theta_1}J_1(\theta_1,\theta_2)+\nabla_{\theta_1}\theta_2^*(\theta_1)\T\nabla_{\theta_2}J_1(\theta_1,\theta_2)\\
+            &=\nabla_{\theta_1}J_1(\theta_1,\theta_2)-\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)\T(\nabla_{\theta_2}^2J_2(\theta_1,\theta_2))^{-1}\nabla_{\theta_2}J_1(\theta_1,\theta_2)\label{eq:nabla_J_1_implicit}
+    \end{align}
+    \end{subequations}
+    を評価できる．
+    \item ただし，前セクションで紹介した$\tau$-Stackelberg updateは更新時に制約条件を考慮せず，現在の$(\theta_1,\theta_2)$で\Cref{eq:nabla_J_1_implicit}を評価するように更新する．その更新方法でも，DSEへの収束についていくつかの保証が与えられる．
+    \end{itemize}
+    \item 1階微分の項（$\nabla_{\theta_1}J_1, \nabla_{\theta_2}J_1$）の導出：
+    \begin{itemize}
+        \item Single-agent MDPsの方策勾配定理より，
+        \begin{gather}
+            \nabla_{\theta_1}J_1(\theta_1,\theta_2)=\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_2}}(s,a,b)\right],\\
+            \nabla_{\theta_2}J_1(\theta_1,\theta_2)=\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_1^{f_{\theta_1}g_{\theta_2}}(s,a,b)\right].
+        \end{gather}
+    \end{itemize}
+    \item 2階微分の項（$\nabla_{\theta_2\theta_1}J_2, \nabla_{\theta_2}^2J_2$）の導出：
+    \begin{itemize}
+        \item 以下の定理が成り立つ：
+        \begin{theorem}\label{thrm:SSPG_nabla_21_J_2}
+            \begin{align}
+                \nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)
+                =\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\Big[&\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T\nonumber\\
+                +&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})\T\Big|s,a,b\bigg]\nonumber\\
+                -&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T\bigg].
+                    \end{align} 
+            \end{theorem}
+        \begin{proof}
+            See \Cref{sec:proof_SSPG_nabla_21_J_2}
+        \end{proof}
+
+        \begin{theorem}\label{thrm:SSPG_nabla_22_J_2}
+            \begin{align}
+                \nabla_{\theta_2}^2J_2(\theta_1,\theta_2)=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\Bigg[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[&\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T\nonumber\\
+                +&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})\T\bigg|s,a,b\bigg]\nonumber\\
+                -&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T\nonumber\\
+                +&\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\Bigg].
+            \end{align}
+        \end{theorem}
+        \begin{proof}
+            See \Cref{sec:proof_SSPG_nabla_22_J_2}
+        \end{proof}
+    \end{itemize}
+
+    \item 以上より，$J_1(\theta_1,\theta_2)=\nabla_{\theta_1}J_1(\theta_1,\theta_2)-\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)\T(\nabla_{\theta_2}^2J_2(\theta_1,\theta_2))^{-1}\nabla_{\theta_2}J_1(\theta_1,\theta_2)$を計算するには，
+    \begin{itemize}
+        \item $\nabla_{\theta_1}\log f_{\theta_1}(a|s)$,
+        \item $\nabla_{\theta_2}\log g_{\theta_2}(b|s)$,
+        \item $\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)$,
+        \item $Q_1^{f_{\theta_1}g_{\theta_2}}(s,a,b)$,
+        \item $Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)$
+    \end{itemize}
+    を計算すればよい．
+    \item Follower の勾配$\nabla_{\theta_2}J_2(\theta_1,\theta_2)$は，$\nabla_{\theta_2}\log g_{\theta_2}(b|s)$と$Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)$から
+    \begin{gather}
+        \nabla_{\theta_2}J_2(\theta_1,\theta_2)=\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\right].
+    \end{gather}
+    と計算される．
+\end{itemize}
+
+\subsection{Algorithm}
+
+アルゴリズム擬似コードを\Cref{algo:proposed_SSPG}に示す．以下でこのアルゴリズムを説明する．
+
+\begin{itemize}
+    \item Black-Boxな環境の下では以下のものが計算できないので近似する必要がある：
+    \begin{itemize}
+        \item $Q_1^{f_{\theta_1}g_{\theta_2}}(s,a,b)$,
+        \item $Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)$,
+        \item $\E_{d_{\gamma_i}^\theta}^{f_{\theta_1}g_{\theta_2}}[\cdot]\quad (i\in\{1,2\})$,
+        \item $\E_{d_{\gamma_2}^\theta}^{f_{\theta_1}g_{\theta_2}}[\cdot|s,a,b]$.
+    \end{itemize}
+    \item $Q_i^{f_{\theta_1}g_{\theta_2}}$はcritic network $Q_{\omega_j}~(j\in\{1,2\})$で推定する．
+    \begin{itemize}
+        \item $\omega_j$の損失関数は，$Q_{\bar{\omega}_j}$をtarget critic, $f_{\bar{\theta}_1}$と$g_{\bar{\theta}_2}$をtarget actors として，
+        \begin{align}
+            &L(\omega_j;\theta):=\E_{(s,a,b,r_j,s')\sim\mathcal{D},a'\sim f_{\bar{\theta}_1}(\cdot|s'),b'\sim g_{\bar{\theta}_2}(\cdot|s')}\left[\left(r_j+\gamma_jQ_{\bar{\omega}_j}(s',a',b') - Q_{\omega_j}(s,a,b)\right)^2\right],\\
+            &\widehat{L}(\omega_j;\theta):=\dfrac{1}{N}\sum_{i=0}^N\left(r_j^{(i)}+\gamma_jQ_{\bar{\omega}_j}(s_i',a_i',b_i') - Q_{\omega_j}(s_i,a_i,b_i)\right)^2\Big|_{a_i'\sim f_{\bar{\theta}_1}(\cdot|s_i'),b_i'\sim g_{\bar{\theta}_2}(\cdot|s_i')},
+        \end{align}
+        where a minibatch of $N$ transitions $(s_i,a_i,b_i,r_1^{(i)},s_i')$ is sampled from replay buffer $\mathcal{D}$.
+    \end{itemize}
+    \item $\E_{d_\gamma^\theta}^{fg}[\cdot]$は$\gamma^t$に比例した確率でリプレイバッファからサンプリングしたサンプル平均で近似する（\Cref{sec:sample_approx}）．
+    \begin{itemize}
+        \item リプレイバッファ$\mathcal{D}$中の各サンプルには生成時のタイムステップ$t$が保存する：$(s,a,b,s',r_A,r_B,t)$
+        \item $\gamma^t$に比例した確率で$\mathcal{D}$からサンプリングし，サンプル平均をとる．
+        \item 以上のサンプリング方法を，$\gamma$による割引サンプリング（discount sampling）と呼ぶことにする．また，$\mathrm{(sample)}\overset{\gamma}{\sim}\mathcal{D}$と表記する．
+    \end{itemize}
+    \item $\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s,a,b]$のサンプル近似の時には，サンプル$(s,a,b)$をタイムステップ$t=0$のサンプル$(s_0,a_0,b_0)$とみなし，同じエピソード中の$(s,a,b)$以降（すなわち，$(s,a,b)$の生成タイムステップを$t$とするとき，同エピソードのタイムステップ$t'\ge t$のサンプル）から$\gamma_2^{t'-t}$に比例する確率で割引サンプリングする．これを $\mathrm{(sample)}\overset{\gamma_2}{\sim}\mathcal{D}(\cdot|s,a,b)$と表記する．
+
+    \item 以上より，$\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)$と$\nabla_{\theta_2}^2J_2(\theta_1,\theta_2)$のサンプル近似は，
+    \begin{align}
+        \widehat{\nabla_{\theta_2\theta_1}J_2}(\theta_1,\theta_2)
+        =\dfrac{1}{1-\gamma_2}\dfrac{1}{N}\sum_{i=1}^N\Bigg[\dfrac{1}{1-\gamma_2}\dfrac{1}{M}\sum_{j=1}^M\bigg[&\nabla_{\theta_2}\log g_{\theta_2}(b_{ij}|s_{ij})Q_{\omega_2}(s_{ij},a_{ij},b_{ij})\nabla_{\theta_1}\log f_{\theta_1}(a_i|s_i)\T\nonumber\\
+        +&\nabla_{\theta_2}\log g_{\theta_2}(b_i|s_i)Q_{\omega_2}(s_{ij},a_{ij},b_{ij})\nabla_{\theta_1}\log f_{\theta_1}(a_{ij}|s_{ij})\T\bigg]\nonumber\\
+        -&\nabla_{\theta_2}\log g_{\theta_2}(b_i|s_i)Q_{\omega_2}(s_i,a_i,b_i)\nabla_{\theta_1}\log f_{\theta_1}(a_i|s_i)\T\Bigg].\label{eq:nabla_2_1_J_2_sampleapprox}
+    \end{align}
+    \begin{align}
+        \widehat{\nabla_{\theta_2}^2J_2}(\theta_1,\theta_2)=\dfrac{1}{1-\gamma_2}\dfrac{1}{N}\sum_{i=1}^N\Bigg[\dfrac{1}{1-\gamma_2}\dfrac{1}{M}\sum_{j=1}^M\bigg[&\nabla_{\theta_2}\log g_{\theta_2}(b_{ij}|s_{ij})Q_{\omega_2}(s_{ij},a_{ij},b_{ij})\nabla_{\theta_2}\log g_{\theta_2}(b_i|s_i)\T\nonumber\\
+        +&\nabla_{\theta_2}\log g_{\theta_2}(b_i|s_i)Q_{\omega_2}(s_{ij},a_{ij},b_{ij})\nabla_{\theta_2}\log g_{\theta_2}(b_{ij}|s_{ij})\T\bigg|s,a,b\bigg]\nonumber\\
+        -&\nabla_{\theta_2}\log g_{\theta_2}(b_i|s_i)Q_{\omega_2}(s_i,a_i,b_i)\nabla_{\theta_2}\log g_{\theta_2}(b_i|s_i)\T\nonumber\\
+        +&\nabla_{\theta_2}^2\log g_{\theta_2}(b_i|s_i)Q_{\omega_2}(s_i,a_i,b_i)\Bigg].\label{eq:nabla_2_2_J_2_sampleapprox}
+    \end{align}
+    \begin{align*}
+        \where~
+        \{(s_{ij},a_{ij},b_{ij})\}_{j=1}^M\overset{\gamma_2}{\sim}\mathcal{D}(\cdot|s_i,a_i,b_i)\enspace\st\enspace\{(s_i,a_i,b_i)\}_{i=1}^N\overset{\gamma_2}{\sim}\mathcal{D}.
+    \end{align*}
+    \begin{itemize}
+        \item Total sample size = $N\x M$.
+    \end{itemize}
+
+    \item 逆行列$(\nabla_{\theta_2}^2J_2(\theta_1,\theta_2))^{-1}$の計算は数値誤差を軽減する工夫が必要と予想される．
+    \begin{itemize}
+        \item 正則化した$(\nabla_{\theta_2}^2J_2(\theta_1,\theta_2)+\lambda I)^{-1}$を計算する\cite{Yang2023-tf}．かつ，$(\nabla_{\theta_2}^2J_2(\theta_1,\theta_2)+\lambda I)\mathbf{x}=\nabla_{\theta_2}J_1(\theta_1,\theta_2)$を線型ソルバで解く．$\implies \mathbf{x}=(\nabla_{\theta_2}^2J_2(\theta_1,\theta_2)+\lambda I)^{-1}\nabla_{\theta_2}J_1(\theta_1,\theta_2)$.
+        \item \textcolor{blue}{逆行列の計算にSherman-Morrison-Woodbury formulaが使えるのでは}
+    \end{itemize}
+\end{itemize}
+
+
+\subsection{Paper Story}
+
+\section{Method 2: Stackelberg Stochastic Policy Gradient with a Quantal-Response Follower $g(b|s)$}\label{sec:ST_SPG_QRF}
+
+\subsection{Problem Setting}
+
+\begin{itemize}
+    \item 2-player Markov Game $(\mathcal{S}, (\mathcal{A},\mathcal{B}), p, \rho_0, (r_1,r_2), (\gamma_1,\gamma_2),(f,g))$においてStackelberg均衡を求める問題を考える．
+    \item フォロワーの目的関数はentropy-regularizedであるとする．すなわち，フォロワーの目的関数はMax-Ent RLと同様に定義される．
+    \item フォロワーの方策は状態$s\in\mathcal{S}$を入力に取るとする．
+    \item Black-boxな環境を考える．すなわち状態遷移関数と初期状態分布が未知で，状態遷移の結果訪れた状態のみ観測できるとする．なお，報酬関数もblack-boxでよい．
+\end{itemize}
+
+\subsection{Formulation}
+
+\begin{itemize}
+    \item 2-player Markov Game: $(\mathcal{S}, (\mathcal{A},\mathcal{B}), p, \rho_0, (r_1,r_2), (\gamma_1,\gamma_2),(f,g))$
+    \item パラメータ$\beta$を導入．
+    \item Leader方策$f_{\theta_1}:\mathcal{S}\to\Delta(\mathcal{A})$，follower方策$g_{\theta_2}:\mathcal{S}\to\Delta(\mathcal{B})$
+    \item 方策性能$J_i(\theta_1,\theta_2)~(i\in\{1,2\})$:
+    \begin{gather}
+        J_1(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_1^tr_1(s_t,a_t,b_t)\right],\\
+        J_2(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty \gamma_2^t\left\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^{g_{\theta_2}}(s_t)\right\}\right],\\
+        \where \mathcal{H}^{g_{\theta_2}}(s):=\E_{a\sim g_{\theta_2}(\cdot|s)}[-\log g_{\theta_2}(a|s)].
+    \end{gather}
+    \item 定式化：
+    \begin{subequations}
+    \begin{gather}
+        \max_{\theta_1,\theta_2} J_1(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right]\\
+        \st\quad \theta_2\in\argmax_{\theta_2'} J_2(\theta_1,\theta_2'):=\E^{f_{\theta_1}g_{\theta_2'}}\left[\sum_{t=0}^\infty \gamma_2^t\left\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^{g_{\theta_2'}}(s_t)\right\}\right].
+    \end{gather}\label{eq:formula_SSPG_QR}
+    \end{subequations}
+    \begin{itemize}
+        \item この最適解$(\theta_1^*,\theta_2^*)$が (strong) Stackelberg 均衡である．我々の目標はこの$(\theta_1^*,\theta_2^*)$を求めることである．
+    \end{itemize}
+    \item 価値関数とQ関数の定義は，フォロワーのみ変わる：
+    \begin{align}
+        &V_2^{fg}(s):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^t\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^g(s_t)\}\middle|s_0=s\right],\\
+        &Q_2^{fg}(s,a,b):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^t\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^g(s_t)\}\middle|s_0=s,a_0=a.b_0=b\right]-\beta\mathcal{H}^g(s).
+    \end{align}
+
+    \item $\theta_1$がgivenのもとで，制約条件を満たす$\theta_2$は，$g_{\theta_2}$の表現能力が十分ならば$g_{\theta_2}(b|s)=g_{\theta_1}^*(b|s)$に一致する：
+    \begin{align}
+        g_{\theta_1}^*(b|s)&=\exp\left(\beta^{-1}\left(\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]-V_2^{f_{\theta_1}\dag}(s)\right)\right)
+    \end{align}
+    \begin{itemize}
+        \item ここで $V_2^{f_{\theta_1}\dag}(s), Q_2^{f_{\theta_1}\dag}(s,a,b)$ は
+        \begin{align}
+            &V_2^{f\dag}(s):=\max_{g}V_2^{fg}(s),\\
+            &Q_2^{f\dag}(s,a,b):=\max_{g}Q_2^{fg}(s,a,b)
+        \end{align}
+        と定義される関数で，以下のBellman方程式を満たす解である：
+        \begin{align}
+            &V_2^{f_{\theta_1}\dag}(s)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)\rmd b,\\
+            &Q_2^{f_{\theta_1}\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f_{\theta_1}\dag}(s')\right].
+        \end{align}
+    \end{itemize}
+    \item したがって以下のように定式化し直すことができる：
+    \begin{subequations}
+    \begin{gather}
+        \max_{\theta_1} J_1(\theta_1):=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right],\\
+        \where\quad g_{\theta_1}^*(b|s):=\exp\left(\beta^{-1}\left(\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]-V_2^{f_{\theta_1}\dag}(s)\right)\right).
+    \end{gather}
+    \end{subequations}    
+\end{itemize}
+
+
+\subsection{Policy Gradient}
+
+\begin{itemize}
+    \item まず，$\nabla_{\theta_1}J_1(\theta_1)$について\Cref{thrm:SPG_qr_1}が成り立つ．
+\end{itemize}
+
+\begin{theorem}\label{thrm:SPG_qr_1}
+    \begin{multline}
+    \nabla_{\theta_1}J_1(\theta_1)\\
+    =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)
+    +\mathrm{Cov}_{b}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s),Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\middle|s,a\right]\Big]
+    \end{multline}
+    ここで，$\mathrm{Conv}_{b}[\cdot|s,a],\mathrm{Conv}_{b}[\cdot|s]$はそれぞれ$(s,a),s$が与えられた下での，$b\sim g_{\theta_1}^*(\cdot|s,a)$および$b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))$に関する条件付き共分散である．
+\end{theorem}
+\begin{proof}
+    See \Cref{sec:proof_SPG_qr_1}.
+\end{proof}
+
+\begin{itemize}
+    \item 次に，\cref{thrm:SPG_qr_2}は\cref{thrm:SPG_qr_1}をさらに書き下して，サンプルから推定可能な$\nabla_{\theta_1}J_1(\theta_1)$の式を与える．
+\end{itemize}
+
+\begin{theorem}\label{thrm:SPG_qr_2}
+    \begin{multline}
+        \nabla_{\theta_1}J_1(\theta_1)
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\\
+        \cdot\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})Q_2^{f_{\theta_1}\dag}(\dot{s},\dot{a},\dot{b})\middle|s,b\right]\bigg]
+        \label{eq:SPG_qr_2}
+    \end{multline}
+\end{theorem}
+\begin{proof}
+    See \Cref{sec:proof_SPG_qr_2}.
+\end{proof}
+
+\begin{itemize}
+    \item $\E_{b\sim g_{\theta_1}^*(\cdot\mid s)}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right] = $
+\end{itemize}
+
+
+\subsection{Algorithm}\label{sec:SSPG_qr_algo}
+
+アルゴリズム擬似コードを\Cref{algo:proposed_SSPG_QRF}に示す．以下でこのアルゴリズムを説明する．
+
+\begin{itemize}
+    \item 方策パラメータの更新式は
+    \begin{align}
+        &\theta_1^{(t+1)}\gets \theta_1^t+\alpha^1\nabla_{\theta_1} J_1(\theta_1^t).
+    \end{align}
+    ここで，$\nabla_{\theta_1}J_1$の計算に必要なのは：$\nabla_{\theta_1}\log f_{\theta_1}, g_{\theta_1}^*, Q_1^{f_{\theta_1}g_{\theta_1}^*}, Q_2^{f_{\theta_1}\dag}$.
+    \item 現在の$f_{\theta_1}$に対するfollowerのquantal response $g_{\theta_1}^*$とそれに対応する$Q_2^{f_{\theta_1}\dag}$は，Soft Actor-Criticやsoft Q-learningで学習する．
+    \begin{itemize}
+        \item Followerのpolicy networkを$g_{\theta_2}$，q-function networkを$Q_{\omega_2}$とする．
+        \item SACは方策反復法ベース（原論文はそうだが方策勾配法の説もあり？），soft Q-learningは価値反復法ベース．どちらもcriticは最適Q関数に収束するので原理的にはどちらを使ってもよい．
+        \item SACの方がサンプル効率が良い傾向にあるのでSACを使う．
+        \item 現在のLeader方策に対して最適反応である必要があるので，まず学習初期にfollower方策だけある程度学習を進め，その後Leader方策を一度更新する度に複数回follower方策を更新するフェーズにシフトする戦略をとる．Quantal responseがleader方策に対してある程度滑らかであることを期待する\textcolor{red}{（この点はquantal responseの性質について先行研究を調査する必要がある）}．
+    \end{itemize}
+    \item $Q_1^{f_{\theta_1}g_{\theta_1}^*}$は
+    critic network $Q_{\omega_1}$ で推定する．
+    \begin{itemize}
+        \item $\omega_j$の損失関数は，$Q_{\bar{\omega}_j}$をtarget critic, $f_{\bar{\theta}_1}$をleader's target actor，$g_{\bar{\theta}_2}$をfollower's target actorとして，
+        \begin{align}
+            &L(\omega_1;\theta_1):=\E_{(s,a,b,r_1,s')\sim\mathcal{D},a'\sim f_{\bar{\theta}_1}(\cdot|s'),b'\sim g_{\bar{\theta}_2}(\cdot|s')}\left[\left(r_1+\gamma_1Q_{\bar{\omega}_1}(s',a',b') - Q_{\omega_1}(s,a,b)\right)^2\right],\\
+            &\widehat{L}(\omega_1;\theta_1):=\dfrac{1}{N}\sum_{i=0}^N\left(r_1^{(i)}+\gamma_1Q_{\bar{\omega}_1}(s_i',a_i',b_i') - Q_{\omega_1}(s_i,a_i,b_i)\right)^2\Big|_{a_i'\sim f_{\bar{\theta}_1}(\cdot|s_i'),b_i'\sim g_{\bar{\theta}_2}(\cdot|s_i')},
+        \end{align}
+        where a minibatch of $N$ transitions $(s_i,a_i,b_i,r_1^{(i)},s_i')$ is sampled from replay buffer $\mathcal{D}$.
+    \end{itemize}
+    \item $\E_{\gamma_1}^{f_{\theta_1}g_{\theta_1}^*}[\cdot]$はリプレイバッファからdiscount sampling (\Cref{sec:sample_approx}) したサンプルででサンプル近似する.
+    \item $\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})Q_2^{f_{\theta_1}\dag}(\dot{s},\dot{a},\dot{b})\middle|s,b\right]$の期待値は，外側の期待値の近似で用いたサンプルに含まれる$(s,b)$から始まるエピソード，すなわち$(s,b)$が含まれていたエピソードの$(s,b)$以降の部分のtransitionsからdiscount samplingしたサンプルで近似できる．もしくは，サンプル数の少なさを補うために，$(s,b)$以降の部分のtransitions全てを用いて，
+    \begin{align}
+        \E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})Q_2^{f_{\theta_1}\dag}(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^{\infty}\gamma_2^t \nabla_{\theta_1}\log f_{\theta_1}(a_t|s_t)Q_2^{f_{\theta_1}\dag}(s_t,a_t,b_t)\middle|s,a,b\right]
+    \end{align}
+    をモンテカルロ近似する方法も考えられる．
+\end{itemize}
+
+
+\subsection{Paper Story}
+
+
+\section{Method 3: Stackelberg Policy Gradient with a Quantal-Response Follower $g(b|s,a)$}\label{sec:ST_SPG_QRF_BBF}
+
+\subsection{Problem Setting}
+
+\begin{itemize}
+    \item 2-player Markov Game $(\mathcal{S}, (\mathcal{A},\mathcal{B}), p, \rho_0, (r_1,r_2), (\gamma_1,\gamma_2),(f,g))$においてStackelberg均衡を求める問題を考える．
+    \item フォロワーの目的関数はentropy-regularizedであるとする．すなわち，フォロワーの目的関数はMax-Ent RLと同様に定義される．
+    \item フォロワーの方策は状態$s\in\mathcal{S}$とリーダー行動$a\in\mathcal{A}$を入力に取るとする．これは次のように解釈できる：リーダー・フォロワー方策がgivenとしたとき，先にリーダーが現在の状態$s\in\mathcal{S}$に依存して行動$a\sim f(\cdot|s)$を選択し，次にフォロワーはリーダー行動$a$を観測して自らの行動$b\sim g(\cdot|s,a)$を選択する．
+    \item Black-boxな環境を考える．すなわち状態遷移関数と初期状態分布が未知で，状態遷移の結果訪れた状態のみ観測できるとする．なお，報酬関数もblack-boxでよい．
+\end{itemize}
+
+\subsection{Formulation}
+
+\begin{itemize}
+    \item 2-player Markov Game: $(\mathcal{S}, (\mathcal{A},\mathcal{B}), p, \rho_0, (r_1,r_2), (\gamma_1,\gamma_2),(f,g)$
+    \item パラメ-タ$\beta$を導入．
+    \item Leader方策$f_{\theta_1}:\mathcal{S}\to\Delta(\mathcal{A})$（もしくは$f_{\theta_1}:\mathcal{S}\to\mathcal{A}$），follower方策$g_{\theta_2}:\mathcal{S}\x\mathcal{A}\to\Delta(\mathcal{B})$
+    \item 方策性能$J_i(\theta_1,\theta_2)~(i\in\{1,2\})$:
+    \begin{gather}
+        J_1(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_1^tr_1(s_t,a_t,b_t)\right],\\
+        J_2(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty \gamma_2^t\left\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^{g_{\theta_2}}(s_t,a_t)\right\}\right],\\
+        \where \mathcal{H}^{g_{\theta_2}}(s,a):=\E_{b\sim g_{\theta_2}(\cdot|s,a)}[-\log g_{\theta_2}(b|s,a)].
+    \end{gather}
+    \item 定式化：
+    \begin{subequations}
+    \begin{gather}
+        \max_{\theta_1,\theta_2} J_1(\theta_1,\theta_2):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right]\\
+        \st\quad \theta_2\in\argmax_{\theta_2'} J_2(\theta_1,\theta_2'):=\E^{f_{\theta_1}g_{\theta_2'}}\left[\sum_{t=0}^\infty \gamma_2^t\left\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^{g_{\theta_2'}}(s_t,a_t)\right\}\right].
+    \end{gather}\label{eq:formula_SSPG_qr_bbf}
+    \end{subequations}
+    \begin{itemize}
+        \item この最適解$(\theta_1^*,\theta_2^*)$が (strong) Stackelberg 均衡である．我々の目標はこの$(\theta_1^*,\theta_2^*)$を求めることである．
+    \end{itemize}
+    \item 価値関数とQ関数の定義は，フォロワーのみ変わる：
+    \begin{align}
+        &V_2^{fg}(s,a):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^t\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^g(s_t,a_t)\}\middle|s_0=s,a_0=a\right],\\
+        &Q_2^{fg}(s,a,b):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^t\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^g(s_t,a_t)\}\middle|s_0=s,a_0=a.b_0=b\right]-\beta\mathcal{H}^g(s,a).
+    \end{align}
+
+    \item $\theta_1$がgivenのもとで，制約条件を満たす$\theta_2$は，$g_{\theta_2}$の表現能力が十分ならば以下の$g_{\theta_1}^*(b|s,a)$に一致する：
+    \begin{align}
+        g_{\theta_1}^*(b|s,a)&:=\exp\left(\beta^{-1}\left(Q_2^{f\dag}(s,a,b)-V_2^{f\dag}(s,a)\right)\right)\label{eq:quantal_response_bbf}
+    \end{align}
+    \begin{itemize}
+        \item ここで $V_2^{f_{\theta_1}\dag}(s), Q_2^{f_{\theta_1}\dag}(s,a,b)$ は
+        \begin{align}
+            &V_2^{f\dag}(s,a):=\max_{g}V_2^{fg}(s,a),\\
+            &Q_2^{f\dag}(s,a,b):=\max_{g}Q_2^{fg}(s,a,b)
+        \end{align}
+        と定義される関数で，以下のBellman方程式を満たす解である：
+        \begin{align}
+            &V_2^{f\dag}(s,a)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f\dag}(s,a,b)\right)\rmd b\\
+            &Q_2^{f\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\E_{a'\sim f(\cdot|s')}\left[V_2^{f\dag}(s',a')\right]
+        \end{align}
+    \end{itemize}
+    \item したがって，$g_{\theta_2}$の表現能力が十分だと仮定すれば，以下のように定式化し直すことができる：
+    \begin{gather}
+        \max_{\theta_1} J_1(\theta_1):=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right],\\
+        \where\quad g_{\theta_1}^*(b|s,a):=\exp\left(\beta^{-1}\left(Q_2^{f_{\theta_1}\dag}(s,a,b)-V_2^{f_{\theta_1}\dag}(s,a)\right)\right).
+    \end{gather}
+\end{itemize}
+
+\subsubsection{Formulation with deterministic $f_{\theta_1}$}
+
+\begin{itemize}
+    \item $f_{\theta_1}$が決定的方策な場合の定式化：
+    \begin{gather}
+        \max_{\theta_1} J_1(\theta_1):=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right],\\
+        \where\quad g_{\theta_1}^*(b|s,a):=\exp\left(\beta^{-1}\left(Q_2^{f_{\theta_1}\dag}(s,a,b)-V_2^{f_{\theta_1}\dag}(s,a)\right)\right).
+    \end{gather}
+    \item $V_2^{f_{\theta_1}\dag}$と$Q_2^{f_{\theta_1}\dag}$は以下のBellman方程式を満たすような関数である：
+    \begin{align}
+        &V_2^{f_{\theta_1}\dag}(s,a)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)\rmd b\\
+        &Q_2^{f_{\theta_1}\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f_{\theta_1}\dag}(s',f(s'))\right]
+    \end{align}
+    \item その他の詳細は同じである．
+\end{itemize}
+
+
+\subsection{Policy Gradient}
+
+\begin{itemize}
+    \item まず，$\nabla_{\theta_1}J_1(\theta_1)$について\Cref{thrm:SPG_qr_bbf_1}が成り立つ．
+\end{itemize}
+
+\begin{theorem}\label{thrm:SPG_qr_bbf_1}
+    リーダー方策$f_{\theta_1}$が確率的ならば\cref{eq:SPG_qr_bbf_1_1}，決定的ならば\cref{eq:SPG_qr_bbf_1_2}が成り立つ．
+    \begin{multline}
+        \nabla_{\theta_1}J_1(\theta_1)\\
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\Bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)
+        +\mathrm{Cov}_{b}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a),Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\middle|s,a\right]\Bigg].\label{eq:SPG_qr_bbf_1_1}
+    \end{multline}
+    \begin{multline}
+        \nabla_{\theta_1}J_1(\theta_1)\\
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\Bigg[\nabla_{\theta_1}f_{\theta_1}(s)\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)|_{a=f_{\theta_1}(s)}
+        +\mathrm{Cov}_{b}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s)),Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\middle|s\right]\Bigg].\label{eq:SPG_qr_bbf_1_2}
+    \end{multline}
+    ここで，$\mathrm{Conv}_{b}[\cdot|s,a],\mathrm{Conv}_{b}[\cdot|s]$はそれぞれ$(s,a),s$が与えられた下での，$b\sim g_{\theta_1}^*(\cdot|s,a)$および$b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))$に関する条件付き共分散である．
+\end{theorem}
+\begin{proof}
+    See \Cref{sec:proof_SPG_qr_bbf_1}.
+\end{proof}
+
+\begin{itemize}
+    \item \Cref{thrm:SPG_qr_bbf_1}の解釈：第一項はリーダー目的関数の$\theta_1$に関する偏微分で，リーダーの更新がリーダー目的関数に与える影響を捉える項，第二項はリーダーとフォロワーの更新の相互作用がリーダーの目的関数に与える影響を捉える項だと考えられる．
+    \item 次に，\cref{thrm:SPG_qr_bbf_2}は\cref{thrm:SPG_qr_bbf_1}をさらに書き下して，サンプルから推定可能な$\nabla_{\theta_1}J_1(\theta_1)$の式を与える．
+\end{itemize}
+
+\begin{theorem}\label{thrm:SPG_qr_bbf_2}
+    リーダー方策$f_{\theta_1}$が確率的ならば\cref{eq:SPG_qr_bbf_2_1}，決定的ならば\cref{eq:SPG_qr_bbf_2_2}が成り立つ．
+    \begin{multline}
+        \nabla_{\theta_1}J_1(\theta_1)
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\\
+        \cdot\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})V_2^{f_{\theta_1}\dag}(\dot{s},\dot{a})\middle|s,a,b\right]\bigg]\label{eq:SPG_qr_bbf_2_1}
+    \end{multline}
+    \begin{multline}
+        \nabla_{\theta_1}J_1(\theta_1)
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)|_{a=f_{\theta_1}(s)}\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\right)\\
+        \cdot\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})|_{a=f_{\theta_1}(\dot{s})}\middle|s,b\right]\bigg]
+        \label{eq:SPG_qr_bbf_2_2}
+    \end{multline}
+\end{theorem}
+\begin{proof}
+    See \Cref{sec:proof_SPG_qr_bbf_2}.
+\end{proof}
+
+\begin{itemize}
+    \item \cref{eq:SPG_qr_bbf_2_2}の$Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})$は$V_2^{f_{\theta_1}\dag}(\dot{s},a)$に置き換えてもよい\textcolor{red}{（期待値の内側を累積期待の形に書き換えた時の$t>0$の部分に限る）}．
+    \begin{proof}
+        \begin{subequations}
+        \begin{align}
+            \nabla_{a}V_2^{f_{\theta_1}\dag}(s,a)&=\nabla_{a}\beta\log\int_{\mathcal{B}}\exp \left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)\rmd b\\
+            &=\int_{\mathcal{B}}g_{\theta_1}^*(b|s,a)\nabla_{a}Q_2^{f_{\theta_1}\dag}(s,a,b)\rmd b\\
+            &=\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{a}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]
+        \end{align}
+        \end{subequations}
+        \begin{subequations}
+        \begin{align}
+            &\therefore\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})|_{a=f_{\theta_1}(\dot{s})}\middle|s,b\right]\\
+            &=\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})\E_{\dot{b}\sim g_{\theta_1}^*(\cdot|\dot{s},f_{\theta_1}(\dot{s}))}\left[\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})|_{a=f_{\theta_1}(\dot{s})}\right]\middle|s,b\right]\\
+            &=\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})\nabla_{a}V_2^{f_{\theta_1}\dag}(\dot{s},a)|_{a=f_{\theta_1}(\dot{s})}\middle|s,b\right]
+        \end{align}
+        \end{subequations}
+    \end{proof}
+    \item $\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\cdot\middle|s,a,b\right]$および$\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\cdot\middle|s,b\right]$は，外側の期待値のサンプル近似時に用いたサンプル$(s,a,b)$が含まれていたエピソードの$(s,a,b)$以降の部分に含まれるサンプル$(\dot{s},\dot{a},\dot{b})$を用いて近似できる．ここで，
+    \begin{align}
+        \E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^{\infty}\gamma_2^t h(s_t,a_t,b_t)|s,a,b\right]
+    \end{align}
+    が成り立つ事実を考慮し，エピソードの$(s,a,b)$以降の部分から右辺のようなモンテカルロ近似をする方法もある．
+    サンプル数の少なさを考慮するとこちらの方法の方が良いかもしれない．
+\end{itemize}
+
+
+\subsection{Algorithm}
+
+\begin{itemize}
+    \item 方策パラメータの更新式は
+    \begin{align}
+        &\theta_1^{(t+1)}\gets \theta_1^t+\alpha^1\nabla_{\theta_1} J_1(\theta_1^t).
+    \end{align}
+    ここで，$\nabla_{\theta_1}J_1$の計算 (\Cref{thrm:SPG_qr_bbf_2}) に必要なのは：$\nabla_{\theta_1}\log f_{\theta_1}, g_{\theta_1}^*, Q_1^{f_{\theta_1}g_{\theta_1}^*}, Q_2^{f_{\theta_1}\dag}$ (or $V_2^{f_{\theta_1}\dag}$).
+    \item 現在の$f_{\theta_1}$に対するfollowerのquantal response $g_{\theta_1}^*$とそれに対応する$Q_2^{f_{\theta_1}\dag}$は，Soft Actor-Criticやsoft Q-learningで学習する．
+    \begin{itemize}
+        \item Followerの actor networkを$g_{\theta_2}$，critic networkを$Q_{\omega_2}$とする．
+        \item Soft Q-learning\cite{Haarnoja2017-nn}もSAC\cite{Haarnoja2018-if}も，方策を改善する過程でそのQ関数を学習するため，最適方策が得られると同時に$Q_2^{f_{\theta_1}\dag}$も得られるはずである．
+        \item 現在のLeader方策に対して最適反応である必要があるので，まず学習初期にfollower方策だけある程度学習を進め，その後Leader方策を一度更新する度に複数回follower方策を更新するフェーズにシフトする戦略をとる．Quantal responseがleader方策に対してある程度滑らかであることを期待する\textcolor{red}{（この点はquantal responseの性質について先行研究を調査する必要がある）}．
+    \end{itemize}
+    \item $Q_1^{f_{\theta_1}g_{\theta_1}^*}$は
+    critic network $Q_{\omega_1}$ で推定する．
+    \begin{itemize}
+        \item $\omega_j$の損失関数は，$Q_{\bar{\omega}_j}$をtarget critic, $f_{\bar{\theta}_1}$をleader's target actor，$g_{\bar{\theta}_2}$をfollower's target actorとして，
+        \begin{align}
+            &L(\omega_1;\theta_1):=\E_{(s,a,b,r_1,s')\sim\mathcal{D},a'\sim f_{\bar{\theta}_1}(\cdot|s'),b'\sim g_{\bar{\theta}_2}(\cdot|s',a')}\left[\left(r_1+\gamma_1Q_{\bar{\omega}_1}(s',a',b') - Q_{\omega_1}(s,a,b)\right)^2\right],\\
+            &\widehat{L}(\omega_1;\theta_1):=\dfrac{1}{N}\sum_{i=0}^N\left(r_1^{(i)}+\gamma_1Q_{\bar{\omega}_1}(s_i',a_i',b_i') - Q_{\omega_1}(s_i,a_i,b_i)\right)^2\Big|_{a_i'\sim f_{\bar{\theta}_1}(\cdot|s_i'),b_i'\sim g_{\bar{\theta}_2}(\cdot|s_i',a_i')},
+        \end{align}
+        where a minibatch of $N$ transitions $(s_i,a_i,b_i,r_1^{(i)},s_i')$ is sampled from replay buffer $\mathcal{D}$.
+    \end{itemize}
+    \item $\E_{\gamma_1}^{f_{\theta_1}g_{\theta_1}^*}[\cdot]$はリプレイバッファからdiscount sampling (\Cref{sec:sample_approx}) したサンプルででサンプル近似する.
+    \item $\E_{\gamma_2}^{f_{\theta_1}g_{\theta_1}^*}[\cdot|s,a,b]$および$\E_{\gamma_2}^{f_{\theta_1}g_{\theta_1}^*}[\cdot|s,b]$は，
+    \item $\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})V_2^{f_{\theta_1}\dag}(\dot{s},\dot{a})\middle|s,a,b\right]$および$\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})|_{a=f_{\theta_1}(\dot{s})}\middle|s,b\right]$の期待値は，外側の期待値の近似で用いたサンプルに含まれる$(s,a,b)$から始まるエピソード，すなわち$(s,a,b)$が含まれていたエピソードの$(s,a,b)$以降の部分のtransitionsからdiscount samplingしたサンプルで近似できる．もしくは，サンプル数の少なさを補うために，$(s,b)$以降の部分のtransitions全てを用いて，
+    \begin{align}
+        \E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^{\infty}\gamma_2^t h(s_t,a_t,b_t)\middle|s,a,b\right]
+    \end{align}
+    をモンテカルロ近似する方法も考えられる．
+    \item 以上より，$\nabla_{\theta_1}J_1(\theta_1)$のサンプル近似は，
+    \begin{multline}
+        \widehat{\nabla_{\theta_1}J_1^{\mathrm{stoc}}}(\theta_1)=\dfrac{1}{1-\gamma_1}\dfrac{1}{N}\sum_{i=1}^N\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a_i|s_i)Q_{\omega_1}(s_i,a_i,b_i)\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_{\omega_1}(s_i,a_i,b_i)-\E_{b\sim g_{\theta_2}(\cdot|s_i,a_i)}\left[Q_{\omega_1}(s_i,a_i,b)\right]\right)\\
+        \cdot\dfrac{1}{M}\sum_{j=1}^M\nabla_{\theta_1}\log f_{\theta_1}(a_{ij}|s_{ij})V_{\omega_2}(s_{ij},a_{ij})\bigg]\label{eq:SPG_qr_bbf_2_1_approx}
+    \end{multline}
+    \begin{multline}
+        \widehat{\nabla_{\theta_1}J_1^{\mathrm{det}}}(\theta_1)=\dfrac{1}{1-\gamma_1}\dfrac{1}{N}\sum_{i=1}^N\bigg[\nabla_{\theta_1}f_{\theta_1}(s_i)\nabla_{a}Q_{\omega_1}(s_i,a,b_i)|_{a=f_{\theta_1}(s_i)}\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_{\omega_1}(s_i,f_{\theta_1}(s_i),b_i)-\E_{b\sim g_{\theta_2}(\cdot|s_i,f_{\theta_1}(s_i))}\left[Q_{\omega_1}(s_i,f_{\theta_1}(s_i),b_i)\right]\right)\\
+        \cdot\dfrac{1}{M}\sum_{j=1}^M\nabla_{\theta_1}f_{\theta_1}(s_{ij})\nabla_{a}Q_{\omega_2}(s_{ij},a,b_{ij})|_{a=f_{\theta_1}(s_{ij})}\bigg]
+        \label{eq:SPG_qr_bbf_2_2_approx}
+    \end{multline}
+    \begin{align*}
+    \begin{multlined}
+        \where~
+        \{(s_{ij},a_{ij},b_{ij})\}_{j=1}^M\overset{\gamma_2}{\sim}\mathcal{D}(\cdot|s_i,a_i,b_i)~\forall i
+        \enspace\st\enspace\{(s_i,a_i,b_i)\}_{i=1}^N\overset{\gamma_2}{\sim}\mathcal{D}.
+    \end{multlined}
+    \end{align*}
+\end{itemize}
+
+
+\section{Stackelberg-PG with a Black-Box Quantal-Response Follower}\label{sec:BB_policy_teaching}
+
+\subsection{Problem Setting}
+
+\begin{itemize}
+    \item 問題設定は\Cref{sec:ST_SPG_QRF_BBF}と同じだが，以下のようなblack-box followerの下でのリーダー方策の最適化を考える．
+    \begin{definition}[Black-Box Follower]\label{thrm:bb_follower_definition}
+        Black-box follower は任意のリーダー方策の元で自律的に学習し，我々はその学習に関与できない．
+        我々にとって以下は未知である：フォロワーの方策，報酬関数$r_2$，学習アルゴリズム，学習進捗度．
+        ただし，毎ステップのフォロワー行動は観測できる．
+        また，フォロワーの割引率$\gamma_2$は既知とする．
+    \end{definition}
+    \item 以下の仮定を置く：
+    \begin{assumption}[Disentangle reward decomposition assumptions\cite{Fu2018-lp}]\label{thrm:assumption_AIRL}
+        The transition $p$ is deterministic and irreducible.
+        The follower's reward does not depend on the follower's action: $r_2(s,a)\in\R$.
+    \end{assumption}
+    \begin{itemize}
+        \item \textcolor{red}{\Cref{thrm:assumption_AIRL}は結構強いかもしれない．例えば自身の行動コストを最小化するフォロワーなどは考えられなくなる．この仮定は取り除くか，尤もな理由（具体例など）が必要だと考えられる．}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Proposed Method}
+
+\begin{itemize}
+    \item （以降，フォロワーは現在のリーダー方策に対して常にquantal response $g_{\theta_1}^*$にしたがって振る舞っていると仮定して話を進める．実際には，リーダー方策が更新されてからフォロワーがquantal response を獲得するまでに一定の時間がかかると想定されるため，リーダーの更新を一定時間遅らせるといった工夫が必要だと考えられる）
+    \item \Cref{thrm:SPG_qr_bbf_2}より，
+    \begin{multline}
+        \nabla_{\theta_1}J_1(\theta_1)
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)|_{a=f_{\theta_1}(s)}\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\right)\\
+        \cdot\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})|_{a=f_{\theta_1}(\dot{s})}\middle|s,b\right]\bigg]\label{eq:SPG_qr_bbf_det}
+    \end{multline}
+    \item \Cref{eq:SPG_qr_bbf_det}を推定するためには$Q_2^{f_{\theta_1}\dag}$と$g_{\theta_1}^*$を推定する必要がある．これらが推定できれば，\Cref{eq:SPG_qr_bbf_det}は観測した軌跡を用いてサンプル近似できる．
+    \item $Q_2^{f_{\theta_1}\dag}$の推定：
+    \begin{itemize}
+        \item 状態遷移が決定的（\Cref{thrm:assumption_AIRL}）かつリーダー方策が決定的であるのでであるので，
+        \begin{subequations}
+        \begin{align}
+            g_{\theta_1}^*(b|s,a)&=\exp\left(\beta^{-1}\left(Q_2^{f_{\theta_1}\dag}(s,a,b)-V_2^{f_{\theta_1}\dag}(s,a)\right)\right)\\
+            &=\exp\left(\beta^{-1}\left(r_2(s,a)+\gamma_2V_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'))-V_2^{f_{\theta_1}\dag}(s,a)\right)\right)
+        \end{align}
+        \end{subequations}
+        と書くことができ，これを推定器$h_{\phi},v_{\psi}:\mathcal{S}\x\mathcal{A}\to\R$を用いて
+        \begin{multline}
+            h_{\phi}(s,a)+\gamma_2v_{\psi}(s',f_{\theta_1}(s'))-v_{\psi}(s,a)\approx r_2(s,a)+\gamma_2V_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'))-V_2^{f_{\theta_1}\dag}(s,a)\\\forall s,a\in\mathcal{S}\x\mathcal{A}
+        \end{multline}
+        のように推定できれば，\Cref{thrm:assumption_AIRL}のもとで
+        \begin{align}
+            h_{\phi}(s,a)\approx r_2(s,a),\quad v_{\psi}(s,a)\approx V_2^{f_{\theta_1}\dag}(s,a)\quad\forall s,a\in\mathcal{S}\x\mathcal{A}
+        \end{align}
+        が成り立つ\cite{Fu2018-lp}．この推定ができると，$\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)$は
+        \begin{align}
+            \nabla_{\theta_1}\left(h_{\phi}(s,f_{\theta_1}(s))+\gamma_2v_{\psi}(s',f_{\theta_1}(s'))\right)\approx\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)
+        \end{align}
+        のように推定できる．
+    \end{itemize}
+    \item $g_{\theta_1}^*(b|s,a)$の推定：
+    \begin{itemize}
+        \item $\exp\left(\beta^{-1}(h_{\phi}(s,a)+\gamma_2v_{\psi}(p(s,a,b),f_{\theta_1}(s'))-v_{\psi}(s,a))\right)$は$g_{\theta_1}^*(b|s,a)$の推定器となるが，遷移関数$p(s,a,b)$が未知なのでこれは計算できない．
+        \item したがって$g_{\theta_1}^*(b|s,a)$は，独立に推定（例えば最尤推定など）するか，もしくはシミュレータを用いてAIRL\cite{Fu2018-lp}を実行して推定する（この場合$Q_2^{f_{\theta_1}\dag}$の推定の推定もAIRLで行う）．
+    \end{itemize}
+    \item $Q_2^{f_{\theta_1}\dag}$と$g_{\theta_1}^*(b|s,a)$の推定は，AIRLを行わずともリプレイバッファのサンプルのみから推定できる（はず）なので，シミュレータが必ずしもここで必要になる訳ではない．
+\end{itemize}
+
+
+\subsection{Paper Story}
+
+\begin{itemize}
+    \item 
+\end{itemize}
+
+\subsubsection{Action Cost}
+
+\begin{itemize}
+    \item 
+\end{itemize}
+
+
+
+% 参考文献
+\bibliography{bibliography}
+\bibliographystyle{junsrt}
+
+\appendix
+
+\section{Proof of \Cref{thrm:lemma_exp_ocup}}\label{sec:proof_lemma_exp_ocup}
+
+\begin{lemma}
+    \begin{align}
+    &\mathrm{(a)}\quad\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s'\right]\right]=\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]-(1-\gamma_i)h(s,a,b).\\
+    &\begin{multlined}
+        \mathrm{(b)}\quad\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\gamma_i\E_{s'\sim p(\cdot|\dot{s},\dot{a},\dot{b}),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}[h(s',a',b')]\middle|s\right]\\
+        =\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s\right]-\E_{a\sim f_{\theta_1}(\cdot|s),b\sim g_{\theta_2}(\cdot|s,a)}\left[h(s,a,b)\right].
+    \end{multlined}\\
+    &\begin{multlined}
+        \mathrm{(c)}\quad\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\gamma_i\E_{s'\sim p(\cdot|\dot{s},\dot{a},\dot{b}),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}[h(s',a',b')]\middle|s,a,b\right]\\
+        =\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s,a,b]-(1-\gamma_i)h(s,a,b).
+    \end{multlined}
+\end{align}
+\end{lemma}
+
+\begin{proof}[Proof of (a)]
+    定義より，
+    \begin{subequations}
+    \begin{align}
+        \E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s,a,b]&= (1-\gamma_i)h(s,a,b)+\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\E_{\dot{s}\sim d_{\gamma_i}^{\theta}(\cdot|s'),\dot{a}\sim f_{\theta}(\cdot|\dot{s}),\dot{b}\sim g_{\theta_2}(\cdot|\dot{s},\dot{a})}[h(\dot{s},\dot{a},\dot{b})]\\
+        &=(1-\gamma_i)h(s,a,b)+\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s']\right]
+    \end{align}
+    \end{subequations}
+\end{proof}
+
+\begin{proof}[Proof of (b)]
+    \begin{subequations}
+    \begin{align}
+        &\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\gamma_i\E_{s'\sim p(\cdot|\dot{s},\dot{a},\dot{b}),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}[h(s',a',b')]\middle|s\right]\\
+        &=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}d_{\gamma_i}^{\theta}(\dot{s}|s)f(\dot{a}|\dot{s})g_{\theta_2}(\dot{b}|\dot{s},\dot{a})\bigg\{\gamma_i\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}p(s'|\dot{s},\dot{a},\dot{b})f_{\theta_1}(a'|s')g_{\theta_2}(b'|s',a')h(s',a',b')\rmd s'\rmd a'\rmd b'\bigg\}\rmd\dot{s}\rmd\dot{a}\rmd\dot{b}\\
+        &\begin{multlined}
+            =\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\bigg\{\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\sum_{t=0}^{\infty}\gamma_i^{t+1}\rho_t^{\theta}(\dot{s}|s)f(\dot{a}|\dot{s})g_{\theta_2}(\dot{b}|\dot{s},\dot{a})p(s'|\dot{s},\dot{a},\dot{b})\rmd\dot{s}\rmd\dot{a}\rmd\dot{b}\bigg\}f_{\theta_1}(a'|s')g_{\theta_2}(b'|s',a')h(s',a',b')\rmd s'\rmd a'\rmd b'
+        \end{multlined}\\
+        &=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\bigg\{\sum_{t=0}^{\infty}\gamma_i^{t+1}\rho_{t+1}^{\theta}(s'|s)\bigg\}f_{\theta_1}(a'|s')g_{\theta_2}(b'|s',a')h(s',a',b')\rmd s'\rmd a'\rmd b'\\
+        &=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\bigg\{\sum_{t=0}^{\infty}\gamma_i^t\rho_t^{\theta}(s'|s)-\rho_0^{\theta}(s'|s)\bigg\}f_{\theta_1}(a'|s')g_{\theta_2}(b'|s',a')h(s',a',b')\rmd s'\rmd a'\rmd b'\\
+        &=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}d_{\gamma_i}^{\theta}(s'|s)f_{\theta_1}(a'|s')g_{\theta_2}(b'|s',a')h(s',a',b')\rmd s'\rmd a'\rmd b' - \int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s,a)h(s,a,b)\rmd a\rmd b\\
+        &=\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s\right]-\E_{a\sim f_{\theta_1}(\cdot|s),b\sim g_{\theta_2}(\cdot|s,a)}\left[h(s,a,b)\right]
+    \end{align}
+    \end{subequations}
+\end{proof}
+
+\begin{proof}[Proof of (c)]
+    $h'(s,a,b):=\gamma_i\E_{s'\sim p(\cdot|s,a,b),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}[h(s',a',b')]$と置く．定義より，
+    \begin{subequations}
+    \begin{align}
+        &\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h'(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]\\
+        &=(1-\gamma_i)h'(s,a,b) + \gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h'(\dot{s},\dot{a},\dot{b})\middle|s'\right]\right].\label{eq:proof_lemma_exp_ocup_c_1}
+    \end{align}
+    \end{subequations}
+    ここで，\Cref{thrm:lemma_exp_ocup} (b)より
+    \begin{subequations}
+    \begin{align}
+        &\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h'(\dot{s},\dot{a},\dot{b})\middle|s'\right]\\
+        &=\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\gamma_i\E_{s'\sim p(\cdot|\dot{s},\dot{a},\dot{b}),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}[h(s',a',b')]\middle|s'\right]\\
+        &=\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s'\right]-\E_{a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}\left[h(s',a',b')\right]
+    \end{align}
+    \end{subequations}
+    であるため，\Cref{eq:proof_lemma_exp_ocup_c_1}の第2項は
+    \begin{subequations}
+    \begin{align}
+        &\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h'(\dot{s},\dot{a},\dot{b})\middle|s'\right]\right]\\
+        &=\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s'\right]\right] - \gamma_i\E_{s'\sim p(\cdot|s,a,b),a'\sim f_{\theta_1}(\cdot|s'),b'\sim g_{\theta_2}(\cdot|s',a')}\left[h(s',a',b')\right]\\
+        &=\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s'\right]\right] - h'(s,a,b)
+    \end{align}
+    \end{subequations}
+    となる．よって，
+    \begin{subequations}
+    \begin{align}
+        \E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h'(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]&=\gamma_i\E_{s'\sim p(\cdot|s,a,b)}\left[\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s'\right]\right]\\
+        &=\E_{d_{\gamma_i}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[h(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]-(1-\gamma_i)h(s,a,b)\quad (\because \mathrm{\Cref{thrm:lemma_exp_ocup}~(a)}).
+    \end{align}
+    \end{subequations}
+\end{proof}
+
+
+\section{Proof of \Cref{thrm:SSPG_nabla_21_J_2}}\label{sec:proof_SSPG_nabla_21_J_2}
+
+\begin{proof}
+    方策勾配定理より，$\nabla_{\theta_2}J_2$は以下で定義する$\bar{r}_\theta(s,a)\in\R^{|\theta_2|}$の累積期待値として表される：
+    \begin{gather}
+        \nabla_{\theta_2}J_2(\theta_1,\theta_2)=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_2^t\bar{r}_\theta(s_t,a_t,b_t)\right],\\
+        \where \bar{r}_\theta(s,a,b):=\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b).
+    \end{gather}
+    これをocupancy functionの下での期待値に書き換えると，
+    \begin{gather}
+        \nabla_{\theta_2}J_2(\theta_1,\theta_2)=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\bar{r}_\theta(s,a,b)\right].
+    \end{gather}
+    この$\nabla_{\theta_2}J_2$を再び$\theta_1$で微分する必要があるが，ここで方策勾配定理（\Cref{thrm:PGT}）の証明のテクニックを転用する．
+    $\bar{r}_\theta(s,a)$についての価値関数を$\bar{V}_\theta(s)\in\R^{|\theta_2|}$，Q関数を$\bar{Q}_\theta(s,a,b)\in\R^{|\theta_2|}$とする，すなわち
+    \begin{gather}
+        \bar{V}_\theta(s):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{k=0}^\infty\gamma_2^k\bar{r}_{\theta}(s_k,a_k,b_k)\middle|s_0=s\right],\\
+        \bar{Q}_\theta(s,a,b):=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{k=0}^\infty\gamma_2^k\bar{r}_{\theta}(s_k,a_k,b_k)\middle|s_0=s,a_0=a,b_0=b\right]
+    \end{gather}
+    とすると，MDPsの基本的性質より，
+    \begin{gather}
+        \nabla_{\theta_2}J_2(\theta_1,\theta_2)=\int_{\mathcal{S}}\rho^0(s)\bar{V}_\theta(s)\rmd s,\\
+        \bar{V}_\theta(s)
+        =\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\bar{r}_{\theta}(s,a,b) + \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\bar{V}_\theta(s')\rmd s'\right\}\rmd a\rmd b,\label{eq:bellman_eq_V_bar}\\
+        \bar{Q}_\theta(s,a,b)=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\bar{r}_\theta(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right].\label{eq:Q_bar_by_rho}
+    \end{gather}
+    が成り立つ．
+    \Cref{eq:bellman_eq_V_bar}の両辺を$\theta_1$で微分すると，
+    \begin{subequations}
+    \begin{align}
+        \nabla_{\theta_1}\bar{V}_\theta(s)
+        &=\nabla_{\theta_1}\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\bar{r}_{\theta}(s,a,b) + \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\bar{V}_\theta(s')\rmd s'\right\}\rmd a\rmd b \\
+        &
+        \begin{multlined}
+            =\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\left(\bar{r}_{\theta}(s,a,b)+\gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\bar{V}_\theta(s')\rmd s'\right)\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T\right.\\
+            \quad+\nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)+\gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\nabla_{\theta_1}\bar{V}_\theta(s')\rmd s'\Big\}\rmd a\rmd b
+        \end{multlined}\\
+        &=\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\bar{Q}_\theta(s,a,b)\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T+\nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)+\gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\nabla_{\theta_1}\bar{V}_\theta(s')\rmd s'\right\}.
+    \end{align}
+    \end{subequations}
+    これは(行列の)ベルマン期待方程式の形をしているので，$\nabla_{\theta_1}(\nabla_{\theta_2}J_2)=\nabla_{\theta_2\theta_1}J_2$は次のように$\bar{Q}_\theta(s,a,b)\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T+\nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)$の累積期待値として表される：
+    \begin{subequations}
+    \begin{align}
+        &\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)\nonumber\\
+        &=\E^{f_{\theta_1}g_{\theta_2}}\left[\sum_{t=0}^\infty\gamma_2^t\left\{\bar{Q}_\theta(s_t,a_t,b_t)\nabla_{\theta_1}\log f_{\theta_1}(a_t|s_t)\T+\nabla_{\theta_1}\bar{r}_{\theta}(s_t,a_t,b_t)\right\}\right]\\
+        &=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\bar{Q}_\theta(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})\T+\nabla_{\theta_1}\bar{r}_{\theta}(\dot{s},\dot{a},\dot{b})\right].
+    \end{align}
+    \end{subequations}
+    ここに\Cref{eq:Q_bar_by_rho}を代入して，
+    \begin{subequations}
+    \begin{align}
+        \nabla_{\theta_2\theta_1}&J_2(\theta_1,\theta_2)\nonumber\\
+        &
+        \begin{multlined}
+            =\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\bar{r}_\theta(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T+\nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)\right]
+        \end{multlined}\\
+        &=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T+\nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)\bigg]\label{eq:nabla_21_j_2_with_r_bar}
+    \end{align}
+    \end{subequations}
+    を得る．
+    ここで，$\bar{r}_\theta(s,a,b)=\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)$より，
+    \begin{subequations}
+    \begin{align}
+        \nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)&=\nabla_{\theta_2}\log g_{\theta_2}(b|s)\nabla_{\theta_1}Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\T\\
+        &=\nabla_{\theta_2}\log g_{\theta_2}(b|s)\nabla_{\theta_1}\left(r_2(s,a,b) + \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)V_2^{f_{\theta_1}g_{\theta_2}}(s')\rmd s'\right)\T\\
+        &=\gamma_2\nabla_{\theta_2}\log g_{\theta_2}(b|s) \int_{\mathcal{S}}p(s'|s,a,b)\nabla_{\theta_1}V_2^{f_{\theta_1}g_{\theta_2}}(s')\T \rmd s'
+    \end{align}
+    \end{subequations}
+    であるが，方策勾配定理より
+    \begin{align}
+        \nabla_{\theta_1}&V_2^{f_{\theta_1}g_{\theta_2}}(s')=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\middle|s'\right]
+    \end{align}
+    であるため，
+    \begin{align}
+        \nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)
+        =\dfrac{\gamma_2}{1-\gamma_2}\nabla_{\theta_2}\log g_{\theta_2}(b|s)
+        \int_{\mathcal{S}}p(s'|s,a,b)\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})^{\T}\middle|s'\right]\rmd s'\label{eq:nabla_1_r_bar}
+    \end{align}
+    を得る．ここで，\Cref{eq:rewrite_exp_ocup_a}より
+    \begin{multline}
+        \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})^{\T}\middle|s'\right]\rmd s'\\
+        =\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})^{\T}\middle|s,a,b\right]-(1-\gamma_2)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_1}\log f_{\theta_1}(a|s)^{\T}
+    \end{multline}
+    が成り立つため，
+    \begin{multline}
+        \nabla_{\theta_1}\bar{r}_{\theta}(s,a,b)=\dfrac{1}{1-\gamma_2}\nabla_{\theta_2}\log g_{\theta_2}(b|s)\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})^{\T}\middle|s,a,b\right]\\
+        -\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_1}\log f_{\theta_1}(a|s)^{\T}
+    \end{multline}
+    を得る．これを\Cref{eq:nabla_21_j_2_with_r_bar}に代入して，
+    \begin{align}
+        \nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)
+        =\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[&\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T\nonumber\\
+        &+\dfrac{1}{1-\gamma_2}\nabla_{\theta_2}\log g_{\theta_2}(b|s)\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})^{\T}|s,a,b\right]\nonumber\\
+        &-\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_1}\log f_{\theta_1}(a|s)^{\T}\bigg)\bigg]
+    \end{align}
+    \begin{align}
+        \therefore\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)
+        =\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\Big[&\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T\nonumber\\
+        +&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})\T\Big|s,a,b\bigg]\nonumber\\
+        -&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_1}\log f_{\theta_1}(a|s)\T\bigg].
+    \end{align}        
+\end{proof}
+
+
+\section{Proof of \Cref{thrm:SSPG_nabla_22_J_2}}\label{sec:proof_SSPG_nabla_22_J_2}
+
+\begin{proof}
+    $\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)$と同様に，$\bar{V}_\theta(s)$のベルマン期待方程式
+    $$\bar{V}_\theta(s)=\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\bar{r}_{\theta}(s,a,b) + \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\bar{V}_\theta(s')\rmd s'\right\}\rmd a\rmd b$$
+    の両辺を$\theta_2$で微分すると，
+    \begin{subequations}
+    \begin{align}
+        \nabla_{\theta_2}\bar{V}_\theta(s)
+        &=\nabla_{\theta_2}\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\bar{r}_{\theta}(s,a,b) + \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\bar{V}_\theta(s')\rmd s'\right\}\rmd a\rmd b\\
+        &
+        \begin{multlined}
+            =\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\left(\bar{r}_{\theta}(s,a,b)+\gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\bar{V}_\theta(s')\rmd s'\right)\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T\right.\\
+            \quad+\nabla_{\theta_2}\bar{r}_{\theta}(s,a,b)+\gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\nabla_{\theta_2}\bar{V}_\theta(s')\rmd s'\Big\}\rmd a\rmd b
+        \end{multlined}\\
+        &=\int_{\mathcal{A}}\int_{\mathcal{B}}f_{\theta_1}(a|s)g_{\theta_2}(b|s)\left\{\bar{Q}_\theta(s,a,b)\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T+\nabla_{\theta_2}\bar{r}_{\theta}(s,a,b)+\gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\nabla_{\theta_2}\bar{V}_\theta(s')\rmd s'\right\}.
+    \end{align}
+    \end{subequations}
+    これは(行列の)ベルマン期待方程式の形をしている.
+    したがって$\nabla_{\theta_2\theta_1}J_2(\theta_1,\theta_2)$と同様の導出により，
+    \begin{multline}
+        \nabla_{\theta_2}^2J_2(\theta_1,\theta_2)
+        =\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T\\
+        +\nabla_{\theta_2}\bar{r}_{\theta}(s,a,b)\bigg]\label{eq:nabla_22_j_2_with_r_bar}
+    \end{multline}
+    を得る．
+    ここで，$\bar{r}_\theta(s,a,b)=\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)$より，
+    \begin{subequations}
+    \begin{align}
+        &\nabla_{\theta_2}\bar{r}_{\theta}(s,a,b)\nonumber\\
+        &=\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)+\nabla_{\theta_2}\log g_{\theta_2}(b|s)\nabla_{\theta_2}Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\T\\
+        &=\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)+\nabla_{\theta_2}\log g_{\theta_2}(b|s)\nabla_{\theta_2}\left(r_2(s,a,b) + \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)V_2^{f_{\theta_1}g_{\theta_2}}(s')\rmd s'\right)\T\\
+        &=\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)+\gamma_2\nabla_{\theta_2}\log g_{\theta_2}(b|s) \int_{\mathcal{S}}p(s'|s,a,b)\nabla_{\theta_2}V_2^{f_{\theta_1}g_{\theta_2}}(s')\T \rmd s'
+    \end{align}
+    \end{subequations}
+    を得るが，方策勾配定理より，
+    \begin{align}
+        \nabla_{\theta_2}V_2^{f_{\theta_1}g_{\theta_2}}(s')\T=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})\T\middle|s'\right]
+    \end{align}
+    であり，\Cref{eq:rewrite_exp_ocup_a}より
+    \begin{multline}
+        \gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\nabla_{\theta_2}V_2^{f_{\theta_1}g_{\theta_2}}(s')\T \rmd s'=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})\T\middle|s,a,b\right]\\
+        -Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T
+    \end{multline}
+    であるので，
+    \begin{multline}
+        \nabla_{\theta_2}\bar{r}_{\theta}(s,a,b)
+        =\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\\
+        +\dfrac{1}{1-\gamma_2}\nabla_{\theta_2}\log g_{\theta_2}(b|s)\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})\T\middle|s,a,b\right]\\
+        -\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T
+    \end{multline}
+    を得る．
+    これを\Cref{eq:nabla_22_j_2_with_r_bar}に代入して，
+    \begin{align}
+        \nabla_{\theta_2}^2J_2(\theta_1,\theta_2)
+        =\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\middle|s,a,b\right]\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T\nonumber\\
+        +\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nonumber\\
+        +\dfrac{1}{1-\gamma_2}\nabla_{\theta_2}\log g_{\theta_2}(b|s)\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\left[Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})\T\middle|s,a,b\right]\nonumber\\
+        -\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T
+        \bigg]
+    \end{align}
+    \begin{align}
+        \therefore\nabla_{\theta_2}^2J_2(\theta_1,\theta_2)=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\Bigg[\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_2}}\bigg[&\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T\nonumber\\
+        +&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(\dot{s},\dot{a},\dot{b})\nabla_{\theta_2}\log g_{\theta_2}(\dot{b}|\dot{s})\T\bigg|s,a,b\bigg]\nonumber\\
+        -&\nabla_{\theta_2}\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\nabla_{\theta_2}\log g_{\theta_2}(b|s)\T\nonumber\\
+        +&\nabla_{\theta_2}^2\log g_{\theta_2}(b|s)Q_2^{f_{\theta_1}g_{\theta_2}}(s,a,b)\Bigg].
+    \end{align}
+\end{proof}
+
+
+\section{Proof of \Cref{thrm:SPG_qr_1}}\label{sec:proof_SPG_qr_1}
+
+\begin{proof}
+$f_{\theta_1}(a|s)g_{\theta_1}^*(b|s)~$を$\theta_1$に依存する一つの結合方策とみなせば，$J_1(\theta_1)=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right]$の$\theta_1$での微分にsingel-anget MDPs (witout the entropy regularization)の方策勾配定理が適用できるため，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\\
+    &=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\left[\{\nabla_{\theta_1}\log f_{\theta_1}(a|s)g_{\theta_1}^*(b|s)\}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\\
+    &=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)+\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\label{eq:nabla_1_J_1_qr_first}
+\end{align}
+\end{subequations}
+を得る．
+ここで，最適Bellman方程式，
+\begin{align}
+    &V_2^{f\dag}(s)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)\rmd b,
+\end{align}
+の両辺を$\theta_1$で微分して，
+\begin{subequations}
+\begin{align}
+    \nabla_{\theta_1}V_2^{f_{\theta_1}\dag}(s)&=\beta\dfrac{\nabla_{\theta_1}\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)\rmd b}{\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)\rmd b}\\
+    &=\beta\int_{\mathcal{B}}\dfrac{\nabla_{\theta_1}\exp\left(\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)}{\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)\rmd b}\rmd b\\
+    &=\beta\int_{\mathcal{B}}\dfrac{\exp\left(\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)}{\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)\rmd b}\nabla_{\theta_1}\beta^{-1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\rmd b\\
+    &=\int_{\mathcal{B}}g_{\theta_1}^*(b|s)\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\rmd b\\
+    &=\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right]\label{eq:nabla1_V2_nabla1_Q2}
+\end{align}
+\end{subequations}
+を得る．
+これと$g_{\theta_1}^*(b|s)=\exp\left(\beta^{-1}\left(\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]-V_2^{f_{\theta_1}\dag}(s)\right)\right)$より，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)\\
+    &=\beta^{-1}\left(\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]-\nabla_{\theta_1}V_2^{f_{\theta_1}\dag}(s)\right)\\
+    &=\beta^{-1}\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]-\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\beta^{-1}\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right]\label{eq:nablaQ-Eb_nablaQ}\\
+    &=\beta^{-1}\nabla_{\theta_1}\left(\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]-V_2^{f_{\theta_1}\dag}(s)\right)-\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\beta^{-1}\nabla_{\theta_1}\left(\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]-V_2^{f_{\theta_1}\dag}(s)\right)\right]\\
+    &=\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)-\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)\right]
+\end{align}
+\end{subequations}
+を得ることができ，これを\cref{eq:nabla_1_J_1_qr_first}に代入して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)-\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\Big]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)-\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\Big]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)
+        +\mathrm{Cov}_{b}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s),Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\middle|s,a\right]\Big]
+    \end{multlined}
+\end{align}
+\end{subequations}
+\end{proof}
+
+
+\section{Proof of \Cref{thrm:SPG_qr_2}}\label{sec:proof_SPG_qr_2}
+
+\begin{proof}
+\cref{eq:nablaQ-Eb_nablaQ}を\Cref{eq:nabla_1_J_1_qr_first}に代入して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\nonumber\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\left(\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right] - \E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\left(\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right] - \E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b) - \E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right]\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b) - \E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\bigg]
+    \end{multlined}\label{eq:nabla1_J1_nabla1_Ea_Q2}
+\end{align}
+\end{subequations}
+を得る．
+ここで，最適Bellman方程式，
+\begin{align}
+    Q_2^{f_{\theta_1}\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f_{\theta_1}\dag}(s')\right],
+\end{align}
+より，
+\begin{subequations}
+\begin{align}
+    \nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]&=\nabla_{\theta_1}\int_{\mathcal{A}}f_{\theta_1}(a|s)\left(r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\right)\rmd a\\
+    &\begin{multlined}
+        =\int_{\mathcal{A}}f_{\theta_1}(a|s)\left(\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_2^{_{\theta_1}\dag}(s,a,b)
+        +\gamma_2\E_{s'}\left[\nabla_{\theta_1}V_2^{f\dag}(s')\right]\right)\rmd a
+    \end{multlined}
+\end{align}
+\end{subequations}
+が得られ，ここに\cref{eq:nabla1_V2_nabla1_Q2}を代入して，
+\begin{multline}
+        \nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\\
+        =\int_{\mathcal{A}}f_{\theta_1}(a|s)\left(\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_2^{_{\theta_1}\dag}(s,a,b)
+        +\gamma_2\E_{s'}\E_{b'\sim g_{\theta_1}^*(\cdot|s')}\left[\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s',a,b')\right]\right]\right)\rmd a
+\end{multline}
+を得る．
+これは$(s,b)$を状態と見做したときの，関数$\nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]$についてのBellman期待方程式になっているため，Bellman方程式の解の一意性より，
+\begin{align}
+    \nabla_{\theta_1}\E_{a\sim f_{\theta_1}}\left[Q_2^{f_{\theta_1}\dag}(s,a,b)\right]=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})Q_2^{f_{\theta_1}\dag}(\dot{s},\dot{a},\dot{b})\middle|s,b\right]
+\end{align}
+が得られる．
+これを\cref{eq:nabla1_J1_nabla1_Ea_Q2}に代入して，
+\begin{multline}
+    \nabla_{\theta_1}J_1(\theta_1)=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+    +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b) - \E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\\
+    \cdot\E_{d_{\gamma_2}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})Q_2^{f_{\theta_1}\dag}(\dot{s},\dot{a},\dot{b})\middle|s,b\right]\bigg]
+\end{multline}
+を得る．
+\end{proof}
+
+
+\section{Proof of \Cref{thrm:SPG_qr_bbf_1}}\label{sec:proof_SPG_qr_bbf_1}
+
+\begin{proof}
+（$f_{\theta_1}$が確率的な場合）
+
+$f_{\theta_1}(a|s)g_{\theta_1}^*(b|s,a)~$を$\theta_1$に依存する一つの結合方策$fg_{\theta_1}^*(a,b|s)$とみなせば，$J_1(\theta_1)=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty \gamma_1^tr_1(s_t,a_t,b_t)\right]$の$\theta_1$での微分にsingel-anget MDPs (witout the entropy regularization)の方策勾配定理が適用できるため，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\\
+    &=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\left(\nabla_{\theta_1}\log f_{\theta_1}(a|s)g_{\theta_1}^*(b|s,a)\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\\
+    &=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)+\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\label{eq:nabla_1_J_1_qr_bbf_first}
+\end{align}
+\end{subequations}
+を得る．
+ここで，最適Bellman方程式，
+\begin{align}
+    &V_2^{f\dag}(s,a)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f\dag}(s,a,b)\right)\rmd b,
+\end{align}
+の両辺を$\theta_1$で微分して，
+\begin{subequations}
+\begin{align}
+    \nabla_{\theta_1}V_2^{f_{\theta_1}\dag}(s,a)&=\beta\dfrac{\nabla_{\theta_1}\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)\rmd b}{\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)\rmd b}\\
+    &=\beta\int_{\mathcal{B}}\dfrac{\nabla_{\theta_1}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)}{\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)\rmd b}\rmd b\\
+    &=\beta\int_{\mathcal{B}}\dfrac{\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)}{\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right)\rmd b}\nabla_{\theta_1}\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,a,b)\rmd b\\
+    &=\int_{\mathcal{B}}g_{\theta_1}^*(b|s,a)\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\rmd b\\
+    &=\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]
+\end{align}
+\end{subequations}
+を得る．
+これと$g_{\theta_1}^*(b|s,a)=\exp\left(\beta^{-1}\left(Q_2^{f_{\theta_1}\dag}(s,a,b)-V_2^{f_{\theta_1}\dag}(s,a)\right)\right)$より，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)\\
+    &=\beta^{-1}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)-\nabla_{\theta_1}V_2^{f_{\theta_1}\dag}(s,a)\right)\\
+    &=\beta^{-1}\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\beta^{-1}\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\label{eq:nablaQ-Eb_nablaQ_bbf}\\
+    &=\beta^{-1}\nabla_{\theta_1}\left(Q_2^{f_{\theta_1}\dag}(s,a,b)-V_2^{f_{\theta_1}\dag}(s,a)\right)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\beta^{-1}\nabla_{\theta_1}\left(Q_2^{f_{\theta_1}\dag}(s,a,b)-V_2^{f_{\theta_1}\dag}(s,a)\right)\right]\\
+    &=\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)\right]
+\end{align}
+\end{subequations}
+を得ることができ，これを\cref{eq:nabla_1_J_1_qr_bbf_first}に代入して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)-\E_{b\sim g_{\theta_1}^*(\cdot|s)}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\Big]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\Big]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)
+        +\mathrm{Cov}_{b}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a),Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\middle|s,a\right]\Big]
+    \end{multlined}
+\end{align}
+\end{subequations}
+
+（$f_{\theta_1}$が決定的な場合）
+
+まず
+\begin{align}
+    \nabla_{\theta_1}J_1(\theta_1)=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}+\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]
+\end{align}
+を示す．
+Bellman 期待方程式，$$V_1^{f_{\theta_1}g_{\theta_1}^*}(s)=\int_{\mathcal{B}}g_{\theta_1}^*(b|s,f_{\theta_1}(s))\left(r_1(s,f_{\theta_1}(s),b)+\gamma_1\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\rmd s'\right)\rmd b,$$の両辺を$\theta_1$で微分して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1} V_1^{f_{\theta_1}g_{\theta_1}^*}(s)\nonumber\\
+    &\begin{multlined}
+        =\int_{\mathcal{B}}\Bigg(\nabla_{\theta_1}g_{\theta_1}^*(b|s,f_{\theta_1}(s))\bigg(r_1(s,f_{\theta_1}(s),b)+\gamma_1\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\rmd s'\bigg)\\
+        +g_{\theta_1}^*(b|s,f_{\theta_1}(s))\nabla_{\theta_1}\bigg(r_1(s,f_{\theta_1}(s),b)+\gamma_1\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\rmd s'\bigg)\Bigg)
+    \end{multlined}\\
+    &\begin{multlined}
+        =\int_{\mathcal{B}}g_{\theta_1}^*(b|s,f_{\theta_1}(s))\Bigg(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))\left(r_1(s,f_{\theta_1}(s),b)+\gamma_1\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\rmd s'\right)\\
+        +\bigg(\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}r_1(s,a,b)+\gamma_1\int_{\mathcal{S}}\Big(\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}p(s'|s,a,b)V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\\+p(s'|s,a,b)\nabla_{\theta_1}V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\Big)\rmd s'\bigg)\bigg|_{a=f_{\theta_1}(s)}\Bigg)\rmd b
+    \end{multlined}\\
+    &\begin{multlined}
+        =\int_{\mathcal{B}}g_{\theta_1}^*(b|s,f_{\theta_1}(s))\Bigg(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))\left(r_1(s,f_{\theta_1}(s),b)+\gamma_1\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\rmd s'\right)\\
+        +\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}\left(r_1(s,a,b)+\gamma_1\int_{\mathcal{S}}p(s'|s,a,b)V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\right)\bigg|_{a=f_{\theta_1}(s)}\\
+        +\gamma_1\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)\nabla_{\theta_1}V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\rmd s'\Bigg)\rmd b
+    \end{multlined}\\
+    &\begin{multlined}
+        =\int_{\mathcal{B}}g_{\theta_1}^*(b|s,f_{\theta_1}(s))\Bigg(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)
+        +\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\\
+        +\gamma_1\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)\nabla_{\theta_1}V_1^{f_{\theta_1}g_{\theta_1}^*}(s')\rmd s'\Bigg)\rmd b.
+    \end{multlined}
+\end{align}
+\end{subequations}
+これはBellman期待方程式の形をしているため，Bellman期待方程式の解の一意性より，
+\begin{equation}
+\begin{aligned}
+    &\nabla_{\theta_1} V_1^{f_{\theta_1}g_{\theta_1}^*}(s)\\
+    &=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^{\infty}\gamma_1^t\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b_t|s_t,f_{\theta_1}(s_t))Q_1^{f_{\theta_1}g_{\theta_1}^*}(s_t,f_{\theta_1}(s_t),b_t)
+        +\nabla_{\theta_1}f_{\theta_1}(s_t)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s_t,a,b_t)\big|_{a=f_{\theta_1}(s_t)}\right)\middle|s\right].\\
+    &\textcolor{red}{=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^{\infty}\gamma_1^t\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b_t|s_t,a_t)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s_t,a_t,b_t)
+        +\nabla_{\theta_1}f_{\theta_1}(s_t)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s_t,a,b_t)\big|_{a=f_{\theta_1}(s_t)}\right)\middle|s\right].}
+\end{aligned}
+\end{equation}
+$J_1(\theta_1)=\E_{s\sim \rho_0}\left[V_1^{f_{\theta_1}g_{\theta_1}^*}(s)\right]$より$\nabla_{\theta_1}J_1(\theta_1)=\E_{s\sim \rho_0}\left[\nabla_{\theta_1}V_1^{f_{\theta_1}g_{\theta_1}^*}(s)\right]$であるので，
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\nonumber\\
+    &=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^{\infty}\gamma_1^t\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b_t|s_t,f_{\theta_1}(s_t))Q_1^{f_{\theta_1}g_{\theta_1}^*}(s_t,f_{\theta_1}(s_t),b_t)
+    +\nabla_{\theta_1}f_{\theta_1}(s_t)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s_t,a,b_t)\big|_{a=f_{\theta_1}(s_t)}\right)\right]\\
+    &=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)
+    +\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\right].
+\end{align}
+\begin{equation}
+\begin{aligned}
+    \therefore&\nabla_{\theta_1}J_1(\theta_1)\\
+    &=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}+\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right].\label{eq:SPG_qr_bbf_det_first}\\
+    &\textcolor{red}{=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}+\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right].}
+\end{aligned}
+\end{equation}
+
+次に，$g_{\theta_1}^*(b|s,a)=\exp\left(\beta^{-1}\left(Q_2^{f_{\theta_1}\dag}(s,a,b)-\beta\log Z^{f_{\theta_1}\dag}(s,a)\right)\right)$より，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))\enspace\textcolor{red}{\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,a)\right)}\\
+    &=\beta^{-1}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b) - \beta\dfrac{1}{Z^{f_{\theta_1}\dag}(s,f_{\theta_1}(s))}\nabla_{\theta_1}\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\right)\rmd b\right)\\
+    &=\beta^{-1}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b) -\int_{\mathcal{B}}g_{\theta_1}^*(b|s,f_{\theta_1}(s))\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\rmd b\right)\\
+    &=\beta^{-1}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\right]\right)\label{eq:nabla_1_log_g_qr_bbf_with_nabla_q}\\
+    \textcolor{red}{\Bigg(}&\textcolor{red}{=\beta^{-1}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)\Bigg)}\nonumber\\
+    &\begin{multlined}
+        =\nabla_{\theta_1}\beta^{-1}\left(Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)-\beta\log Z^{f_{\theta_1}\dag}(s,f_{\theta_1}(s))\right)\\
+        -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\nabla_{\theta_1}\beta^{-1}\left(Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)-\beta\log Z^{f_{\theta_1}\dag}(s,f_{\theta_1}(s))\right)\right]
+    \end{multlined}\\
+    &=\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s)) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))\right]
+\end{align}
+\end{subequations}
+を得る．
+これより，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\nonumber\\
+    &=\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}+\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\Big[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\\
+        +\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s)) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\Big]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\\
+        +\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\left(\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s)) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s))\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}
+        +\mathrm{Cov}_{b}\left[\nabla_{\theta_1}\log g_{\theta_1}^*(b|s,f_{\theta_1}(s)),Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\middle|s\right]\right]
+    \end{multlined}
+\end{align}
+\end{subequations}
+\end{proof}
+
+
+\section{Proof of \Cref{thrm:SPG_qr_bbf_2}}\label{sec:proof_SPG_qr_bbf_2}
+
+\begin{proof}
+
+（$f_{\theta_1}$が確率的な場合）
+
+\cref{eq:nablaQ-Eb_nablaQ_bbf}を\Cref{eq:nabla_1_J_1_qr_bbf_first}に代入して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\nonumber\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\bigg]\label{eq:nabla1_J1_nabla1_Q2}
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\bigg]
+    \end{multlined}
+\end{align}
+\end{subequations}
+を得る．
+ここで，最適Bellman方程式，
+\begin{align}
+    Q_2^{f_{\theta_1}\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[\int_{\mathcal{A}}f_{\theta_1}(a'|s')\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',a',b')\right)\rmd b'\rmd a'\right]
+\end{align}
+の両辺を$\theta_1$で微分して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\nonumber\\
+    &\begin{multlined}
+        =\gamma_2\E_{s'}\Bigg[\int_{\mathcal{A}}f_{\theta_1}(a'|s')\Bigg\{\nabla_{\theta_1}\log f_{\theta_1}(a'|s')\cdot \beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',a',b')\right)\rmd b'\\   +\nabla_{\theta_1}\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',a',b')\right)\rmd b'\Bigg\}\rmd a' \Bigg]
+    \end{multlined}\\
+    &=\gamma_2\E_{s'}\E_{a'\sim f(\cdot|s')}\left[\nabla_{\theta_1}\log f_{\theta_1}(a'|s')V_2^{f_{\theta_1}\dag}(s',a')+\int_{\mathcal{B}}g_{\theta_1}^*(b'|s',a')\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s',a',b')\rmd b'\right]\\
+    &=\gamma_2\E_{s'}\E_{a'\sim f(\cdot|s')}\left[\nabla_{\theta_1}\log f_{\theta_1}(a'|s')V_2^{f_{\theta_1}\dag}(s',a')\right]+\gamma_2\E_{s'}\E_{a'\sim f(\cdot|s')}\E_{b'\sim g_{\theta_1}^*(\cdot|s',a')}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s',a',b')\right]\label{eq:nabla_1_Q_2_qr_bbf_bellman_eq}
+\end{align}
+\end{subequations}
+を得る．
+\Cref{eq:nabla_1_Q_2_qr_bbf_bellman_eq}はBellman期待方程式になっているため，Bellman期待方程式の解の一意性より，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\nonumber\\
+    &=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty \gamma_2^t\cdot \gamma_2\E_{s'\sim p(\cdot|s_t,a_t,b_t),a'\sim f(\cdot|s')}\left[\nabla_{\theta_1}\log f_{\theta_1}(a'|s')V_2^{f_{\theta_1}\dag}(s',a')\right]\middle|s,a,b\right]\\
+    &=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\gamma_2\E_{s'\sim p(\cdot|\dot{s},\dot{a},\dot{b}),a'\sim f(\cdot|s')}\left[\nabla_{\theta_1}\log f_{\theta_1}(a'|s')V_2^{f_{\theta_1}\dag}(s',a')\right]\middle|s,a,b\right]\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})V_2^{f_{\theta_1}\dag}(\dot{s},\dot{a})\middle|s,a,b\right] - \nabla_{\theta_1}\log f_{\theta_1}(a|s)V_2^{f_{\theta_1}\dag}(s,a)\quad(\because \mathrm{\Cref{thrm:lemma_exp_ocup}~(c)})\label{eq:nabla_1_V_2_pgt_qr_bbf}
+    \end{multlined}
+\end{align}
+\end{subequations}
+を得る．
+これを\cref{eq:nabla1_J1_nabla1_Q2}に代入して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\nonumber\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta}\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\Big[\Big(\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})V_2^{f_{\theta_1}\dag}(\dot{s},\dot{a})\middle|s,a,b\right]\\
+        -\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})V_2^{f_{\theta_1}\dag}(\dot{s},\dot{a})\middle|s,a,b\right]\right]\Big)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\Big]\bigg]
+    \end{multlined}\\&\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+        +\dfrac{1}{\beta(1-\gamma_2)}\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\Big[\Big(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)
+        -\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\Big)\\
+        \cdot\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})V_2^{f_{\theta_1}\dag}(\dot{s},\dot{a})\middle|s,a,b\right]\Big]\bigg]
+    \end{multlined}
+\end{align}
+\end{subequations}
+\begin{multline}
+    \therefore\nabla_{\theta_1}J_1(\theta_1)
+    =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}\log f_{\theta_1}(a|s)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\\
+    +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\\
+    \cdot\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}\log f_{\theta_1}(\dot{a}|\dot{s})V_2^{f_{\theta_1}\dag}(\dot{s},\dot{a})\middle|s,a,b\right]\bigg]
+\end{multline}
+
+（$f_{\theta_1}$が決定的な場合）
+
+\cref{eq:nabla_1_log_g_qr_bbf_with_nabla_q}を\Cref{eq:SPG_qr_bbf_det_first}に代入して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}J_1(\theta_1)\nonumber\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\\
+        +\dfrac{1}{\beta}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\bigg]\\
+        \textcolor{red}{\Bigg(+\dfrac{1}{\beta}\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\bigg]\Bigg)}
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\\
+        +\dfrac{1}{\beta}\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\left(\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\right]\right)Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\\
+        +\dfrac{1}{\beta}\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\right)\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\right]\bigg]
+    \end{multlined}\\
+    &\begin{multlined}
+        =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\big|_{a=f_{\theta_1}(s)}\\
+        +\dfrac{1}{\beta}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b) -\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\right)\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\bigg]
+    \end{multlined}\label{eq:nabla1_J1_nabla1_Q2_det}
+\end{align}
+\end{subequations}
+を得る．
+ここで最適Bellman方程式，
+\begin{align}
+    Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)=r_2(s,f_{\theta_1}(s),b)+\gamma_2\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\right)\rmd b'\rmd s'
+\end{align}
+の両辺を$\theta_1$で微分して，
+\begin{subequations}
+\begin{align}
+    &\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)\nonumber\\
+    &\begin{multlined}
+        =\bigg(\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}r_2(s,a,b)+\gamma_2\int_{\mathcal{S}}\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}p(s'|s,a,b)\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\right)\rmd b'\rmd s'\bigg)\bigg|_{a=f_{\theta_1}(s)}\\
+        +\gamma_2\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)\nabla_{\theta_1}\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\right)\rmd b'\rmd s'
+    \end{multlined}\\
+    &\begin{multlined}
+        =\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}\bigg(r_2(s,a,b)+\gamma_2\int_{\mathcal{S}}p(s'|s,a,b)\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\right)\rmd b'\rmd s'\bigg)\bigg|_{a=f_{\theta_1}(s)}\\
+        +\gamma_2\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)\int_{\mathcal{B}}\dfrac{\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\right)}{\int_{\mathcal{B}}\exp\left(\beta^{-1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\right)\rmd b'}\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\rmd b'\rmd s'
+    \end{multlined}\\
+    &\begin{multlined}
+        =\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_{a}Q_2^{f_{\theta_1}\dag}(s,a,b)\big|_{a=f_{\theta_1}(s)}
+        +\gamma_2\int_{\mathcal{S}}p(s'|s,f_{\theta_1}(s),b)\int_{\mathcal{B}}g_{\theta_1}^*(b'|s',f_{\theta_1}(s'))\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\rmd b'\rmd s'\label{eq:nabla_1_Q_2_qr_bbf_dpg_bellman_eq}
+    \end{multlined}
+\end{align}
+\end{subequations}
+を得る．
+\Cref{eq:nabla_1_Q_2_qr_bbf_dpg_bellman_eq}はBellman期待方程式になっているため，Bellman期待方程式の解の一意性より，
+\begin{subequations}
+\begin{align}
+    \nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,f_{\theta_1}(s),b)        &=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty \gamma_2^t\nabla_{\theta_1}f_{\theta_1}(s_t)^{\T}\nabla_{a}Q_2^{f_{\theta_1}\dag}(s_t,a,b_t)\big|_{a=f_{\theta_1}(s_t)}\middle|s,f_{\theta_1}(s),b\right]\\
+    &=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})^{\T}\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})\big|_{a=f_{\theta_1}(\dot{s})}\middle|s,f_{\theta_1}(s),b\right]\\
+    &=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})^{\T}\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})\big|_{a=f_{\theta_1}(\dot{s})}\middle|s,b\right].\label{eq:nabla_1_Q_2_qr_bbf_dpg}
+\end{align}
+\end{subequations}
+を得る．
+
+\textcolor{red}{(また，
+\begin{align}
+    &\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s,a,b)\nonumber\\
+    &=\gamma_2\E_{s'\sim p(\cdot|s,a,b),b'\sim g_{\theta_1}^*(\cdot|s,a)}\left[\nabla_{\theta_1}Q_2^{f_{\theta_1}\dag}(s',f_{\theta_1}(s'),b')\right]\\
+    &=\gamma_2\E_{s'\sim p(\cdot|s,a,b),b'\sim g_{\theta_1}^*(\cdot|s,a)}\left[\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty\nabla_{\theta_1}f_{\theta_1}s_t^{\T}\nabla_aQ_2^{f_{\theta_1}\dag}(s_t,b_t)\middle|s',b'\right]\right]\\
+    &=\gamma_2\E_{s'\sim p(\cdot|s,a,b)}\left[\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty\nabla_{\theta_1}f_{\theta_1}(s_t)^{\T}\nabla_aQ_2^{f_{\theta_1}\dag}(b_t,a,b_t)\middle|s'\right]\right]\\
+    &=\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty\nabla_{\theta_1}f_{\theta_1}(s_t)^{\T}\nabla_aQ_2^{f_{\theta_1}\dag}(s_t,a,b_t)\middle|s,a,b\right]-\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_aQ_2^{f_{\theta_1}\dag}(b,a,b).
+\end{align}
+)}
+
+これを\cref{eq:nabla1_J1_nabla1_Q2_det}に代入して，
+\begin{multline}
+    \nabla_{\theta_1}J_1(\theta_1)
+    =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)|_{a=f_{\theta_1}(s)}\\
+    +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,f_{\theta_1}(s))}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,f_{\theta_1}(s),b)\right]\right)\\
+    \cdot\E_{d_{\gamma_2}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}}\left[\nabla_{\theta_1}f_{\theta_1}(\dot{s})\nabla_{a}Q_2^{f_{\theta_1}\dag}(\dot{s},a,\dot{b})|_{a=f_{\theta_1}(\dot{s})}\middle|s,b\right]\bigg]
+\end{multline}
+を得る．
+
+\textcolor{red}{または，
+\begin{multline}
+    \nabla_{\theta_1}J_1(\theta_1)
+    =\dfrac{1}{1-\gamma_1}\E_{d_{\gamma_1}^{\theta_1}}^{f_{\theta_1}g_{\theta_1}^*}\bigg[\nabla_{\theta_1}f_{\theta_1}(s)\nabla_{a}Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)|_{a=f_{\theta_1}(s)}\\
+    +\dfrac{1}{\beta(1-\gamma_2)}\left(Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)-\E_{b\sim g_{\theta_1}^*(\cdot|s,a)}\left[Q_1^{f_{\theta_1}g_{\theta_1}^*}(s,a,b)\right]\right)\\
+    \cdot\left(\E^{f_{\theta_1}g_{\theta_1}^*}\left[\sum_{t=0}^\infty\nabla_{\theta_1}f_{\theta_1}(s_t)^{\T}\nabla_aQ_2^{f_{\theta_1}\dag}(s_t,a,b_t)\middle|s,a,b\right]-\nabla_{\theta_1}f_{\theta_1}(s)^{\T}\nabla_aQ_2^{f_{\theta_1}\dag}(b,a,b)\right)\bigg]
+\end{multline}
+}
+\end{proof}
+
+
+\section{Sample Approximation of $\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[\cdot]$}\label{sec:sample_approx}
+
+\begin{itemize}
+    \item 近似する対象：$\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)]=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}d_{\gamma}^{\theta}(s)f_{\theta_1}(a|s)g_{\theta_2}(b|s)h(s,a,b)
+            \rmd s\rmd a\rmd b$
+        \begin{itemize}
+            \item $d_{\gamma}^{\theta}(s)=(1-\gamma)\sum_{t=0}^{\infty}\gamma_2^t\rho_t^\theta(s)$
+        \end{itemize}
+    \item 結論：$\gamma_2^t$に比例する確率でサンプリングして$h(s,a,b)$のサンプル平均をとれば，$\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)]$の不偏推定量になる：
+    \begin{align}
+        \E\left[\dfrac{1}{n}\sum_{i=1}^nh(S_i,A_i,B_i)\right]=\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)].
+    \end{align}
+    \begin{itemize}
+        \item 仮定：
+        \begin{itemize}
+            \item リプレイバッファ$\mathcal{D}$には$\rho^0,p,f_{\theta_1},g_{\theta_2}$にしたがって生成された無限長の軌跡が有限個入っている．
+            \item 各サンプルには生成時のタイムステップ$t$が保存してある：$(s,a,b,s',r_A,r_B,t)$
+        \end{itemize}
+        \item リプレイバッファから$\gamma_2^t$に比例した確率でサンプリング$(S,T)\overset{\gamma_2}{\sim}\mathcal{D}$すると，
+        \begin{itemize}
+            \item $p(T=t)\propto\gamma_2^t, p(S=s|t)=\rho_t^\theta(s)$より，サンプル$(S,T)$が$(s,t)$である確率は，$p(S=s,T=t)\propto\gamma_2^t\rho_t^\theta(s)$.
+            \item $T$で周辺化する（=サンプル中の$t$を無視する）と，$p(S=s)=\sum_{t=0}^\infty p(S=s,T=t)\propto\sum_{t=0}^\infty\gamma_2^t\rho_t^\theta(s)$.
+            \item $\int_{\mathcal{S}}\sum_{t=0}^\infty\gamma_2^t\rho_t^\theta(s)\rmd s=\sum_{t=0}^\infty\gamma_2^t\int_{\mathcal{S}}\rho_t^\theta(s)\rmd s=\sum_{t=0}^\infty\gamma_2^t=\dfrac{1}{1-\gamma_2}$より，
+            \begin{align}
+                p(S=s)=(1-\gamma_2)\sum_{t=0}^\infty\gamma_2^t\rho_t^\theta(s)=d_{\gamma}^{\theta}(s).
+            \end{align}
+            \item したがって，サンプル$\{(S_i,A_i,B_i)\}_{i=1}^n\overset{\gamma_2}{\sim}\mathcal{D}$による$h(s,a,b)$のサンプル平均の期待値は，
+            \begin{subequations}
+            \begin{align}
+                \E\left[\dfrac{1}{n}\sum_{i=1}^nh(S_i,A_i,B_i)\right]&=\dfrac{1}{n}\sum_{i=1}^n\E\left[h(S_i,A_i,B_i)\right]\\
+                &=\E\left[h(S,A,B)\right]\\
+                &=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}d_{\gamma}^{\theta}(s)f_{\theta_1}(a|s)g_{\theta_2}(b|s)h(s,a,b)\rmd s\rmd a\rmd b\\
+                &=\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)].
+            \end{align}
+            \end{subequations}
+        \end{itemize} 
+    \end{itemize}
+    \begin{comment}
+    \item 結論2：$\gamma_2^t$に比例する確率でサンプリングして$h(s,a,b)$のサンプル平均をとれば，$\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)]$の不偏推定量になる：
+    \begin{align}
+        \E\left[\dfrac{1}{n}\sum_{i=1}^nh(S_i,A_i,B_i)\right]=\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)].
+    \end{align}
+    \begin{itemize}
+        \item 仮定：
+        \begin{itemize}
+            \item リプレイバッファ$\mathcal{D}$には$\rho^0,p,f_{\theta_1},g_{\theta_2}$にしたがって生成された軌跡を入れる．
+            \item また各サンプルには収集時にタイムステップ$t$が保存してある：$(s,a,b,s',r_A,r_B,t)$
+            \item エピソード長は有限長$H$(i.e. $t=0,...,H-1$)で，$\mathcal{D}$からサンプリングされるタイムステップ$T$は一様分布に従う確率変数である．
+        \end{itemize}
+        \item リプレイバッファから$\gamma_2^t$に比例する確率でサンプリングする代わりに，一様分布を提案分布として importance sampling $(S,T)\sim\mathcal{D}$する（つまり$\mathcal{D}$から一様ランダムにサンプリングする）と，
+        \begin{itemize}
+            \item $p(T=t)=1/H, p(S=s|t)=\rho_t^\theta(s)$より，サンプル$(S,T)$が$(s,t)$である確率は，$p(S=s,T=t)=\rho_t^\theta(s)/H$.
+            \item $T$で周辺化する（=サンプル中の$t$を無視する）と，$p(S=s)=\sum_{t=0}^\infty p(S=s,T=t)\propto\sum_{t=0}^\infty\gamma_2^t\rho_t^\theta(s)$.
+            \item ミニバッチ$\{(S_i,A_i,B_i,T_i)\}_{i=1}^n\sim\mathcal{D}$の各サンプルについて，$h(s,a,b)$に$\gamma_2^t/(1/H)=H\gamma_2^t$をかけてサンプル平均をとると，その期待値は，
+            \begin{subequations}
+            \begin{align}
+                \E\left[\dfrac{1}{n}\sum_{i=1}^nH\gamma_2^{T_i}h(S_i,A_i,B_i)\right]&=\dfrac{1}{n}\sum_{i=1}^n\E\left[H\gamma_2^{T_i}h(S_i,A_i,B_i)\right]\\
+                &=\E\left[H\gamma_2^Th(S,A,B)\right]\\
+                &=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\sum_{t=0}^{H-1}\dfrac{\rho_t^{\theta}}{H}(s)f_{\theta_1}(a|s)g_{\theta_2}(b|s)H\gamma_2^th(s,a,b)\rmd s\rmd a\rmd b\\
+                &=\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}\sum_{t=0}^{H-1}\gamma_2^t\rho_t^{\theta}(s)f_{\theta_1}(a|s)g_{\theta_2}(b|s)h(s,a,b)\rmd s\rmd a\rmd b
+            \end{align}
+            \end{subequations}
+            $\lim_{H\to\infty}\sum_{t=0}^{H-1}\gamma_2^t\rho_t^{\theta}(s)$は$(1-\gamma_2)^{-1}d_{\gamma}^{\theta}(s)=\sum_{t=0}^\infty\gamma_2^t\rho_t^{\theta}(s)$に一様収束する（
+            \begin{proof}
+            任意の$\epsilon>0$に対して，$\dfrac
+                {\gamma_2^{H'-1}}{1-\gamma_2}\le\epsilon$となるような$H'\in\N$が存在するため，$H\ge H'$ならば任意の$s\in\mathcal{S}$について
+            \begin{align}
+                \left|\sum_{t=0}^{\infty}\gamma_2^t\rho_t^{\theta}(s)-\sum_{t=0}^{H-1}\gamma_2^t\rho_t^{\theta}(s)\right|&=\left|\sum_{t=H}^{\infty}\gamma_2^t\rho_t^{\theta}(s)\right|\\
+                &\le\sum_{t=H}^{\infty}\gamma_2^t\\
+                &=\left(\dfrac{1}{1-\gamma_2}-\dfrac
+                {1-\gamma_2^{H-1}}{1-\gamma_2}\right)\\
+                &=\dfrac
+                {\gamma_2^{H-1}}{1-\gamma_2}\le\epsilon.
+            \end{align}
+            \end{proof}）ため，両辺から$\lim_{H\to\infty}$をとると，
+            \begin{subequations}
+            \begin{align}
+                \lim_{H\to\infty}\E\left[\dfrac{1}{n}\sum_{i=1}^nH\gamma_2^{T_i}h(S_i,A_i,B_i)\right]&=\dfrac{1}{1-\gamma_2}\int_{\mathcal{S}}\int_{\mathcal{A}}\int_{\mathcal{B}}d_{\gamma}^{\theta}(s)f_{\theta_1}(a|s)g_{\theta_2}(b|s)h(s,a,b)\rmd s\rmd a\rmd b\\
+                &=\dfrac{1}{1-\gamma_2}\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(s,a,b)].
+            \end{align}
+            \end{subequations}
+        \end{itemize} 
+    \end{itemize}
+    \end{comment}
+    \item $\E_{d_{\gamma}^{\theta}}^{f_{\theta_1}g_{\theta_2}}[h(\dot{s},\dot{a},\dot{b})|s,a,b]$のサンプル近似の時には，サンプル$(s,a,b)$をタイムステップ$t=0$のサンプル$(s_0,a_0,b_0)$とみなし，同じエピソード中の$(s,a,b)$以降（すなわち，$(s,a,b)$の生成タイムステップを$t$とするとき，同エピソードのタイムステップ$t'\ge t$のサンプル）から$\gamma_2^{t'-t}$に比例する確率で割引サンプリングする．これを $\mathrm{(sample)}\overset{\gamma_2}{\sim}\mathcal{D}(s,a,b)$と表記する．
+    \item Agarwal et. al.\cite{Agarwal2021-nc}のAlgorithm 1では，$(1-\gamma)d_{\gamma}^{\theta}(s)$からサンプリングする別の方法を提案？紹介？している：ある方策の下で探索する時に，毎ステップ確率$1-\gamma$でエピソードを終了し，エピソード終了時の情報をサンプルとして採用する．その後初期状態分布に従う初期状態からエピソードを再開して繰り返す．
+    \cite{Agarwal2021-nc}．
+    \begin{itemize}
+        \item この時$p(S=s|t)\propto\gamma^t\rho_t^\theta(s)$となるので，あとはリプレイバッファから一様ランダムにサンプリングすればよい（工藤）．
+        \item 毎ステップ確率$1-\gamma$でエピソードを終了するルールで探索していれば，エピソード終了時だけでなく毎ステップの情報をサンプルとして採用していいはず（工藤）．
+        \begin{itemize}
+            \item この時，エピソード再開時に初期状態分布からスタートすることを諦めて\textcolor{blue}{（諦めるというか，定常分布に初期状態がしたがうとみなしている）}，実際にはエピソードは続いているが「別のエピソードとしてリスタートした」とみなして探索を続ければ，もはややっていることは普通に探索してリプレイバッファから普通に一様サンプリングしているだけになる．一般的な方策勾配アルゴリズム(with 累積期待報酬の目的関数)
+            でやっているのはこれではないか？
+        \end{itemize}
+        \item エピソードを自由に終了および再開できない場合はこの方法は適さないと考えられる．
+        \begin{itemize}
+            \item フォロワーがリーダーと独立している状況などではリーダーの都合でエピソードを終了できない．したがって割引サンプリングの方が適すると考えられる（ただこの状況でも，実際の探索ではエピソードは有限長で終了し，初期状態分布に従う初期状態からリスタートすると仮定することは必要だが）．
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+
+\section{Algorithm}
+
+\subsection{Stackelberg Stochastic Policy Gradient (\Cref{sec:ST-SPG})}
+
+\begin{algorithm}[H]
+\caption{Stackelberg Stochastic Policy Gradient Algorithm}
+\label{algo:proposed_SSPG}
+\begin{algorithmic}[1]
+% ここにアルゴリズム
+\REQUIRE {max-episodes-number, batch size $N,M,L$, learning step size $\alpha_1,\alpha_2$, and smoothing factor $\eta$}
+\STATE {Randomly initialize actors $(f_{\theta_1},g_{\theta_2})$ and critic networks $(Q_{\omega_1},Q_{\omega_2})$ with weights $\theta_1,\theta_2,\omega_1$, and $\omega_2$}
+\STATE {Initialize target networks $(Q_{\bar{\omega}_1},Q_{\bar{\omega}_2})$ with weights $\bar{\omega}_1\gets\omega_1, \bar{\omega}_2\gets\omega_2$}
+\STATE {Initialize replay buffer $\mathcal{D}$}
+\FOR {$m=1$ to max-episodes-number}
+\STATE {Observe initial state $s$}
+\FOR {$t=0$ to max-episode-length $-1$}
+\STATE {Select actions $a\sim f_{\theta_1}(\cdot|s)$ and $b\sim g_{\theta_2}(\cdot|s)$}
+\STATE {Execute actions $(a,b)$ in the environment}
+\STATE {Observe rewards $(r_1,r_2)$ and next state $s'$}
+\STATE {Add $(s,a,b,r_1,r_2,s',t)$ to the tail end of episode $m$ in replay buffer $\mathcal{D}$}
+\STATE {Randomly sample a batch of $N$ transitions, $B_1=\{(s,a,b,r_1,r_2,s',t)_i\}_{i=1}^{N}$, by discount sampling $B_1\overset{\gamma_1}{\sim}\mathcal{D}$}
+\STATE {Randomly sample a batch of $N$ transitions, $B_2=\{(s,a,b,r_1,r_2,s',t)_i\}_{i=1}^{N}$, by discount sampling $B_2\overset{\gamma_2}{\sim}\mathcal{D}$}
+\STATE {Randomly sample $N$ batches of $M$ transitions, $B_{2i}=\{(s,a,b,r_1,r_2,s',t)_{ij}\}_{j=1}^{M}$, by discount sampling $B_{2i}\overset{\gamma_2}{\sim}\mathcal{D}(\cdot|s_i,a_i,b_i)$ for each $(s,a,b,t)_i\in B_2$}
+\STATE {Randomly sample $N$ batches of $L$ actions, $B'_{2i}=\{(a,b)_{ik}\}_{k=1}^{L}$, where $B'_{2i}\sim f_{\theta_1}(\cdot|s_i)g_{\theta_2}(\cdot|s_i)$ for each $s_i\in B_2$}
+\STATE {Compute $N$ targets $y_j^{(i)}=r_j^{(i)}+\gamma_jQ_{\bar{\omega}_j}(s_i',a_i',b_i')\big|_{a_i'\sim f_{\bar{\theta}_1}(\cdot|s_i'),b_i'\sim g_{\bar{\theta}_2}(\cdot|s_i')}\quad$ for each player $j\in\{1,2\}$}
+\STATE {Update critics by one step of gradient descent using $\nabla_{\omega_j}\dfrac{1}{N}\sum_{(s,a,b)_i\in B}\left(y_j^{(i)}-Q_{\omega_j}(s_i,a_i,b_i)\right)^2$}
+\STATE {Compute $\widehat{\nabla_{\theta_1}J_1}(\theta_1,\theta_2)=\dfrac{1}{N}\sum_{(s_i,a_i,b_i)\sim B_1}\nabla_{\theta_1}\log f_{\theta_1}(a_i|s_i)Q_{\omega_1}(s_i,a_i,b_i)$}
+\STATE {Compute $\widehat{\nabla_{\theta_2}J_1}(\theta_1,\theta_2)=\dfrac{1}{N}\sum_{(s_i,a_i,b_i)\sim B_1}\nabla_{\theta_2}\log g_{\theta_2}(b_i|s_i)Q_{\omega_1}(s_i,a_i,b_i)$}
+\STATE {Compute $\widehat{\nabla_{\theta_2\theta_1}J_2}(\theta_1,\theta_2)$ by \Cref{eq:nabla_2_1_J_2_sampleapprox} with $B_2,B_{2i},B_{2i}'$}
+\STATE {Compute $\widehat{\nabla_{\theta_2}^2J_2}(\theta_1,\theta_2)$ by \Cref{eq:nabla_2_2_J_2_sampleapprox} with $B_2,B_{2i},B_{2i}'$}
+\STATE {Compute inverse matrix $(\widehat{\nabla_{\theta_2}^2J_2}(\theta_1,\theta_2))^{-1}$}
+\STATE {Compute $\widehat{\nabla J_1}(\theta_1,\theta_2)=\widehat{\nabla_{\theta_1}J_1}(\theta_1,\theta_2)-\widehat{\nabla_{\theta_2\theta_1}J_2}(\theta_1,\theta_2)\T(\widehat{\nabla_{\theta_2}^2J_2}(\theta_1,\theta_2))^{-1}\widehat{\nabla_{\theta_2}J_1}(\theta_1,\theta_2)$}
+\STATE {Compute $\widehat{\nabla_{\theta_2}J_2}(\theta_1,\theta_2)=\dfrac{1}{N}\sum_{(s_i,a_i,b_i)\sim B_2}\nabla_{\theta_2}\log g_{\theta_2}(a_i|s_i)Q_{\omega_2}(s_i,a_i,b_i)$}
+\STATE {Update actor networks for each player $i\in\{1,2\}$ with 
+\begin{align*}
+    \begin{array}{l}
+        \theta_1'\gets\theta_1+\alpha_1\widehat{\nabla J_1}(\theta_1,\theta_2),\\[4pt]
+        \theta_2'\gets\theta_2+\alpha_2\widehat{\nabla_{\theta_2}J_2}(\theta_1,\theta_2),
+    \end{array}
+    \quad\mathrm{and}\quad
+    \begin{array}{l}
+        \theta_1\gets\theta_1',\\[4pt]
+        \theta_2\gets\theta_2'
+    \end{array}
+\end{align*}}
+\STATE {Update target networks for each player $i\in\{1,2\}$ with
+\begin{align*}
+    &\bar{\theta}_j\gets\eta\bar{\theta}_j + (1-\eta)\theta_j\\
+    &\bar{\omega}_j\gets\eta\bar{\omega}_j + (1-\eta)\omega_j
+\end{align*}}
+\ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Stackelberg Stochastic Policy Gradient with a Quantal-Response Follower (\Cref{sec:ST_SPG_QRF})}
+
+\begin{algorithm}[H]
+\caption{Stackelberg Stochastic Policy Gradient with a Quantal-Response Follower $g(b|s)$}
+\label{algo:proposed_SSPG_QRF}
+\begin{algorithmic}[1]
+% ここにアルゴリズム
+\REQUIRE {max-episodes-number, batch size $N,M,L$, learning step size $\alpha_1,\alpha_2$, and smoothing factor $\eta$}
+\STATE {Randomly initialize actors $(f_{\theta_1},g_{\theta_2})$ and critic networks $(Q_{\omega_1},Q_{\omega_2})$ with weights $\theta_1,\theta_2,\omega_1$, and $\omega_2$}
+\STATE {Initialize target networks $(Q_{\bar{\omega}_1},Q_{\bar{\omega}_2})$ with weights $\bar{\omega}_1\gets\omega_1, \bar{\omega}_2\gets\omega_2$}
+\STATE {Initialize replay buffer $\mathcal{D}$}
+\FOR {$m=1$ to max-episodes-number}
+\STATE {Observe initial state $s$}
+\FOR {$t=0$ to max-episode-length $-1$}
+\STATE {Select actions $a\sim f_{\theta_1}(\cdot|s)$ and $b\sim g_{\theta_2}(\cdot|s)$}
+\STATE {Execute actions $(a,b)$ in the environment}
+\STATE {Observe rewards $(r_1,r_2)$ and next state $s'$}
+\STATE {Add $(s,a,b,r_1,r_2,s',t)$ to the tail end of episode $m$ in replay buffer $\mathcal{D}$}
+\STATE\COMMENT {Follower's update}
+\STATE {Randomly sample a batch of transitions, $B=\{(s,a,b,r_2,s')_i\}_{i=1}^{N}$ from $\mathcal{D}$}
+\STATE {Update follower's Q-function $Q_{\omega_2}$ and policy $g_{\theta_2}$ with Max-Ent RL algorithms}
+\IF {$t=0 \mod$leader-update-interval}
+\STATE\COMMENT {Leader's update}
+\STATE {Randomly sample a batch of $N$ transitions, $B=\{(s,a,b,r_1,s',t)_i\}_{i=1}^{N}$, by discount sampling $B_1\overset{\gamma_1}{\sim}\mathcal{D}$}
+\STATE {Randomly sample $N$ batches of $M$ transitions, $B_{i}=\{(s,a,b,r_1,s',t)_{ij}\}_{j=1}^{M}$, by discount sampling $B_{i}\overset{\gamma_2}{\sim}\mathcal{D}(\cdot|s_i,a_i,b_i)$ for each $(s,a,b,t)_i\in B$}
+\STATE {Randomly sample $N$ batches of $L$ actions, $B'_{2i}=\{(a,b)_{ik}\}_{k=1}^{L}$}, where $B'_{i}\sim f_{\theta_1}(\cdot|s_i)g_{\theta_2}(\cdot|s_i)$ for each $s_i\in B_2$
+\STATE {Compute $N$ targets $y^{(i)}=r_1^{(i)}+\gamma_1Q_{\bar{\omega}_1}(s_i',a_i',b_i')\big|_{a_i'\sim f_{\bar{\theta}_1}(\cdot|s_i'),b_i'\sim g_{\bar{\theta}_2}(\cdot|s_i')}\quad$}
+\STATE {Update critics by one step of gradient descent using $\nabla_{\omega_1}\dfrac{1}{N}\sum_{(s,a,b)_i\in B}\left(y^{(i)}-Q_{\omega_1}(s_i,a_i,b_i)\right)^2$}
+\STATE {Compute $\widehat{\nabla_{\theta_1}J_1}(\theta_1)$ with $B,B_{i},B_{i}'$}
+\STATE {Update leader's actor networks with $\theta_1'\gets\theta_1+\alpha_1\widehat{\nabla_{\theta_1} J_1}(\theta_1)$}
+\STATE {Update leader's target networks with
+\begin{align*}
+    &\bar{\theta}_1\gets\eta\bar{\theta}_1 + (1-\eta)\theta_1\\
+    &\bar{\theta}_2\gets\eta\bar{\theta}_2 + (1-\eta)\theta_2\\
+    &\bar{\omega}_1\gets\eta\bar{\omega}_1 + (1-\eta)\omega_1
+\end{align*}}
+\ENDIF
+\ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+
+\section{Best Response}
+
+\subsection{RL agent follower}
+
+\begin{itemize}
+    \item Best response 定義：
+    \begin{gather}
+        g_f^*(b|s):=\max_{g}\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^tr_2(s_t,a_t,b_t)\right]
+    \end{gather}
+    \item Value functions:
+    \begin{align}
+        &V_2^{fg}(s):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^tr_2(s_t,a_t,b_t)\middle|s_0=s\right]\\
+        &Q_2^{fg}(s,a,b):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^tr_2(s_t,a_t,b_t)\middle|s_0=s,a_0=a.b_0=b\right]\\
+        &V_2^{f\dag}(s):=\max_{g}V_2^{fg}(s)\\
+        &Q_2^{f\dag}(s,a,b):=\max_{g}Q_2^{fg}(s,a,b)
+    \end{align}
+    \item Bellman Expectation Equations:
+    \begin{align}
+        &V_2^{fg}(s)=\E_{a\sim f,b\sim g}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{fg}(s')\right]\right]\\
+        &Q_2^{fg}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{fg}(s')\right]
+    \end{align}
+    \item Bellman Operators (contraction mapping):
+    \begin{align}
+        &(\mathcal{B}^{f\dag}v)(s):=\max_{b}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[v(s')\right]\right]\\
+        &(\mathcal{B}^{fg}v)(s)=\E_{a\sim f,b\sim g}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[v(s')\right]\right]
+    \end{align}
+    \item Bellman Equations: $v=V_2^{f\dag}\iff v=\mathcal{B}^{f\dag}v$
+    \begin{align}
+        V_2^{f\dag}(s)=\max_{b}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\right]
+    \end{align}
+    \begin{proof}
+        (1) $v(s)\le (\mathcal{B}^{f\dag}v)(s)\forall s\implies v(s)\le V_2^{f\dag}(s)\forall s$.
+        \begin{align}
+            &v(s)\le \max_{b}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[v(s')\right]\right]\\
+            &\implies \exists g \st v(s)\le \E_{a\sim f}\left[r_2(s,a,g(s))+\gamma_2\E_{s'}\left[v(s')\right]\right]\\
+            &\implies \exists g \st v(s)\le V_2^{fg}(s)\\
+            &\implies v(s)\le V_2^{fg}(s)\le V_2^{f\dag}(s)
+        \end{align}
+
+        (2) $v(s)\ge (\mathcal{B}^{f\dag}v)(s)\forall s\implies v(s)\ge V_2^{f\dag}(s)\forall s$
+        \begin{align}
+            &v(s)\ge \max_{b}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[v(s')\right]\right]\\
+            &\implies \forall g\quad v(s)\ge \E_{a\sim f,b\sim g}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[v(s')\right]\right]\\
+            &\implies \forall g\quad v(s)\ge V_2^{fg}(s)\iff v(s)\ge V_2^{f\dag}(s)
+        \end{align}
+
+        (3) $V_2^{f\dag}(s)\le (\mathcal{B}^{f\dag}V_2^{f\dag})(s)\forall s$
+        \begin{align}
+            (\mathcal{B}^{f\dag}V_2^{f\dag})(s)&=\max_{b}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\right]\\
+            &\ge \max_{g}\E_{a\sim f,b\sim g}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\right]\\
+            &= \max_{g}\E_{a\sim f,b\sim g}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[\max_{g}V_2^{fg}(s')\right]\right]\\
+            &\ge \max_{g}\E_{a\sim f,b\sim g}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{fg}(s')\right]\right]=V_2^{f\dag}(s)
+        \end{align}
+
+        (4) $V_2^{f\dag}(s)\ge (\mathcal{B}^{f\dag}V_2^{f\dag})(s)\forall s$
+        \begin{align}
+            \exists g\st (\mathcal{B}^{f\dag}V_2^{f\dag})(s)&=\E_{a\sim f}\left[r_2(s,a,g(s))+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\right]\\
+            & \le \E_{a\sim f}\left[r_2(s,a,g(s))+\gamma_2\E_{s'}\left[(\mathcal{B}^{f\dag}V_2^{f\dag})(s')\right]\right]\\
+            \implies \exists g\st (\mathcal{B}^{f\dag}V_2^{f\dag})(s)&\le V_2^{fg}(s)\le V_2^{f\dag}(s)\quad\because (3) 
+        \end{align}
+
+        (1) and (2) imply $v(s)=(\mathcal{B}^{f\dag}v)(s)\forall s\implies v(s)=V_2^{f\dag}(s)\forall s$. 
+        
+        (3) and (4) imply $v(s)=V_2^{f\dag}(s)\forall s \implies v(s)=(\mathcal{B}^{f\dag}v)(s)\forall s$.
+        \begin{align}
+            \therefore v(s)=V_2^{f\dag}(s)\forall s \iff v(s)=(\mathcal{B}^{f\dag}v)(s)\forall s.
+        \end{align}
+    \end{proof}
+    \item Optimal Policy:
+    \begin{align}
+        &g_f^* \in \argmax_{b}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\right]\\
+        &\implies \mathcal{B}^{fg_f^*}V_2^{f\dag}=V_2^{f\dag}\\
+        &\implies V_2^{fg_f^*}=V_2^{f\dag}
+    \end{align}
+    \item Other Bellman Equations: $g_f^*$ exists $\implies V_2^{f\dag}, Q_2^{f\dag}$ satisfy Bellman expectation equations.
+    \begin{align}
+        &Q_2^{f\dag}(s,a,b)=r(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\\
+        &V_2^{f\dag}(s)=\max_{b}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]
+    \end{align}
+\end{itemize}
+
+\subsection{Max-Ent RL agent follower (Quantal Response)}
+
+\begin{itemize}
+    \item Quantal Response 定義:
+    \begin{gather}
+        g_f^*(b|s):=\max_{g}\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^t\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^g(s_t)\}\right],\\
+        \where \mathcal{H}^g(s):=\int_{\mathcal{B}}g(b|s)(-\log g(b|s))\rmd b
+    \end{gather}
+    \item Value functions:
+    \begin{align}
+        &V_2^{fg}(s):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^t\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^g(s_t)\}\middle|s_0=s\right]\\
+        &Q_2^{fg}(s,a,b):=\E^{fg}\left[\sum_{t=0}^\infty \gamma_2^t\{r_2(s_t,a_t,b_t)+\beta\mathcal{H}^g(s_t)\}\middle|s_0=s,a_0=a.b_0=b\right]-\beta\mathcal{H}^g(s)\\
+        &V_2^{f\dag}(s):=\max_{g}V_2^{fg}(s)\\
+        &Q_2^{f\dag}(s,a,b):=\max_{g}Q_2^{fg}(s,a,b)
+    \end{align}
+    \item Bellman Expectation Equations:
+    \begin{align}
+        &V_2^{fg}(s)=\E_{a\sim f,b\sim g}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{fg}(s')\right]\right]+\beta\mathcal{H}^g(s)\\
+        &Q_2^{fg}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{fg}(s')\right]
+    \end{align}
+    \item Policy Improvement: let
+    \begin{align}
+        &g'(b|s):=\dfrac{\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{fg}(s,a,b)\right]\right)}{Z^{fg}(s)},\\
+        \where &Z^{fg}(s):=\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{fg}(s,a,b)\right]\right)\rmd b.
+    \end{align}
+    Then, $Q_2^{fg}(s,a,b)\le Q_2^{fg'}(s,a,b)~\forall s,a,b,$ and $V_2^{fg}(s)\le V_2^{fg'}(s)~\forall s.$
+    \begin{proof}
+        Let $\bar{Q}_2^{fg}(s,b):=\E_{a\sim f}\left[Q_2^{fg}(s,a,b)\right]$.
+        \begin{align}
+            &\beta\mathcal{H}^g(s)+\E_{b\sim g}\left[\bar{Q}_2^{fg}(s,b)\right]\\
+            &=\beta\mathcal{H}^g(s)+\int_{\mathcal{B}}g(b|s)\bar{Q}_2^{fg}(s,b)\rmd b\\
+            &=\beta\mathcal{H}^g(s)+\beta\int_{\mathcal{B}}g(b|s)\log\dfrac{\exp\left(\beta^{-1}\bar{Q}_2^{fg}(s,b)\right)}{Z^{fg}(s)}\rmd b + \beta\log Z^{fg}(s)\\
+            &=-\beta\int_{\mathcal{B}}g(b|s)\log\dfrac{g(b|s)}{g'(b|s)}\rmd b+\beta\log Z^{fg}(s)\\
+            &=-\beta \mathrm{D_{KL}}(g(\cdot|s)||g'(\cdot|s))+\beta\log Z^{fg}(s)
+        \end{align}
+        \begin{align}
+            &\therefore \beta\mathcal{H}^{g'}(s)+\E_{b\sim g'}\left[\bar{Q}_2^{fg}(s,b)\right]=\beta\log Z^{fg}(s)\\
+            &\therefore \beta\mathcal{H}^{g'}(s)+\E_{b\sim g'}\left[\bar{Q}_2^{fg}(s,b)\right]\ge \beta\mathcal{H}^{g}(s)+\E_{b\sim g}\left[\bar{Q}_2^{fg}(s,b)\right]
+        \end{align}
+        \begin{align}
+            Q_2^{fg}(s,a,b)&=r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\mathcal{H}^g(s')+\E_{b'\sim g}\left[\bar{Q}_2^{fg}(s',b')\right]\right]\\
+            &\le r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\mathcal{H}^{g'}(s')+\E_{b'\sim g'}\left[\bar{Q}_2^{fg}(s',b')\right]\right]\\
+            &\vdots\\
+            &\le Q_2^{fg'}(s,a,b)
+        \end{align}
+        \begin{align}
+            V_2^{fg}(s)&=\beta\mathcal{H}^g(s)+\E_{b\sim g}\left[\bar{Q}_2^{fg}(s,b)\right]\\
+            &\le\beta\mathcal{H}^{g'}(s)+\E_{b\sim g'}\left[\bar{Q}_2^{fg}(s,b)\right]\\
+            &=\beta\mathcal{H}^{g'}(s)+\E_{b\sim g'}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{fg}(s')\right]\right]\\
+            &\vdots\\
+            &\le V_2^{fg'}(s)
+        \end{align}
+    \end{proof}
+    \item Optimal Policy and Bellman Equations:
+    \begin{itemize}
+        \item Policy improvement は収束する：$Q_2^{fg}\to Q_2^{f\dag}$ and $V_2^{fg}\to V_2^{f\dag}$.
+        \item このとき，$Q_2^{f\dag}$および$V_2^{f\dag}$を実現する方策，すなわち best response $g_f^*$は明らかに
+        \begin{align}
+            &g_f^*(b|s)=\dfrac{\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)}{Z^{f\dag}(s)},\\
+        \where &Z^{f\dag}(s):=\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)\rmd b.
+        \end{align}
+        \item このとき，Bellman expectation equation より，
+        \begin{align}
+            Q_2^{f\dag}(s,a,b)&=r_2(s,a,b)+\gamma_2\E_{s'}\E_{a\sim f,b\sim g_f^*}\left[Q_2^{f\dag}(s',a',b')+\beta\mathcal{H}^{g_f^*}(s')\right]\\
+            &=r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\log Z^{f\dag}(s')\right]\\
+            &\implies V_2^{f\dag}(s)=\beta\log Z^{f\dag}(s)\\
+            &\therefore V_2^{f\dag}(s)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)\rmd b
+        \end{align}
+        \item 以上をまとめると，以下が成り立つ：
+        \begin{align}
+            &V_2^{f\dag}(s)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)\rmd b\\
+            &Q_2^{f\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\\
+            &g_f^*(b|s)=\exp\left(\beta^{-1}\left(\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]-V_2^{f\dag}(s)\right)\right)
+        \end{align}
+    \end{itemize}
+    \item Bellman Operators:
+    \begin{align}
+        &(\mathcal{B}^{f\dag}v)(s):=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[v(s')\right]\right]\right)\rmd b\\
+        &(\Upsilon^{f\dag}q)(s,a,b):=r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a'\sim f}\left[q(s',a',b')\right]\right)\rmd b'\right]
+    \end{align}
+    \begin{itemize}
+        \item これらは（single-agent Max-Ent RLの作用素と同様に） contraction mapping である（\cite{Haarnoja2017-nn} Appendix A.2 参照）．
+    \end{itemize}
+    \item References:\cite{Haarnoja2017-nn,Nakaguchi2022-ds}
+\end{itemize}
+
+\subsubsection{エントロピー正則化項の代わりに，ある reference policy $g_{\mathrm{ref}}$とのKL divergence を最小化する項を用いる場合}\label{sec:max_ent_reference_policy}
+
+\begin{itemize}
+    \item $\mathcal{H}^{g}(s)\to \mathcal{H}_{g_{\mathrm{ref}}}^{g}(s):=-\mathrm{D_{KL}}(g(\cdot|s)||g_{\mathrm{ref}}(\cdot|s))=\mathcal{H}^g(s)+\int_{\mathcal{B}}g(b|s)\log g_{\mathrm{ref}}(b|s)\rmd b$.
+    \item 検証する必要があるのは，policy improvement以降．
+    \item Policy improvement: let
+    \begin{align}
+        &g'(b|s):=\dfrac{g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{fg}(s,a,b)\right]\right)}{Z^{fg}(s)},\\
+        \where &Z^{fg}(s):=\int_{\mathcal{B}}g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{fg}(s,a,b)\right]\right)\rmd b.
+    \end{align}
+    Then, $Q_2^{fg}(s,a,b)\le Q_2^{fg'}(s,a,b)~\forall s,a,b,$ and $V_2^{fg}(s)\le V_2^{fg'}(s)~\forall s.$
+    \begin{proof}
+        Let $\bar{Q}_2^{fg}(s,b):=\E_{a\sim f}\left[Q_2^{fg}(s,a,b)\right]$.
+        \begin{align}
+            &\beta\mathcal{H}_{g_{\mathrm{ref}}}^g(s)+\E_{b\sim g}\left[\bar{Q}_2^{fg}(s,b)\right]\\
+            &=\beta\mathcal{H}_{g_{\mathrm{ref}}}^g(s)+\int_{\mathcal{B}}g(b|s)\bar{Q}_2^{fg}(s,b)\rmd b\\
+            &=\beta\mathcal{H}_{g_{\mathrm{ref}}}^g(s)+\beta\int_{\mathcal{B}}g(b|s)\log\dfrac{g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\bar{Q}_2^{fg}(s,b)\right)}{Z^{fg}(s)}\rmd b +\beta\log Z^{fg}(s)-\beta\int_{\mathcal{B}}g(b|s)\log g_{\mathrm{ref}}(b|s)\rmd b\\
+            &=\beta\mathcal{H}^g(s)+\beta\int_{\mathcal{B}}g(b|s)\log g'(b|s)\rmd b +\beta\log Z^{fg}(s)\\
+            &=-\beta\int_{\mathcal{B}}g(b|s)\log\dfrac{g(b|s)}{g'(b|s)}\rmd b+\beta\log Z^{fg}(s)\\
+            &=-\beta \mathrm{D_{KL}}(g(\cdot|s)||g'(\cdot|s))+\beta\log Z^{fg}(s)
+        \end{align}
+        \begin{align}
+            &\therefore \beta\mathcal{H}_{g_{\mathrm{ref}}}^{g'}z(s)+\E_{b\sim g'}\left[\bar{Q}_2^{fg}(s,b)\right]=\beta\log Z^{fg}(s)\\
+            &\therefore \beta\mathcal{H}_{g_{\mathrm{ref}}}^{g'}(s)+\E_{b\sim g'}\left[\bar{Q}_2^{fg}(s,b)\right]\ge \beta\mathcal{H}_{g_{\mathrm{ref}}}^g(s)+\E_{b\sim g}\left[\bar{Q}_2^{fg}(s,b)\right]
+        \end{align}
+        \begin{align}
+            Q_2^{fg}(s,a,b)&=r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\mathcal{H}_{g_{\mathrm{ref}}}^g(s')+\E_{b\sim g}\left[\bar{Q}_2^{fg}(s,b)\right]\right]\\
+            &\le r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\mathcal{H}_{g_{\mathrm{ref}}}^{g'}(s')+\E_{b\sim g'}\left[\bar{Q}_2^{fg}(s,b)\right]\right]\\
+            &\vdots\\
+            &\le Q_2^{fg'}(s,a,b)
+        \end{align}
+        \begin{align}
+            V_2^{fg}(s)&=\beta\mathcal{H}_{g_{\mathrm{ref}}}^g(s)+\E_{b\sim g}\left[\bar{Q}_2^{fg}(s,b)\right]\\
+            &\le\beta\mathcal{H}_{g_{\mathrm{ref}}}^{g'}(s)+\E_{b\sim g'}\left[\bar{Q}_2^{fg}(s,b)\right]\\
+            &=\beta\mathcal{H}_{g_{\mathrm{ref}}}^{g'}(s)+\E_{b\sim g'}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{fg}(s')\right]\right]\\
+            &\vdots\\
+            &\le V_2^{fg'}(s)
+        \end{align}
+    \end{proof}
+    \item Optimal Policy and Bellman Equations:
+    \begin{itemize}
+        \item Policy improvement は収束する：$Q_2^{fg}\to Q_2^{f\dag}$ and $V_2^{fg}\to V_2^{f\dag}$.
+        \item このとき，$Q_2^{f\dag}$および$V_2^{f\dag}$を実現する方策，すなわち best response $g_f^*$は明らかに
+        \begin{align}
+            &g_f^*(b|s)=\dfrac{g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)}{Z^{f\dag}(s)},\\
+        \where &Z^{f\dag}(s):=\int_{\mathcal{B}}g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)\rmd b.
+        \end{align}
+        \item このとき，Bellman expectation equation より，
+        \begin{align}
+            Q_2^{f\dag}(s,a,b)&=r_2(s,a,b)+\gamma_2\E_{s'}\E_{a\sim f,b\sim g_f^*}\left[Q_2^{f\dag}(s',a',b')+\beta\mathcal{H}_{g_{\mathrm{ref}}}^{g_f}(s')\right]\\
+            &=r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\log Z^{f\dag}(s')\right]\\
+            &\implies V_2^{f\dag}(s)=\beta\log Z^{f\dag}(s)\\
+            &\therefore V_2^{f\dag}(s)=\beta\log\int_{\mathcal{B}}g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)\rmd b
+        \end{align}
+        \item 以上をまとめると，以下が成り立つ：
+        \begin{align}
+            &V_2^{f\dag}(s)=\beta\log\int_{\mathcal{B}}g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]\right)\rmd b\\
+            &Q_2^{f\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\\
+            &g_f^*(b|s)=g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\left(\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]-V_2^{f\dag}(s)\right)\right)
+        \end{align}
+        \item もしくは以下のように書ける：
+        \begin{align}
+            &V_2^{f\dag}(s)=\beta\log\int_{\mathcal{B}}\exp\left(\beta^{-1}\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]+\log g_{\mathrm{ref}}(b|s)\right)\rmd b\label{eq:c_54}\\
+            &Q_2^{f\dag}(s,a,b)=r_2(s,a,b)+\gamma_2\E_{s'}\left[V_2^{f\dag}(s')\right]\label{eq:c_55}\\
+            &g_f^*(b|s)=\exp\left(\beta^{-1}\left(\E_{a\sim f}\left[Q_2^{f\dag}(s,a,b)\right]-V_2^{f\dag}(s)\right)+\log g_{\mathrm{ref}}(b|s)\right)
+        \end{align}
+    \end{itemize}
+    \item Bellman Operators:
+    \begin{align}
+        &(\mathcal{B}^{f\dag}v)(s):=\beta\log\int_{\mathcal{B}}g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a\sim f}\left[r_2(s,a,b)+\gamma_2\E_{s'}\left[v(s')\right]\right]\right)\rmd b\\
+        &(\Upsilon^{f\dag}q)(s,a,b):=r_2(s,a,b)+\gamma_2\E_{s'}\left[\beta\log\int_{\mathcal{B}}g_{\mathrm{ref}}(b|s)\exp\left(\beta^{-1}\E_{a'\sim f}\left[q(s',a',b')\right]\right)\rmd b'\right]
+    \end{align}
+    \begin{itemize}
+        \item これらは（single-agent Max-Ent RLの作用素と同様に） contraction mapping である（\cite{Haarnoja2017-nn} Appendix A.2 参照）．
+    \end{itemize}
+\end{itemize}
+
+
+\section{Problem Setting}
+
+\begin{itemize}
+    \item 状況：リーダーとフォロワーの2-player Stochastic Gameでモデル化される状況があるとする．フォロワーは任意のリーダー方策の下で自らの期待リターンを最大化する方策を自律的に学習し，その学習過程に我々が直接介入することはできない．我々はリーダーであり，前述のフォロワーの下でリーダーの期待リターンが最大になるStackelberg均衡を実現することが目標である．
+    \item 最適解：期待リターンについてのStationary Stackelberg equilibrium (SSE) のリーダー方策$f^*$:
+    \begin{align}
+        f^*\in\argmax_{f\in\mathcal{W}_A} \E^{fR_B^*(f)}\left[\sum_{t=0}^\infty \gamma_A^tr_A(s_t,a_t,b_t)\right],\\
+        \where R_B^*(f)\in\argmax_{g\in\mathcal{W}_B} \E^{fg}\left[\sum_{t=0}^\infty \gamma_B^tr_B(s_t,a_t,b_t)\right].
+    \end{align}
+    \begin{itemize}
+        \item $\E^{fg}[\cdot]$は定常方策組$(f,g)\in\mathcal{W}_A\x\mathcal{W}_B$，遷移関数$p:\mathcal{S}\x\mathcal{A}\x\mathcal{B}\to\Delta(\mathcal{S})$，初期状態分布$\rho\in\Delta(\mathcal{S})$の下で生成される履歴についての期待値．
+        \item （名前について）「任意の状態で状態価値を最大化するSSE」と「期待リターン（初期状態分布で期待値をとった状態価値）を最大化するSSE」（式2）を区別するために，前者を「Markov Perfect SSE」，後者を「SSE」と呼ぶことにする．（もう定常方策しか考えてないので ``stationary'' を無くしてもいいかもしれない）
+    \end{itemize}
+    \item 仮定（基本設定）：
+    \begin{itemize}
+        \item[1.] $R_B^*(f)$は任意の$f\in\mathcal{W}_A$で unique に存在する．
+        \item[2.] フォロワーは十分短い学習時間で$R_B^*(f)$を獲得し，その後はそれに従って行動する．
+        \item[3.] リーダーにとって$R_B^*$は未知．
+        \item[4.] リーダーにとって遷移関数と2つの報酬関数は未知（i.e., RL設定）
+        \item[5.] リーダーが観測可能：現在状態，リーダー即時報酬，実行されたフォロワー行動
+    \end{itemize}
+    \item 仮定のvariation：
+    \begin{itemize}
+        \item 「最適反応フォロワー設定」：フォロワーは常に$R_B^*(f)$に従って行動する．
+        \item 「Policy Teaching設定」：1) リーダーにとってリーダー報酬関数は既知．2) フォロワー報酬関数はリーダー行動に依存しない $r_B(s,b)$．
+        \begin{itemize}
+            \item \textcolor{blue}{Policy Teaching設定の仮定は大して強くない=その仮定によって問題は簡単にならない，かもしれない．さらに追加の情報を使えるなどの問題設定でも良いかも．}
+        \end{itemize}
+        \item 「ホワイトボックス・フォロワー設定」：リーダーは任意の$f$で$R_B^*(f)$が計算できる．すなわち，フォロワー報酬関数と$\gamma_B$が既知である．
+        \begin{itemize}
+            \item WBフォロワー設定かつ遷移関数が既知ならば，提案手法（方策反復）が使える．
+            \item 既存手法（下記）はどれもWBフォロワー設定なので，まず最初はWBフォロワー設定から始めるのが良いと考える．
+            \item \textcolor{blue}{WBフォロワー設定で，$R_B^*$のみにアクセスできる設定と，フォロワー報酬関数（と$\gamma_B$）が既知の設定はだいぶ違う．フォロワー報酬関数が既知の方がやれることが多い．方策勾配方などはフォロワー報酬関数が既知の設定．}
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+
+\section{Related Work}
+
+
+\subsection{Policy Gradient Methods}
+
+\begin{itemize}
+    \item Aravind Rajeswaran et. al. \textit{A Game Theoretic Framework for Model Based Reinforcement Learning}, ICML 2020\cite{Rajeswaran-ym}
+    \begin{itemize}
+        \item 設定：general-sum. model-based RLへの応用．
+        \item 提案手法：（実質的に）フォロワーの勾配情報を用いない方策勾配法．リーダーの更新頻度が小さい．
+    \end{itemize}
+    \item Boling Yang et. al. \textit{Stackelberg Games for Learning Emergent Behaviors During Competitive Autocurricula}, 2023 IEEE International Conference on Robotics and Automation (ICRA)\cite{Yang2023-tf}
+    \begin{itemize}
+        \item 設定：Zero-sum
+        \item 提案手法：全微分での勾配法 (Fiez\cite{Fiez2020-lu}) に基づく，MADDPGのような方策勾配法（ST-MADDPG）．
+        \item 理論保証：なし．ST-MADDPGの更新式の導出が書かれていない．
+        \item 実験タスク：対戦型ゲームでの共進化
+    \end{itemize}
+    \item Thoma et. al., \textit{Contextual Bilevel Reinforcement Learning for Incentive Alignment}, NeurIPS 2024 Poster\cite{Thoma2024-em}
+    \begin{itemize}
+        \item NeurIPS 2024
+        \item Black-box follower setting
+        \item Follower's reward function, the transition function, and the initial state distribution are parameterized by the leader's variable.
+        \item The same formulation as \Cref{eq:formula_SSPG_qr_bbf} but the attacker's policy is not explicit.
+        \item Assuming the transition function is known and differentiable by the policy parameter.
+        \begin{itemize}
+            \item[$\to$] We consider a black-box environment. This is not comparable with ours.
+        \end{itemize}
+    \end{itemize}
+    \item Han Shen, Zhuoran Yang, Tianyi Chen, \textit{Principled Penalty-based Methods for Bilevel Reinforcement Learning and RLHF}, ICML 2024 Poster\cite{shen2024principled}
+    \begin{itemize}
+        \item leaderの目的が一般的な目的関数で書かれているが，我々と同じStackelberg Markov game （leaderの目的関数が累積期待報酬）での勾配計算の方法も提案している
+        \item Lower levelの最適化を制約条件とみなして，penaltyありの単レベルの問題（最適化対象の変数はリーダー・フォロワー両者の方策）に変換．
+        \item リーダー・フォロワー方策を同時に更新する必要があるので，Centralized training で実行可能．
+    \end{itemize}
+    \item Yan Yang, Bin Gao, Ya-xiang Yuan, \textit{Bilevel Reinforcement Learning via the Development of Hyper-gradient without Lower-Level Convexity}, AISTATS 2025 Poster\cite{Yang2024-hp}
+    \begin{itemize}
+        \item フォロワー報酬関数がリーダー変数に依存するタイプの general bi-level RL (ただしRL設定ではupper目的関数は軌跡入力の関数に限定される)．
+        \item 有限離散状態行動空間（RL設定では原理的に連続空間でも適用可能）
+        \item おそらく我々やThoma\cite{Thoma2024-em}で求めた方策勾配と本質的には同じ．
+        \item Thoma\cite{Thoma2024-em}と同様に，
+        \begin{align}
+            &\nabla_{\theta_1}V_2(s)=\E\left[\sum_{t}\gamma^t\nabla_{\theta_1}\dots\middle|s_0=s\right]\\
+            &\nabla_{\theta_1}Q_2(s,a,b)=\E\left[\sum_{t}\gamma^t\nabla_{\theta_1}\dots\middle|s_0=s,a_0=a,b_0=b\right]
+        \end{align}
+        （$(s,a,b)$はリプレイバッファからのサンプル）をどう推定するかを解決していない．
+        \item 提案手法では，近似として，上の累積期待値を，累積でなく1 stepの値のみ使う方法（つまりQ関数を報酬関数に置き換える）を採用している（フォロワー報酬関数は既知）．したがって，シミュレータ等を用いなくても実行可能ではある．
+        \item 問題設定が微妙に違うが，上の工夫を用いた手法は比較手法になる．
+    \end{itemize}
+    \item Liyuan Zheng, Tanner Fiez, et. al. \textit{Stackelberg actor-critic: Game-theoretic reinforcement learning algorithms}. (AAAI 2022)\cite{Zheng2022-xj}
+    \begin{itemize}
+        \item 設定：各プレイヤーの目的関数がActor-Criticの目的関数
+        \item 提案手法：全微分での勾配法\cite{Fiez2020-lu}に基づくActor-Critic手法．ACの目的関数に限定したので，全微分が計算可能な形まで書き下せる．
+        \item 理論保証：特定の条件下でlocal SEへの収束が保証される．
+        \item 実験タスク：single-agent mujocoタスクでの，vanilla AC, DDPG, SACとの比較．
+    \end{itemize}
+\end{itemize}
+
+\subsection{Iteration Methods with Bellman Operators}
+
+\begin{itemize}
+    \item まとめ：
+    \begin{itemize}
+        \item 全てBucarey\cite{Bucarey2022-ro}作用素に基づく．Zhang et. al.\cite{Zhang2020-hw}のみRL設定なので，その他は基本設定では実行できない．Zhang et. al.\cite{Zhang2020-hw}はフォロワー報酬関数を利用するのでWBフォロワー設定で実行可能．
+        \item こちらも$R_B^*$の下で良い性能を達成するかは未知である．特に，作用素不動点のリーダー方策のみ取り出して$R_B^*$に対してdeployした場合，同じ不動点が実現できる一方で，そのリーダー期待リターンが最大化されているかは要検証（メモ：Bucarey2022\cite{Bucarey2022-ro}の実験結果をあらためて確認）．
+    \end{itemize}
+    \item Bucarey et. al. ``Stationary Strong Stackelberg Equilibrium in Discounted Stochastic Games''. 2019.\cite{Bucarey2022-ro}
+    \item Haifeng Zhang el. al. ``Bi-Level Actor-Critic for Multi-Agent Coordination''. (AAAI2020)\cite{Zhang2020-hw}
+    \item Denizalp Goktas et. al. ``Zero-Sum Stochastic Stackelberg Games''. (NeurIPS2022)\cite{Goktas2024-vt}
+    \item Denizalp Goktas et. al. ``Convex-Concave Zero-Sum Markov Stackelberg Games''. (NeurIPS2023)\cite{Goktas2024-pp}
+    \begin{itemize}
+        \item 設定：zero-sum．
+    \end{itemize}
+\end{itemize}
+
+\subsection{Our Research Scope}
+
+\begin{itemize}
+    \item Bi-level RL
+    \begin{itemize}
+        \item 問題設定：
+        \begin{itemize}
+            \item フォロワー報酬関数，状態遷移関数，初期状態分布がparameterized (leader's policy は不使用)
+            \item フォロワー状態行動空間：連続，離散
+            \item フォロワーの目的関数はエントロピー正則化付
+            \item リーダー目的関数は general または cumulative leader reward
+            \item フォロワーの更新アルゴリズムには以下の仮定を置く：任意のリーダーパラメータに対して$\epsilon$-最適反応を獲得できる (c.f. Assumption 3.2 in \cite{Thoma2024-em}). 逆に言えばこの仮定を満たすような任意のアルゴリズムを用いてよく，また多くの一般的なアルゴリズムがこの仮定を満たすことを\cite{Thoma2024-em}は示している．
+            \begin{itemize}
+                \item Note: この問題設定のメリットは．フォロワーが独立分散的に学習する状況，つまりフォロワーが自律的にMaxEnt RLで最適反応を学習するような状況に適用できる点である．そのような状況は実問題でよく見られる（例を挙げる）．なお，この問題設定ではフォロワーの方策や内部的に保持しているフォロワーのQ関数にリーダーはアクセスできる必要がある．
+            \end{itemize}
+        \end{itemize}
+        \item 比較手法：
+        \begin{itemize}
+            \item Baseline (リーダー目的関数の勾配のみ用いた独立勾配法，Thomaらの実装を改変すれば実装できる？)
+            \item Yang\cite{Yang2024-hp}（報酬関数がparameterizedなタスクに限る）（Thomaらの実装を改変すれば実装できる？）
+            \item Thoma\cite{Thoma2024-em}（（オラクル使用なので参照値として）
+        \end{itemize}
+        \item 実験タスク：いずれもリーダー目的関数は cumulative reward．
+        \begin{itemize}
+            \item Four-Room environment\cite{Thoma2024-em}（離散） 
+            \item Tax Design\cite{Thoma2024-em}（連続）
+        \end{itemize}
+    \end{itemize}
+    \item Bi-level RL in Markov Games
+    \begin{itemize}
+        \item 問題設定：
+        \begin{itemize}
+            \item リーダーが方策を持つ．
+            \item 遷移関数，フォロワー/リーダー報酬関数がリーダー行動に依存する．
+            \item 状態行動空間は離散または連続
+            \item フォロワーの目的関数はエントロピー正則化付．
+            \item リーダー目的関数は割引累積期待報酬（現時点ではエントロピー項はなし）
+             \item フォロワーの更新アルゴリズムには以下の仮定を置く：任意のリーダー方策に対して$\epsilon$-最適反応を獲得できる．
+             \item 逆に言えばこの仮定を満たすような任意のアルゴリズムを用いてよく，また多くの一般的なアルゴリズムがこの仮定を満たすことが\cite{Thoma2024-em}の結果からわかる．（\cite{Thoma2024-em}の問題設定におけるリーダーパラメータをリーダー方策パラメータをみなせば問題はほぼ等価になるから．（Note: 初期状態分布のparameterizationは考慮しない）
+            \begin{itemize}
+                \item Note: この問題設定のメリットは．フォロワーが独立分散的に学習する状況，つまりフォロワーがリーダーの行動を観測しながら自律的にMaxEnt RLで最適反応を学習するような状況に適用できる点である．そのような状況は実問題でよく見られる（例を挙げる）．なお，この問題設定ではフォロワーの方策や内部的に保持しているフォロワーのQ関数にリーダーはアクセスできる必要がある．
+            \end{itemize}
+        \end{itemize}
+        \item 比較手法：
+        \begin{itemize}
+            \item Baseline (Rajeswaran\cite{Rajeswaran-ym}) (リーダー目的関数の勾配のみ用いた独立勾配法)
+            \item Yang\cite{Yang2023-tf}（STMADDPGを MaxEnt RL follower 用に調整したもの）
+        \end{itemize}
+        \item 実験タスク：
+        \begin{itemize}
+            \item トイタスク（離散）
+            \item GuidedCartPole（連続）
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Misc}
+
+\begin{itemize}
+    \item Xu et. al.\cite{Xu2022-ea}
+    \begin{itemize}
+        \item AAMAS 2022
+        \item Black-box environment and follower setting
+        \item Instead of using an attack policy (i.e., state-dependent attack actions) as ours, the attacker selects a single variable to manipulate the hyperparameter of the environment's transition.
+        \begin{itemize}
+            \item[$\to$] Comparable with ours, but our method is expected to be more powerful.
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{images/related_works_comparison.pdf}
+    \caption{table comparing related works}
+    \label{fig:related_works_table}
+\end{figure}
+
+\end{document}

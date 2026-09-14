@@ -1,0 +1,984 @@
+% Last update: 2026/06/12
+
+%% 和文論文用のテンプレート
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\makeatletter
+\def\input@path{{sty/}}  % sty/ フォルダを検索パスに追加する
+\makeatother
+%% 1. 和文原稿
+\documentclass[originalpaper,fleqn]{jsaiart}     % 原著論文 Original Paper
+% \documentclass[shortpaper]{jsaiart}       % 速報論文 Short Paper
+% \documentclass[exploratorypaper]{jsaiart} % 萌芽論文 Exploratory Research Paper
+% \documentclass[Specialissue]{jsaiart}     % 特集 Special Issue
+% \documentclass[specialissue]{jsaiart}     % 小特集 Special Issue
+% \documentclass[interimreport]{jsaiart}    % 報告 An Interim Report
+% \documentclass[surveypaper]{jsaiart}      % 解説 Survey Paper
+% \documentclass[aimap]{jsaiart}            % AIマップ AI map
+% \documentclass[specialpaper]{jsaiart}     % 特集論文 Special Paper
+% \documentclass[invitedpaper]{jsaiart}     % 招待論文 Invited Paper
+%
+% %% 2023年 single-blind 化により [blind] オプションは無効化しました
+%
+
+%% ページ番号の指定，掲載時に学会の方で決定します．
+% \setcounter{page}{1}
+% \setcounter{volpage}{1}
+
+
+%%% amsmathパッケージの注意点 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amsmath}
+% 数式番号の参照は \ref ではなく，\eqref を用いること
+% documentclass のオプションに fleqnを指定すること
+% 例: \documentclass[technicalpaper,fleqn]{jsaiart}
+
+%%% My Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\usepackage{mathtools}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage[dvipdfmx]{xcolor}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{bm}  % bold font
+\usepackage{url}
+
+% Mathematical commands that are recursively used
+\providecommand{\argmax}{\operatornamewithlimits{argmax}} % argmax
+\providecommand{\argmin}{\operatornamewithlimits{argmin}} % argmin
+\providecommand{\limsup}{\operatornamewithlimits{limsup}} % limsup
+\providecommand{\liminf}{\operatornamewithlimits{liminf}} % liminf
+\DeclareMathOperator{\Tr}{Tr}     % trace
+\DeclareMathOperator{\Var}{Var}   % variance
+\DeclareMathOperator{\Cov}{Cov}   % covariance
+\DeclareMathOperator{\Cond}{Cond} % condition number
+\DeclareMathOperator{\diag}{diag} % diagonal
+\DeclareMathOperator{\block}{block} % diagonal
+\DeclareMathOperator{\vect}{vec}  % vectorization
+\DeclareMathOperator{\vech}{vech} % half vectorization
+\providecommand{\R}{\mathbb{R}} % real field
+\providecommand{\N}{\mathbb{N}} % natural number field
+\providecommand{\E}{\mathbb{E}} % expectation
+\providecommand{\T}{\ensuremath{^{\mathrm{T}}}} % transpose
+\providecommand{\rmd}{\mathrm{d}} % d for infinitesimal
+\providecommand{\ind}[1]{\mathbb{I}\{#1\}} % indicator function
+\providecommand{\bi}[1]{\ensuremath{\boldsymbol{#1}}} % Italic boldface
+\providecommand{\eqs}{\stackrel{s}{=}}
+\providecommand{\rar}{\rightarrow}
+\providecommand{\lar}{\leftarrow}
+\providecommand{\where}{\mathrm{where~}}
+\providecommand{\st}{\mathrm{~s.t.~}}
+\providecommand{\mc}{\mathcal}
+\renewcommand{\geq}{\geqslant} % geq
+\renewcommand{\leq}{\leqslant} % leq
+
+% Theorem環境
+% \newtheorem{theorem}{Theorem}
+% \newtheorem{lemma}{Lemma}
+% \newtheorem{proposition}{Proposition}
+% \newtheorem{corollary}{Corollary}
+% \newtheorem{definition}{Definition}
+% \newtheorem{assumption}{Assumption}
+%日本語用に変更
+\newtheorem{theorem}{定理}
+\newtheorem{lemma}{補題}
+\newtheorem{proposition}{命題}
+\newtheorem{corollary}{系}
+\newtheorem{definition}{定義}
+\newtheorem{assumption}{仮定}
+
+%% Require/EnsureをInput/Outputに置換
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\newcommand{\ctext}[1]{\hbox{\textcircled{\scriptsize{#1}}}}
+\renewcommand{\algorithmiccomment}{\# }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\Vol{00}  %MARK: あとで設定
+\No{0}  %MARK: あとで設定
+\jtitle{非中央集権バイレベル強化学習のための高サンプル効率なハイパー勾配推定法の提案と評価}
+\jsubtitle{}
+\etitle{Proposal and Evaluation of a Sample-Efficient Hypergradient Estimation for Decentralized Bi-Level Reinforcement Learning}
+\esubtitle{}
+
+\manyauthor % 著者が3名以下の場合はこの行を消すこと
+
+%%% 著者名の注意点 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 所属先が同じ著者が連続する場合，その中の先頭の著者のみ \affiliation
+% を用い，残りの所属先には \sameaffiliation を使う
+% ただし，所属先が同じでも連続していない場合は \affliation を使う
+% 名前が長い場合は \name の代りに \longname を使う
+
+\author{%
+ \name{工藤}{ミコト}{Mikoto Kudo}
+ \affiliation{筑波大学，理化学研究所 AIP}%
+	 {University of Tsukuba, RIKEN AIP}%
+	 {mikoto@bbo.cs.tsukuba.ac.jp}
+\and
+ \name{田邊}{拓実}{Takumi Tanabe}
+ \affiliation{LINEヤフー株式会社}%
+	 {LY Corporation}%
+	 {takumi.tanabe@lycorp.co.jp}
+\and
+ \name{和地}{瞭良}{Akifumi Wachi}
+ \sameaffiliation{akifumi.wachi@lycorp.co.jp}
+\and
+ \name{秋本}{洋平}{Youhei Akimoto}
+ \affiliation{筑波大学，理化学研究所 AIP}%
+	 {University of Tsukuba, RIKEN AIP}%
+	 {akimoto@cs.tsukuba.ac.jp}
+}
+
+\begin{keyword}
+bi-level reinforcement learning,
+hypergradient optimization,
+Markov games,
+Stackelberg games,
+Boltzmann covariance trick
+\end{keyword}
+
+\begin{summary}
+Many strategic decision-making problems, such as environment design for warehouse robots, can be naturally formulated as bi-level reinforcement learning (RL), where a leader agent optimizes its objective while a follower solves a Markov decision process (MDP) conditioned on the leader's decisions.
+In many situations, a fundamental challenge arises in a setting where the leader cannot directly control the follower's optimization process and can only observe its optimization outcome.
+We address this setting by deriving the hypergradient of the leader's objective, i.e., the gradient of the leader's strategy that accounts for changes in the follower's optimal policy.
+Unlike prior hypergradient-based methods that require extensive data for repeated state visits or rely on gradient estimators whose computational costs can increase substantially with the dimensionality of the leader's decision space, we leverage the Boltzmann covariance trick to derive an alternative hypergradient formulation.
+This formulation enables efficient hypergradient estimation from a small number of online interaction samples, without requiring computational costs that scale substantially with the leader's dimension.
+Additionally, this is the first method that enables hypergradient-based optimization for 2-player Markov games in non-interventional settings.
+Experiments highlight the impact of hypergradient updates and demonstrate the effectiveness of our method in both discrete- and continuous-state tasks.
+\end{summary}
+
+\begin{document}
+\maketitle
+
+\section{はじめに}
+
+バイレベル強化学習（RL）は相互依存的な2階層目的を表現できる枠組みである．
+下位レベル（\emph{フォロワー}）は通常，上位変数 $\theta \in \Theta$ でパラメータ化された \emph{Configurable Markov Decision Process (Conf-MDP)}~\cite{pmlr-v80-metelli18a}の中で方策最適化を行う．
+一方，上位レベル（\emph{リーダー}）の目的関数は下位レベルの最適方策に依存し，次のような入れ子構造を持つ．
+\begin{align*}
+    &\max_{\theta \in \Theta, g^{\dagger} \in \mathcal{G}}\ J_L(\theta, g^{\dagger}) &\text{(リーダー)}\\
+    &\mathrm{s.t.}\ g^{\dagger} \in \mathcal{G}^\dag(\theta) := \argmax_{g \in \mathcal{G}} J_F(\theta, g) &\text{(フォロワー)}
+\end{align*}
+ここで $\Theta$ は上位レベルで取りうるパラメータの集合，$\mathcal{G}$ は下位レベルの方策集合である．
+下位レベルの最適方策集合 $\mathcal{G}^\dag(\theta)$ は上位レベル変数に依存し，$\theta$ に対する\emph{最適反応}と呼ばれる．
+
+階層的依存関係を表現する柔軟性から，バイレベルRLは，reward shaping~\cite{Shen2024-ma,Yang2025-lr}，RL from Human Feedback~\cite{Chakraborty2023-gw,Shen2024-ma,Yang2025-lr}，safe-RL~\cite{Zhi2025-s}，model-based RL~\cite{Rajeswaran2020-gv}，広告計画~\cite{Muneeb2019-no}など，多くの分野に適用されてきた．
+しかし，重要ながら十分に取り組まれていない課題として，リーダーがフォロワーの最適化結果にアクセスできる一方で，最適化過程には介入できず，フォロワーのアルゴリズムを所与のものとして扱う必要があるような非中央集権的状況での学習がある．
+例えば，フォロワーが特定の標準アルゴリズムに依存し，それを変更することが不適切または不可能な場合，この状況が生じる．
+倉庫内自律ロボットの環境設計を具体例に挙げると，設計者は環境パラメータを最適化することで操業効率化を目指す一方で，各ロボットに組み込まれた適応アルゴリズム（例：線形二次レギュレータ）は変更しない方が望ましい．
+このような状況での技術的課題は，フォロワー最適化過程を制御せずに，その結果である最適反応の変化を考慮してリーダーの更新を行うことである．
+
+本研究では，フォロワー最適化のアルゴリズムおよび過程に非依存で，最適化結果のみを必要とする非中央集権的バイレベルRL手法を提案する．
+本研究では2つの設定を並列して扱う．1つは，リーダーが環境パラメータを通じてフォロワーに影響を与える Conf-MDP 設定，もう1つは，リーダーとフォロワーの双方が方策を持ち，方策相互作用を通じて互いに影響を与える2人マルコフゲーム  (MG)  設定である．
+両設定において，上位レベルはリーダーの割引累積報酬の最大化を，下位レベルはフォロワーのエントロピー正則化付き割引累積報酬の最大化を目的とする．
+各設定について，我々は上位レベル目的関数のハイパー勾配を導出し，オンラインで収集した状態・フォロワー行動・リーダー行動・リーダー即時報酬からなる軌跡とフォロワーの最適化結果からハイパー勾配を推定する手法を提案する．
+ハイパー勾配を用いてリーダーの変数または方策を更新することで，フォロワーの最適反応の変化を「予見」した最急上昇更新が実現される．
+
+提案手法は，既存手法で必要とされる複雑な軌跡収集手続きを不要にし，離散・連続状態空間の双方において高い性能を実現する．
+Conf-MDP に適用可能な既存手法である HPGD~\cite{Thoma2024-em}および SoBiRL~\cite{Yang2025-lr}は，ハイパー勾配推定のために，同一サンプルバッチ内で同一状態への複数回の訪問を必要とする．
+しかし，状態空間が連続である場合や，離散状態空間がバッチサイズに対して大きい場合には，この要件を満たすことは容易ではなく，追加の軌跡生成や状態リセットなしには実用上困難である．
+提案手法は，\emph{ボルツマン共分散トリック}に基づく新たなハイパー勾配表現を導出することでこの問題を回避し，同一状態への複数回訪問を必要とせずに，離散・連続状態タスクの双方において効率的なハイパー勾配推定を可能にする．
+また，本研究ではこの結果を2人マルコフゲーム (MG) へ拡張する．
+我々の知る限り，エントロピー正則化の下での2人 MG に対するハイパー勾配を導出した研究は本研究が初めてである．
+
+実験では，離散および連続状態空間を持つ Conf-MDP と MG に対して提案手法を評価した．
+その結果，Conf-MDP 設定では，提案手法は既存手法と比較して高いサンプル効率とハイパーパラメータに対する頑健性を示した．
+さらに MG 設定では，ベースラインでは見られなかった，フォロワーの反応を考慮したリーダー更新が提案手法には見られた．
+これらの結果は，提案手法がオンライン軌跡のみから有効なハイパー勾配ベース最適化を実現することを裏付ける．
+また，フォロワーが最適ではなく準最適な反応で行動する状況でも提案手法を評価した．
+その結果，フォロワーが常に厳密な最適反応を獲得していない場合でも，リーダーの変化に伴う最適反応のシフトへ十分に追従可能であれば，提案手法は適切なリーダー更新を実現しうることを確認した．
+
+本論文は，筆者らによる既発表論文~\cite{kudo2026-icaps}を拡張したものである．具体的には，決定的リーダー方策でのハイパー勾配の導出，準最適フォロワーへの拡張，追加実験およびより多くの乱数シードによる評価，ならびに詳細な議論を追加している．
+なお，より詳細な内容については拡張版である~\cite{kudo2026-arxiv}を参照されたい．
+実験に用いたコードは以下のリポジトリにて公開している：
+\url{https://github.com/akimotolab/BC-HG}
+
+\section{問題設定}
+
+\subsection{エントロピー正則化}
+
+本研究ではフォロワーはエントロピー正則化項付き MDP を解く．
+MDP を $(\mathcal{S}, \mathcal{B}, p, \rho_0, r_F, \gamma_F)$ とし，ここで $\mathcal{S}$ は状態空間，$\mathcal{B}$ はフォロワーの行動空間，$p: \mathcal{S}\times\mathcal{B}\times\mathcal{S}\to[0,1]$ は状態遷移確率，$\rho_0: \mathcal{S}\to[0,1]$ は初期状態分布，$r_F:\mathcal{S}\times\mathcal{B}\to\mathbb{R}$ はフォロワーの報酬関数，$\gamma_F\in[0,1)$ はフォロワーの割引率である．
+フォロワーの目的は，エントロピー正則化付き割引累積期待報酬を最大化する確率的方策 $g\in\mathcal{G}: \mathcal{S} \times\mathcal{B}\to[0,1]$ を求めることである．
+\begin{equation}
+    \max_{g \in \mathcal{G}} J(g) := \E_{\tau}\left[ \sum_{t=0}^\infty \gamma_F^t \left(r_F(s_t, b_t) + \beta H(g;s_t)\right)\right]
+    \label{eq:lower}
+\end{equation}
+ここで $\mathcal{G}$ は $\mathcal{S} \times \mathcal{B}$ 上の全方策集合，$\beta > 0$ はエントロピー正則化係数，$H(g; s) := -\E_{b \sim g(\cdot \mid s)}[\ln g(b \mid s)]$ は $s \in \mathcal{S}$ が与えられたときの $g$ のエントロピー，$\E_{\tau}$は $g$ が生成する軌跡 $\tau := (s_0, b_0, s_1, b_1, \dots)$ に関する期待値を表す．
+
+\subsection{Configurable マルコフ決定過程 (Conf-MDP)}
+
+本研究では，状態遷移確率および報酬関数をパラメータ化する変数を導入した MDP を扱う．
+これは\cite{pmlr-v80-metelli18a}の Conf-MDP を包含する枠組みであるが，本論文では簡単のため Conf-MDP と呼ぶ．
+パラメータ $\theta \in \Theta$ で定義される Conf-MDP $\mathcal{M}_{\theta}$ は，$(\mathcal{S}$, $\mathcal{B}$, $p^{\theta}$, $\rho_0^{\theta}$, $r_F^{\theta}$, $\gamma_F)$ の組で定義される．
+フォロワーは，与えられた $\mathcal{M}_{\theta}$ の下でエントロピー正則化付き割引累積期待報酬を最大化する．
+すなわち，パラメータ化された目的関数 $J_{\theta}$ の下で式~\eqref{eq:lower}を解き，その際 $p$，$\rho_0$，$r_F$ はそれぞれパラメータ化された $p^{\theta}$，$\rho_0^{\theta}$，$r_F^{\theta}$ に置き換えられる．
+
+リーダーの目的は，フォロワーの最適反応の下で自身の目的関数を最大化することである．
+これは次のバイレベル強化学習問題として定式化される．
+\begin{equation}
+    \max_{{\theta} \in \Theta} J_L({\theta},g^{\theta\dagger}), \quad \text{where} \quad g^{\theta\dagger} := \argmax_{g\in\mathcal{G}} J_{\theta}(g) \label{eq:upper}
+\end{equation}
+ここで $J_L$ はリーダーの目的関数，$g^{\theta\dagger}$ は $\theta$ に対するフォロワーの最適反応である．
+下位レベル問題にエントロピー正則化があるため，$g^{\theta\dagger}$ はすべての $\theta\in\Theta$ に対して一意に定まり，次のようなボルツマン分布に一致する．
+\begin{equation*}
+    g^{\theta\dagger}(b\mid s)=\exp\left(\dfrac{Q_F^{\theta\dagger}(s,b)-V_F^{\theta\dagger}(s)}{\beta}\right)
+\end{equation*}
+ここで $Q_F^{\theta\dagger}$ と $V_F^{\theta\dagger}$ は $\mathcal{M}_{\theta}$ のソフト最適 Q 関数およびソフト最適価値関数~\cite{haarnoja2017reinforcement}である．
+
+本論文では，リーダーの目的関数がリーダー報酬関数 $r_L:\mathcal{S}\times\mathcal{S}\to\R$についての割引累積期待報酬と正則化項$\Phi_L:\Theta\to\R$の和
+\begin{equation}
+    J_L({\theta}, g^{\theta\dagger}) := \E_\tau\left[ \sum_{t=0}^\infty \gamma_L^t r_L^{\theta}(s_t, b_t)\right] + \Phi_L({\theta})\label{eq:leader-utility}
+\end{equation}
+で定義される状況に着目する．
+
+\subsection{2人マルコフゲーム (MG) }
+
+Conf-MDP に並列して，2人 MG でのバイレベル強化学習を考える．
+2人 MG では，リーダーは変数ではなく方策を持ち，その枠組みは
+$(\mathcal{S}$, $(\mathcal{A},\mathcal{B})$, $p$, $\rho_0$, $(r_L,r_F)$, $(\gamma_L,\gamma_F))$ と定義される．
+$\mathcal{S}$ は状態空間，$\mathcal{A}$ と $\mathcal{B}$ はそれぞれリーダーとフォロワーの行動空間，$p: \mathcal{S}\times\mathcal{A}\times\mathcal{B}\times\mathcal{S}\to[0,1]$ は状態遷移確率，$r_L:\mathcal{S}\times\mathcal{A}\times\mathcal{B}\to\R$と $r_F:\mathcal{S}\times\mathcal{A}\times\mathcal{B}\to\R$ はリーダーとフォロワーの報酬関数， $\gamma_L, \gamma_F \in [0, 1)$ はそれぞれの割引率である．
+本研究において，リーダーとフォロワーの方策はそれぞれ $f_{\theta}: \mathcal{S}\times\mathcal{A}\to[0,1]$, $g:\mathcal{S} \times \mathcal{A}\times\mathcal{B}\to[0,1]$ と定義する．
+すなわち，フォロワーはリーダー行動を観測してから自身の行動を選択する．
+これは，静的なパラメータで環境に介入する Conf-MDP とは異なり，リーダーが状態ごとに異なる行動分布によって環境およびフォロワーの行動選択に影響を与える枠組みだと解釈できる．
+
+フォロワーの目的関数は，Conf-MDP の場合と同様に，式~\eqref{eq:lower}のようなエントロピー正則化付き割引累積期待報酬で定義される．
+ただし，フォロワーはリーダー行動を拡張された状態の一部として観測するため，その最適反応はリーダー行動を入力に取るソフト最適価値関数 $Q_F^{\theta\dagger}(s,a,b)$ および $V_F^{\theta\dagger}(s,a)$ によって書き下される．
+リーダーの目的関数は，式~\eqref{eq:leader-utility}と同様に，フォロワーの最適反応の下での割引累積期待報酬で定義される．
+なお，MDP の場合とは異なり，2人 MG における最適リーダー方策は必ずしも決定的でないことに注意されたい．
+
+\section{関連研究}
+
+\textbf{Conf-MDP におけるバイレベル RL．}
+既存研究のうち，上位レベルで累積期待報酬目的を扱う研究として\cite{Thoma2024-em}と\cite{Yang2025-lr}が挙げられる．
+これらはいずれも，本研究と同様に，フォロワーの最適反応にアクセスできると仮定してハイパー勾配を推定しているため，非中央集権的フォロワー設定に適用可能である．
+
+しかし，これらの手法には共通の限界がある．
+ハイパー勾配に含まれるある期待値を推定するためには，同一の初期状態から開始し，異なる初期フォロワー行動を取る複数の軌跡が必要となる．
+しかし，状態空間が離散かつ十分に小さく，同一状態へ繰り返し訪問できる場合を除き，そのような軌跡を得ることは一般に困難である．
+\cite{Thoma2024-em}は，我々が仮定していない，任意の状態・行動対から軌跡を生成できるオラクルを仮定することにより，この問題を回避している．
+オラクルを仮定しない場合でも，\cite{Thoma2024-em}の公開実装のように，当該期待値を軌跡から直接推定する代わりに関数近似器によって推定したり，あるいは\cite{Yang2025-lr}のように，該当項を軌跡の最初の1ステップ成分のみで近似したりすることで，この問題を緩和できる．
+しかし，後述する実験結果が示すように，これらの近似は実用上の性能低下を招く．
+
+これに対し，本研究では，上記の期待値推定を必要としない新たなハイパー勾配表現を導出する．
+提案手法は，異なる初期フォロワー行動を持つ複数の軌跡を必要としないため，大規模あるいは連続状態空間においても，当該期待値を関数近似や1ステップ近似によって代替する必要がない．
+その結果，近似に起因する性能低下を回避できる．
+また，\cite{Thoma2024-em}の公開実装のように大量の軌跡を収集する必要もなく，高いサンプル効率を実現する．
+
+\textbf{MG におけるバイレベル RL．}
+非中央集権的フォロワーを持つ2人 MG では，主に3つのアプローチが提案されている．
+2タイムスケールの勾配更新~\cite{Rajeswaran2020-gv,Vu2022-jq}，全微分勾配に基づく手法~\cite{Yang2023-tf}，および作用素ベースの手法~\cite{Zhang2020-hw}である．
+2タイムスケールの勾配更新~\cite{Rajeswaran2020-gv,Vu2022-jq}は，リーダーの更新に1次勾配を使用し，フォロワーの最適性を保つために2つの異なる更新頻度を用いる．
+しかし，このアプローチは，\ref{sec:experiment_MG_discrete}で示すように，リーダーとフォロワーの目的が競合的な場合に最適なリーダー方策を発見できないことがある．
+\cite{Yang2023-tf}は全微分に基づく勾配法を提案している．
+ただし，彼らはリーダー行動に条件づけられない決定論的なフォロワー方策を仮定しているうえ，勾配導出に関する数学的な詳細が不足しているため，本研究の設定へ適用するのは容易ではない．
+加えて，方策パラメータに関する逆ヘッセ行列積が必要であり，計算コストが高く，不安定な更新につながりやすい．
+一方，Bi-AC~\cite{Zhang2020-hw}は小さな修正で我々の設定に適用可能である．
+この手法は，Nash-Q~\cite{Hu2003-vz}と同様に，ステージゲーム作用素に基づいている．
+ただし，バイレベル RL （Stackelberg ゲーム）においては，この作用素が最適なリーダー方策へ収束する保証はなく，リーダーの性能を改善する保証すらない~\cite{Kudo2026-ty}．
+詳細は\ref{sec:experiment_MG_discrete}で議論する．
+
+\section{提案手法}
+
+ハイパー勾配を用いる既存手法~\cite{Thoma2024-em,Yang2025-lr}との大きな違いは，同一状態から始まる複数軌跡が必要であるという制約を，ボルツマン共分散トリックを用いて解消する点である．
+この工夫により，提案手法は複雑な軌跡収集手続きを回避し，オンラインで収集した比較的少数の軌跡からハイパー勾配を推定できる．
+
+\subsection{Conf-MDPにおけるハイパー勾配}
+
+リーダー目的関数 $J_L$ のハイパー勾配は，累積報酬（式~\eqref{eq:leader-utility}の第1項）のハイパー勾配と，解析的に微分可能であると仮定される正則化項の勾配 $\nabla \Phi_L({\theta})$ の和である．
+以下の導出では簡単のため正則化項を省略する．
+
+まず，フォロワー行動に関するリーダーの Q 関数を次のように定義する．
+\begin{equation*}
+    Q_L^{{\theta} {g}}(s, b) :=\E_\tau\left[\sum_{t=0}^\infty\gamma_L^t r_L(s_t,b_t)~\middle|\begin{smallmatrix}s_0=s\\b_0=b\end{smallmatrix}\right]
+\end{equation*}
+標準的な Q 関数と異なり，入力は状態とリーダー行動ではなく，状態 $s$ とフォロワー行動 $b$ である．
+最適反応 $g^{\theta\dagger}$ の下でのリーダーの Q 関数を $Q_L^{{\theta} \dagger} := Q_L^{{\theta} {g^{\theta\dagger}}}$ とおく．
+このとき，状態 $s$ においてフォロワーが行動 $b$ を取ったときのリーダーの \emph{ベネフィット関数} を次のように定義する．
+\begin{equation}
+B_L^{{\theta}\dagger}(s, b) := Q_L^{{\theta}\dagger}(s,b)-\E_{b\sim g^{{\theta}\dagger}(\cdot\mid s)}\left[Q_L^{{\theta}\dagger}(s,b)\right]\label{eq:benefit_cmdp}
+\end{equation}
+正のベネフィットはそのフォロワー行動がリーダーにとって相対的に有益であることを示す．
+簡単のため，式~\eqref{eq:benefit_cmdp}の第2項を$V_L^{\theta\dag}(s) := \E_{b\sim g^{{\theta}\dagger}(\cdot\mid s)}\left[Q_L^{{\theta}\dagger}(s,b)\right]$ と表記する．
+% したがって，リーダーは正のベネフィットを持つ行動をフォロワーがより頻繁に選ぶよう促すことを目指す．
+
+ハイパー勾配は，ベネフィット関数を用いて次のように表される．
+\begin{theorem}
+\label{thm:hg-configurable}
+    $\nabla_{\theta} r_L^{\theta}$，$\nabla_{\theta} r_F^{\theta}$，$\nabla_{\theta} \ln \rho_0^{\theta}$および$\nabla_{\theta} \ln p^{\theta}$ は任意の点で計算可能であると仮定する．
+    $J_L$ の $\theta$ に関するハイパー勾配は次の式で与えられる．
+    \begin{multline}
+        \nabla_{\theta}J_L({\theta}, g^{\theta\dagger})
+        =\E_\tau\Bigg[\sum_{t=0}^\infty \gamma_L^t \bigg(\nabla_{\theta} r_L^{\theta}(s_t, b_t)\\
+        + V_L^{{\theta}\dagger}(s_t) \nabla_{\theta}\ln
+        p^{\theta} (s_{t} \mid s_{t-1}, b_{t-1})\\
+        + \frac{1}{\beta} B_L^{{\theta}\dagger}(s_t, b_t) \nabla_{\theta} Q_F^{{\theta} \dagger}(s_t, b_t) \bigg) \Bigg]
+    \label{eq:hg_configurable}
+    \end{multline}
+    ここで $p^{\theta}(s_0\mid s_{-1},b_{-1})$ は $\rho_0^{\theta}(s_0)$ を表し，
+    \begin{multline}
+        \nabla_{\theta}Q_F^{\theta\dag}(s,b) = \E_\tau\Bigg[\sum_{t=0}^\infty\gamma_F^t\nabla_{\theta}r_F^{\theta}(s_t,b_t)\\
+        + \gamma_F^{t+1}V_F^{\theta\dag}(s_{t+1})\nabla_{\theta}\ln p^{\theta}(s_{t+1}\mid s_t,b_t) \Bigg|\begin{smallmatrix}s_0=s\\b_0=b\end{smallmatrix}\Bigg]\label{eq:nablaQF}
+    \end{multline}
+    である．
+\end{theorem}
+\begin{proof}
+    ~\cite{kudo2026-arxiv}の付録B.2節を参照．
+\end{proof}
+式~\eqref{eq:hg_configurable}の前半の2項は，報酬関数と遷移確率の更新による累積報酬上の直接的な改善を表す．
+第3項はフォロワーの最適反応の変化がもたらす間接的な改善を表しており，リーダーに有益なフォロワー行動の確率を高めていると解釈できる．
+我々は前半の2項を\emph{直接項}，第3項を\emph{間接項}と呼ぶ．
+
+\cite{Thoma2024-em}は，同じバイレベルRL問題に対して，異なる形のハイパー勾配を導出している．
+重要なのは，我々のハイパー勾配表現が\cite{Thoma2024-em}のものと数学的には等価であるため，彼らの研究で示された非漸近収束保証がそのまま提案手法に適用できる点である．
+我々の貢献は補完的であり，ハイパー勾配推定の不偏性を維持したまま，推定機構をオラクル不要かつより高効率なものへ置き換えることで，現実的な非中央集権的設定への適用を可能にしている．
+
+\cite{Thoma2024-em}と我々のハイパー勾配の本質的な違いは，間接項の形式にある．
+\cite{Thoma2024-em}で導出されたハイパー勾配の間接項は次のように表される．
+\begin{equation}
+    \frac{1}{\beta} \E_\tau\left[\sum_{t=0}^\infty \gamma_L^t Q_L^{{\theta} \dagger}(s_t, b_t) \nabla_{\theta} A_F^{{\theta} \dagger}(s_t, b_t)  \right] \label{eq:third_term_thoma_grad}
+\end{equation}
+ここで $A_F^{{\theta} \dagger}(s, b) := Q_F^{{\theta} \dagger}(s, b) - V_F^{{\theta} \dagger}(s)$ はフォロワーのアドバンテージ関数である．
+上式を推定するためには，式~\eqref{eq:nablaQF}で導出した $\nabla_{\theta} Q_F^{{\theta} \dagger}(s, b)$ と，$$\nabla_{\theta} V_F^{{\theta} \dagger}(s) = \E_{b \sim g^{{\theta}\dagger}(\cdot\mid s)}\left[\nabla_{\theta} Q_F^{{\theta} \dagger}(s, b)\right]$$ の両方を推定する必要がある．
+しかし，経験した軌跡からこれらを推定することは容易ではない．
+$\nabla_{\theta} Q_F^{{\theta} \dagger}(s, b)$ の推定には，状態 $s$ とフォロワー行動 $b$ から始まる軌跡が必要である．
+一方，$\nabla_{\theta} V_F^{{\theta} \dagger}(s)$ の推定には，状態 $s$ と複数の異なるフォロワー行動 $b$ から始まる軌跡を用いて，行動 $b$ に関する期待値をモンテカルロ推定する必要がある．
+このような軌跡の収集は，状態空間が連続である場合，または離散であっても空間が大きい場合には困難である．
+\cite{Thoma2024-em}は任意の状態・行動対から軌跡を生成するオラクルを使用することで問題に対処しているが，そのようなオラクルの存在を保証することは難しく，特にリーダーがフォロワーを完全には制御できないような場合に困難である．
+一方，我々のハイパー勾配（式~\eqref{eq:hg_configurable}）では， $\nabla_{\theta} V_F^{{\theta} \dagger}(s)$ を推定する必要がないため上記のような軌跡も不要である．
+代わりに必要なのはベネフィット $B_L^{{\theta} \dagger}(s, b)$ であり，これは比較的容易に推定できる．
+
+式~\eqref{eq:hg_configurable}の第3項と式~\eqref{eq:third_term_thoma_grad}の等価性は，以下の等式で表される．
+\begin{equation*}
+\begin{split}
+    &\E_{b\sim g^{\theta\dagger}(\cdot\mid s)}\left[Q_L^{\theta\dag}(s,b)\nabla_{\theta} A_F^{{\theta} \dagger}(s, b)\right]\\
+    &=\E_{b}\left[Q_L^{\theta\dag}(s,b)\cdot\left(\nabla_{\theta} Q_F^{{\theta} \dagger}(s, b) - \E_{b}\left[\nabla_{\theta} Q_F^{{\theta} \dagger}(s, b)\right]\right)\right]\\
+    &=\mathrm{Cov}_{b}\left[Q_L^{\theta\dag}(s,b), \nabla_{\theta}Q_F^{\theta\dag}(s,b)~\middle|~ s\right]\\
+    &=\E_{b}\left[\left(Q_L^{\theta\dag}(s,b) - \E_{b}\left[Q_L^{{\theta} \dagger}(s, b)\right]\right)\cdot \nabla_{\theta} Q_F^{{\theta} \dagger}(s, b)\right]\\
+    &=\E_{b\sim g^{\theta\dagger}(\cdot\mid s)}\left[B_L^{\theta\dag}(s,b)\nabla_{\theta} Q_F^{{\theta} \dagger}(s, b)\right]
+\end{split}
+\end{equation*}
+ここで $\mathrm{Cov}_{b}[\cdot,\cdot\mid s]$ は，$b\sim g^{\theta\dagger}(\cdot\mid s)$ に関する共分散である．
+この等式は恒等的に成立するため，どの形に置き換えても期待値は保存され，その結果，対応するモンテカルロ推定量の不偏性も保たれる．
+我々はこの操作を\emph{ボルツマン共分散トリック}と呼ぶ．
+
+\subsection{2人 MG におけるハイパー勾配}
+
+2人 MG ではリーダー方策 $f_{\theta}$ が導入されるため，リーダー Q 関数はリーダー行動 $a\in\mathcal{A}$ を入力にとる．
+\begin{equation*}
+    Q_L^{{\theta} {g}}(s, a, b) :=\E_\tau\left[\sum_{t=0}^\infty\gamma_L^t r_L(s_t,a_t,b_t)~\middle|\begin{smallmatrix}s_0=s\\a_0=a\\b_0=b\end{smallmatrix}\right]
+\end{equation*}
+
+定理~\ref{thm:hg-mg-stochastic}は，単一エージェント MDP の方策勾配定理~\cite{Sutton1999-su,Sutton2018-jf}を2人 MG へ拡張し，確率的リーダー方策に対するハイパー勾配を与える．
+% なお，単一エージェントMDPとは異なり，2人 MG における最適リーダー方策は必ずしも決定的でないことに注意されたい．
+ここでは，方策勾配定理と同様に，割引状態訪問分布 $d_{\gamma}^{\theta g}(s)$ およびその略記 $d_\gamma^{\theta \dag}:=d_\gamma^{\theta g^{\theta\dagger}}$ を導入する．
+また，リーダー行動 $a$ および状態 $s$ においてフォロワーが行動 $b$ を取ったときの，リーダーのベネフィット関数を次のように定義する．
+\begin{equation*}
+    B_L^{{\theta}\dagger}(s, a, b) := Q_L^{{\theta}\dagger}(s,a,b)-\E_{b\sim g^{{\theta}\dagger}(\cdot\mid s,a)}\left[Q_L^{{\theta}\dagger}(s,a,b)\right]
+\end{equation*}
+
+\begin{theorem}[]\label{thm:hg-mg-stochastic}
+2人 MG 設定において，$J_L$ の $\theta$ に関するハイパー勾配は次のように与えられる．
+\begin{multline}
+    \nabla_{\theta}J_L({\theta}, g^{\theta\dagger})
+    =\dfrac{1}{1-\gamma_L}\E\bigg[Q_L^{{\theta}\dagger}(s,a,b)\nabla_{\theta}\ln f_{\theta}(a\mid s)
+   \\+\dfrac{1}{\beta} B_L^{{\theta}\dagger}(s,a,b) \nabla_{\theta}Q_F^{\theta\dagger}(s,a,b)\bigg]\label{eq:hg_MG_stc}
+\end{multline}
+ここで期待値 $\E$ は $(s,a,b) \sim g^{{\theta}\dagger}(b\mid s,a)f_{\theta}(a\mid s) d_{\gamma_L}^{\theta\dagger}(s)$ について取られる．
+また，
+\begin{align}
+    &\nabla_{\theta}Q_F^{\theta\dagger}(s,a,b) \label{eq:nablaQF_MG_stc}\\ &=\E_{\tau}\Bigg[\sum_{t=0}^\infty \gamma_F^t V_F^{\theta\dag}(s_t,a_t)\nabla_{\theta}\ln f_{\theta}(a_t\mid s_t)\Bigg|\begin{smallmatrix}s_0=s\\a_0=a\\b_0=b\end{smallmatrix}\Bigg]\notag
+\end{align}
+である．
+\end{theorem}
+\begin{proof}
+~\cite{kudo2026-arxiv}の付録B.3節を参照．
+\end{proof}
+
+式~\eqref{eq:hg_MG_stc}の第1項は単一エージェントの方策勾配に類似した形をしており，リーダー方策の変更によるリーダー目的関数の改善を表す．
+一方，第2項はリーダーの方策変更に伴うフォロワー最適反応の変化がもたらす間接的な改善を表しており，リーダーに有益なフォロワー行動の確率を高めていると解釈できる．
+ここでは，我々は第1項を直接項，第2項を間接項と呼ぶ．
+
+単一エージェントの高次元連続制御タスクなどでは，効率的な最適化のために決定的方策のみ扱う場合も多い．
+ここで定理~\ref{thm:hg-mg-deterministic}は，2人 MG においてリーダー方策を決定的方策に限定した場合のハイパー勾配を与える．
+
+\begin{theorem}[]\label{thm:hg-mg-deterministic}
+2人 MG 設定において，リーダー方策が決定的であるとする．このとき，$J_L$ の $\theta$ に関するハイパー勾配は次のように与えられる．
+\begin{multline}
+    \nabla_{\theta}J_L({\theta}, g^{\theta\dagger})
+    =\dfrac{1}{1-\gamma_L}\E\bigg[\left.\nabla_a Q_L^{{\theta}\dagger}(s,a,b)\right|_{a=f_{\theta}(s)}\nabla_{\theta}f_{\theta}(s)
+   \\+\dfrac{1}{\beta} B_L^{{\theta}\dagger}(s,f_{\theta}(s),b) \nabla_{\theta}Q_F^{\theta\dagger}(s,f_{\theta}(s),b)\bigg]\label{eq:hg_MG_det}
+\end{multline}
+ここで期待値 $\E$ は $(s,b) \sim g^{{\theta}\dagger}(b\mid s,f_{\theta}(s)) d_{\gamma_L}^{\theta\dagger}(s)$ について取られる．
+また，
+\begin{align}
+    &\nabla_{\theta}Q_F^{\theta\dagger}(s,f_{\theta}(s),b) \label{eq:nablaQF_MG_det}\\ &=\E_{\tau}\Bigg[\sum_{t=0}^\infty \gamma_F^t \left.\nabla_a Q_F^{\theta\dag}(s_t,a,b_t)\right|_{a=f_{\theta}(s_t)}\nabla_{\theta}f_{\theta}(s_t)\Bigg|\begin{smallmatrix}s_0=s\\b_0=b\end{smallmatrix}\Bigg]\notag
+\end{align}
+である．
+\end{theorem}
+\begin{proof}
+    ~\cite{kudo2026-arxiv}の付録D節を参照．
+\end{proof}
+
+定理~\ref{thm:hg-mg-stochastic}と同様に，第1項がリーダー方策の変化による直接的改善，第2項が最適反応の変化による間接的改善と解釈できる．ただし，前述の通り，2人 MG においては，最適リーダー方策が決定的方策になる保証はないことに注意されたい．
+
+\subsection{Boltzmann Covariance HyperGradient}
+
+導出したハイパー勾配を用いてリーダー変数・方策を最適化するアルゴリズム \emph{Boltzmann Covariance HyperGradient} (BC-HG) を提案する．
+本アルゴリズムは Actor-Critic 型 RL アルゴリズムと類似の構造を持つ．
+すなわち，最適反応の下で収集した軌跡から現在のリーダー Q 関数を推定する critic 更新と，ベネフィットを用いて推定したハイパー勾配に基づきリーダー変数および方策を更新する actor 更新を交互に実行する．
+この方針は\cite{Thoma2024-em}の手法と同じだが，ベネフィットを利用する点で異なっている．
+前述のとおり，この違いは手法の実用性を左右する重要な要素である．
+提案手法の概要は Algorithm~\ref{algo:proposal}に示す．
+
+推定するハイパー勾配は次の2つの要素に分解できる：直接項 $\partial_{\theta}J_L$ と間接項 $\beta^{-1}\E[B_L^{\theta\dagger}\nabla_{\theta}Q_F^{\theta\dagger}]$ である．
+Conf-MDP におけるハイパー勾配（式~\eqref{eq:hg_configurable}）の前半2項および MG におけるハイパー勾配（式~\eqref{eq:hg_MG_stc}，\eqref{eq:hg_MG_det}）の第1項に対応する直接項は，それぞれ必要な勾配量を計算し，それを軌跡サンプル上で重み付き平均することで推定する（Algorithm~\ref{algo:proposal}の\ref{algo:proposal_l_partial}行目）．
+一方，各ハイパー勾配の最終項に対応する間接項は，軌跡サンプル中の遷移 $(s_t,b_t)$ について，フォロワー Q 関数の勾配 $\nabla_{\theta}Q_F^{\theta\dagger}(s_t,b_t)$をベネフィット $B_L^{\theta\dagger}(s_t,b_t)$で重み付けして平均することで推定する（\ref{algo:proposal_l_hg}行目）．
+$\nabla_{\theta}Q_F^{\theta\dagger}(s_t,b_t)$ の推定は，式~\eqref{eq:nablaQF}および式~\eqref{eq:nablaQF_MG_stc}に基づき，各遷移 $(s_t,b_t)$ を起点とする部分軌跡に沿った勾配量の割引累積和として推定する（\ref{algo:proposal_l_fqgrad}行目）．
+つまり，式~\eqref{eq:nablaQF}および式~\eqref{eq:nablaQF_MG_stc}の軌跡に関する期待値 $\E_{\tau}$ を，サンプル軌跡から抽出した，$(s_t,b_t)$ 以降の部分軌跡を用いたモンテカルロ推定により近似する．
+
+ハイパー勾配の推定におけるフォロワーの最適反応 $g^{\theta\dag}$ と価値関数 $V_F^{\theta\dag}$ の使用に関して，以下の仮定を置く．
+\begin{assumption}[ホワイトボックスフォロワー]\label{thm:assume_wb_follower}
+    フォロワーが獲得した方策と価値関数に，リーダーはアクセスできる.
+\end{assumption}
+
+本研究では，リーダーはフォロワーの最適化過程には介入できないものの，その最適化結果にはアクセス可能であるという非中央集権的設定を扱うため，仮定~\ref{thm:assume_wb_follower}は妥当である．
+実際に，フォロワーの最適反応がタスク固有の手法によって解析的に求まる場合には，リーダーがフォロワーの最適化手続きそのものを変更できない一方で，得られた最適反応を利用することは自然である．
+このような状況では，フォロワーのホワイトボックス性は十分に正当化される．
+本研究では，このようなシナリオを実験（\ref{sec:experiment_Conf-MDP_continuous}，\ref{sec:experiment_MG_continuous}）にて扱う．
+
+\begin{algorithm}[t]
+\caption{The BC-HG Algorithm}
+\label{algo:proposal}
+\begin{algorithmic}[1]\small
+\STATE{Initialize leader parameters $\theta^0$ and critic $Q_L^0$}
+\FOR{$i=0$ to $N-1$}
+\STATE{(Follower computes best response $g^{\theta^i\dagger}$ for $\mathcal{M}_{\theta^i}$)}
+\STATE{Sample a batch of trajectories $B\gets\{\tau_j\}$ of length $T$}
+\STATE{Get follower's best response $g^{\theta^i\dagger}$ and value $V_F^{\theta^i\dagger}$}
+\STATE{$Q_L^{i+1}\gets \texttt{CriticUpdate}(Q_L^{i},B)$}
+\STATE\COMMENT{$\bar{s}$ denotes state $s$ for configurable MDPs}
+\STATE\COMMENT{$\bar{s}$ denotes state-action pair $(s,a)$ for MGs}
+\FOR{$(\bar{s},b)\in\tau\in B$}
+\STATE{$V_L(\bar{s})\gets\E_{b\sim g^{\theta^i\dagger}(\cdot\mid \bar{s})}\left[Q_L^{i+1}(\bar{s},b)\right]$}
+\STATE{$B_L(\bar{s},b)\gets Q_L^{i+1}(\bar{s},b)-V_L(\bar{s})$}
+\STATE{$B_{\bar{s}b}\gets\left\{\tau^{k:T}\mid (\bar{s}_k, b_k) = (\bar{s},b) \text{ for } (\bar{s}_k,b_k)\in\tau\in B\right\}$}
+\STATE{$\widehat{\nabla_{\theta}Q_F}(\bar{s},b)\gets\texttt{FollowerQGrad}(B_{\bar{s}b},\theta^i,V_F^i)$}\label{algo:proposal_l_fqgrad}
+\ENDFOR
+\STATE{$\widehat{\partial_{\theta}J_L}\gets\texttt{PartialDerivative}(B,\theta^i,V_L,Q_L^{i+1})$}\label{algo:proposal_l_partial}
+\STATE{$\widehat{\nabla_{\theta}J_L}\gets \widehat{\partial_{\theta}J_L}$\\ \hfill + $\frac{1}{\beta|B|}\displaystyle\sum_{\tau\in B}\sum_{(\bar{s}_t,b_t)\in\tau}\gamma_L^tB_L(\bar{s}_t,b_t)\widehat{\nabla_{\theta}Q_F}(\bar{s}_t,b_t)$}\label{algo:proposal_l_hg}
+\STATE{$\theta^{i+1}\gets \theta^i+\alpha\widehat{\nabla_{\theta}J_L}$}
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\section{Experiments}
+
+まず，Conf-MDP と2人 MG の離散および連続状態タスクにおいて，フォロワー最適反応の最適性を担保した条件下で評価を行い，提案手法 BC-HG がベースライン手法よりも高いサンプル効率および漸近性能を達成することを示す．
+次に，フォロワー最適反応が準最適であるような条件下で評価し，下位レベルの最適性ギャップと上位レベルの学習性能の関係を考察する．
+なお，紙面の都合上省略した提案手法およびベースライン手法の実装の詳細，実験設定ならびにタスク設計の詳細，および補足的な実験結果については，\cite{kudo2026-arxiv}を参照されたい．
+
+\subsection{Conf-MDP (離散状態)}\label{sec:experiment_Conf-MDP_discrete}
+
+\subsubsection{実験設定}
+
+本設定では，\cite{Thoma2024-em}で用いられた Four-Rooms タスクを一部改変して使用した．
+\ref{fig:four_rooms_env}に示すような，格子に囲まれた 104 個のマスの中をフォロワーは1マスずつ移動し，その際フォロワーは上下左右の 4 行動を取ることができる．
+フォロワーは $S$ と記されたマスから開始し，ゴール $G$ に到達すると即時報酬 $+1$ を得る．
+一方，フォロワーがターゲットマス，すなわち「1」と記された緑色のマスを訪れると，リーダーは即時報酬 $+1$ を得る．
+リーダーは各マスに負のインセンティブ（罰則）を配置することができ，フォロワーがターゲットを訪問するような方策を学習するように配置を最適化する．
+ただし，フォロワーがゴールに到達した時点で，リーダーは配置した負のインセンティブ総量に比例したコストを負う．
+
+フォロワーの最適反応は soft Q-iteration により計算し，エントロピー正則化係数は $\beta\in\{1\times10^{-3}, 3\times10^{-3}, 5\times10^{-3}\}$ とした．
+バッチサイズ\footnote{勾配推定に用いるバッチ$B$に含まれる状態遷移数}は $10^2$ とした．
+これは，状態空間 ($|\mathcal{S}|=104$) がバッチサイズに対して相対的に大きい状況を再現するためである．
+具体的には，\cite{Thoma2024-em}でオラクルを用いない場合に採用されたバッチサイズ $10^4$ よりも小さい値を設定した．
+各手法についてハイパーパラメータのグリッドサーチを行い，20個の乱数シードにわたる平均性能に基づいて最良の組を選択した．
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/FourRooms/FourRooms.pdf}
+    \caption{Four-Rooms 環境}
+    \label{fig:four_rooms_env}
+\end{figure}
+
+\subsubsection{ベースライン}
+提案手法の比較対象として，以下のベースライン手法を実装した．
+ハイパー勾配ではなく直接項のみ用いる \textsc{Naive-PGD}~\cite{Rajeswaran2020-gv,Vu2022-jq}，ハイパー勾配を用いる既存手法 \textsc{HPGD}~\cite{Thoma2024-em}，および間接項推定での部分軌跡を初期ステップで打ち切るハイパー勾配手法 \textsc{SoBiRL}~\cite{Yang2025-lr}である．
+\textsc{HPGD} については，\cite{Thoma2024-em}の公開実装を採用した \textsc{HPGD (MC)} と，critic推定方法を提案手法と揃えた \textsc{HPGD (SA)} の2つを評価した．
+また，参考値として \textsc{HPGD (oracle)} を用意した．
+これは，ハイパー勾配推定時にサイズ $10^4$ の追加軌跡をオラクルにより生成する手法であり，ハイパー方策を用いる場合の理想的挙動としての参考値となる．
+
+\subsubsection{結果}
+
+\begin{figure*}[t]
+    \centering
+
+    \begin{subfigure}[t]{0.33\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 5]{images/FourRooms/UL_rewards_grid_search_reg_lambda_5.0_beta_0_001_total_steps_100.pdf}
+        \caption{$\beta=1\times10^{-3}, \text{バッチサイズ}=100$}
+        \label{fig:four_rooms_UL_rewards_grid_search_reg_lambda_5.0_beta_0_001_total_steps_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.33\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 5]{images/FourRooms/UL_rewards_grid_search_reg_lambda_5.0_beta_0_003_total_steps_100.pdf}
+        \caption{$\beta=3\times10^{-3}, \text{バッチサイズ}=100$}
+        \label{fig:four_rooms_UL_rewards_grid_search_reg_lambda_5.0_beta_0_003_total_steps_100}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.33\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 5]{images/FourRooms/UL_rewards_grid_search_reg_lambda_5.0_beta_0_005_total_steps_100.pdf}
+        \caption{$\beta=5\times10^{-3}, \text{バッチサイズ}=100$}
+        \label{fig:four_rooms_UL_rewards_grid_search_reg_lambda_5.0_beta_0_005_total_steps_100}
+    \end{subfigure}
+
+    \caption{Four-Rooms タスクでの結果．横軸はリーダーの更新反復回数，縦軸はリーダーの目的関数値である．実線は乱数シード間の平均，半透明の誤差帯は標準偏差を表す．}
+    \label{fig:fourrooms}
+\end{figure*}
+
+結果を\ref{fig:fourrooms}に示す．
+提案手法 \textsc{BC-HG} は一貫して他手法より高い性能を達成した．
+特に，\textsc{BC-HG} が \textsc{HPGD (SA)} を上回ったのは，2つの違いがハイパー勾配における間接項の形のみであることを踏まえると，ボルツマン共分散トリックが勾配推定の効率を高めたことを示している．
+\textsc{HPGD} 系（\textsc{oracle} を除く）の性能は，エントロピー正則化が弱まる，すなわち $\beta$ が小さくなるにつれて低下した．
+$\beta$ が小さいほど同じ状態で異なる行動を選ぶ可能性は低くなるため，\textsc{HPGD} 系が置いている「同じ状態で異なる行動を持つ複数の軌跡が収集される」という仮定が満たされにくくなったと考えられる．
+\textsc{HPGD (oracle)} は，追加生成した軌跡を用いて間接項を推定しているため，他手法よりもハイパー勾配の推定誤差が小さいと考えられる．
+\textsc{BC-HG} は，概ね \textsc{HPGD (oracle)} に匹敵する，あるいはそれを上回る性能を示した．
+この結果は，\textsc{BC-HG} におけるオラクルフリーなハイパー勾配推定が，オラクルを用いる場合と同程度の精度を達成できることを示唆している．
+
+図~\ref{fig:four_rooms_UL_rewards_grid_search_reg_lambda_5.0_beta_0_001_total_steps_100}の \textsc{SoBiRL}，\textsc{Naive-PGD}，および \textsc{HPGD} 系は，負のインセンティブが配置されない局所解に陥り，結果としてリーダーへの罰則と正の報酬がともに 0 になった．
+これは，最適反応の変化を捉える間接項の推定が不十分で，直接項の罰則効果が強調されたためだと考えられる．
+
+\subsection{Conf-MDP (連続状態)}\label{sec:experiment_Conf-MDP_continuous}
+
+\subsubsection{実験設定}
+
+\cite{AFRAM2014343}に着想を得て，フォロワーが線形二次レギュレータ (LQR) を用いて $n$ 個のゾーンの温度偏差を最小化するために HVAC ユニットを制御する，$n$ゾーン熱環境制御タスクを設計する．
+リーダーは，断熱性能や気流量といったパラメータを設定することで，温度安定性とエネルギー効率の向上を目指す．
+
+本タスクは，エントロピー正則化付き無限時間割引 LQR のバイレベル拡張として定式化される．
+状態 $s\in\R^n$ は各ゾーンの温度偏差を表し，$b_t\in\R^m$ は HVAC ユニットの制御入力を表す．
+状態遷移は
+$s_{t+1} = A_{\theta} s_{t} + B b_{t} + w_{t}$
+で与えられる．
+ここで，
+$A_{\theta}\in\R^{n\times n}$，
+$B\in\R^{n\times m}$，
+$U\in\R^{n\times n}$
+は定数行列であり，
+$w_t\sim \mathcal{N}(0,UU^T)$
+である．
+フォロワーの報酬関数は $r_F(s, b) := - s^{\top} \bar{Q} s - b^{\top} \bar{R} b$ と定義する．
+ここで，$\bar{Q} \in \R^{n\times n}$ は半正定値行列，$\bar{R} \in \R^{m\times m}$ は正定値行列である．
+したがって，与えられたリーダーパラメータ $\theta$ の下でのフォロワー最適化問題は，ガウスノイズを伴う標準的な LQR として表される．
+そのため，フォロワーの最適反応は Riccati 反復によって求めることができる．
+リーダーパラメータ $\theta\in\R^{2n}$ は，各ゾーンの断熱性能および隣接ゾーン間を接続する $n$ 個の空調連絡ダクトの気流量を表す．
+
+本研究において，ゾーン数および HVAC ユニット数はそれぞれ $n=4$ と $m=2$ に設定した．
+また，各手法について20個の乱数シードを用いてハイパーパラメータのグリッドサーチを行った．
+
+\subsubsection{ベースライン}
+
+\textsc{Naive-PGD}，\textsc{HPGD (MC)}，および\textsc{HPGD (TD)} と比較した．
+\cite{Thoma2024-em}の公開実装に従い，連続状態設定における \textsc{HPGD} でのフォロワー Q 関数勾配の推定を，軌跡を利用する代わりに関数近似器（ニューラルネットワーク）を用いて行った．
+リーダーの critic は，\cite{Thoma2024-em}の公開実装を反映した \textsc{HPGD (MC)} ではモンテカルロ推定，提案手法と揃えた \textsc{HPGD (TD)} ではニューラルネットワークを用いたTD法で推定した．
+なお，\textsc{SoBiRL} は遷移関数をパラメータ化する場合には適用できないため，今回の比較対象から外れている．
+
+\subsubsection{結果}
+
+\ref{fig:BTC_return_UL_no_outliers}に結果を示す．
+\textsc{BC-HG} は最も少ない反復回数で高い評価値へ収束した．
+\textsc{Naive-PGD} はより緩やかな改善を示した．
+この結果は，今回のような非競争的タスクでは，直接項のみの更新でも有効だが間接項が持つハイパー勾配情報なしではその効果は不十分であることを示唆する．
+\textsc{HPGD} 系は改善が遅く，ハイパーパラメータによっては性能がむしろ悪化した．
+これは関数近似器によるフォロワー Q 関数勾配の推定精度が不十分だったためと考えられる．
+ Q 関数勾配の次元数はリーダーパラメータの次元に等しいため，その推定コストはリーダーパラメータの次元に応じて増加する．
+この結果は \textsc{HPGD} が抱えるスケーラビリティの限界を示唆している．
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.8\hsize,clip,trim=5 5 5 0]{images/BuildingThermalControl/return_UL_no_outliers.pdf}
+    \caption{$n$ゾーン熱環境制御タスクでの結果}
+    \label{fig:BTC_return_UL_no_outliers}
+\end{figure}
+
+\subsection{2人 MG （離散状態）}\label{sec:experiment_MG_discrete}
+
+\subsubsection{実験設定}
+
+有限状態・行動空間からなる MG トイタスクを設計した．
+状態空間は $\mathcal{S} = \{S, A, B\}$，行動空間はリーダーが $\mathcal{A} = \{0, 1\}$，フォロワーが $\mathcal{B} = \{s, a, b\}$ である．
+遷移ダイナミクスと報酬関数は\ref{fig:DiscreteToy4_1b}に示す．
+状態 $S$ と $B$ におけるリーダー行動は報酬や遷移に影響しないため，ここでは状態 $A$ におけるリーダーの行動分布に着目する．
+もし $f(0\mid A) \approx 1$ なら，フォロワーは状態 $S, A, B$ においてそれぞれ行動 $a, b, s$ を選好する．すると $S \xrightarrow{*|a} A \xrightarrow{0|b} B \xrightarrow{*|s} S$ というサイクルが生じ，フォロワーは $1, R(>0), 0$，リーダーは $1, 0, 0$ の報酬を得る．
+逆に，$f(1\mid A) \approx 1$ なら，フォロワーは状態 $S, A, B$ でそれぞれ行動 $b, b, s$ を選好する．すると $S \xrightarrow{*|b} B \xrightarrow{*|s} S$ というサイクルが生じ，フォロワーは $1, 0$，リーダーは $0, 0$ の報酬を得る．
+前者のシナリオはフォロワーにとって高いリターンを与えるため，$f(0 \mid A) = p \in (0, 1)$ が適切な値ならば，フォロワーは確率 $1-p$ で $-1$ の負報酬を受けるリスクがあるにもかかわらず，状態 $S$ で行動 $a$ を選好する．
+リーダーの観点からは $S \leftrightarrow A$ のループが最も高い累積報酬を与える．
+したがって，最適なリーダー戦略は，フォロワー最適反応が状態 $S$ で行動 $a$ を選ぶ確率を高く保ちながら，$p$ を最小化することである．
+最適な $p^*$ は $R$ に依存し，例えば$R=1$の場合は$p^* = f^*(0 \mid A) \approx 0.85$, $R=2$の場合は$p^* = f^*(0 \mid A) \approx 0.51$ が最適である．
+
+$R$ の値は$R=1$ および $R=2$ に設定した．
+フォロワーの最適反応は，エントロピー正則化係数 $\beta=5\times10^{-2}$ の下，soft Q-iteration で計算した．
+固定学習率の下，ハイパーパラメータ（リーダー更新反復ごとの critic/actor 更新回数）についてグリッドサーチを行い，20個の乱数シードにわたる平均性能に基づいて最良の組を選んだ．
+
+\subsubsection{ベースライン}
+
+2つのベースラインを考える．
+1つ目は \textsc{Naive-PGD}，2つ目は中央集権学習向けに提案された Bi-AC~\cite{Zhang2020-hw}を本研究の非中央集権的設定に適用したものである．
+
+\subsubsection{結果}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.9\hsize,clip,trim=10 10 10 10]{images/DiscreteToy/DiscreteToy4_1b.pdf}
+    \caption{MG トイタスクの状態遷移図．ノードは状態，エッジは遷移を表す．エッジ上のラベルは $\mathcal{A}\mid\mathcal{B}$ および \colorbox{gray!20}{$r_L \mid r_F$} を示す．網掛けラベルがない場合は報酬が0であることを意味する．``$*$'' は任意の行動，$R$ は正の報酬を表す．}
+    \label{fig:DiscreteToy4_1b}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}{\hsize}
+        \centering
+        \includegraphics[width=0.8\hsize,clip,trim=5 5 5 0]{images/DiscreteToy/4_1b-v0/Evaluation_AverageDiscountedTargetReturn_AveStd.pdf}
+        \caption{$R=1$の場合}
+        \label{fig:dicrete_toy_v0_Evaluation_AverageDiscountedTargetReturn_AveStd}
+    \end{subfigure}
+    \\
+    \begin{subfigure}{\hsize}
+        \centering
+        \includegraphics[width=0.8\hsize,clip,trim=5 5 5 0]{images/DiscreteToy/4_1b-v1/Evaluation_AverageDiscountedTargetReturn_AveStd.pdf}
+        \caption{$R=2$の場合}
+        \label{fig:dicrete_toy_v1_Evaluation_AverageDiscountedTargetReturn_AveStd}
+    \end{subfigure}
+    \caption{MGトイタスク での結果}
+    \label{fig:toymarkovgame}
+\end{figure}
+
+$R=1$での結果を図~\ref{fig:dicrete_toy_v0_Evaluation_AverageDiscountedTargetReturn_AveStd}に示す．
+\textsc{BC-HG} は他手法と比べて速やかに収束し，最終的に最も高い性能へ到達した．
+\textsc{BC-HG} により実際に獲得されたリーダー方策は，平均して $f_{\theta}(0 \mid A) \approx 0.84$ に収束しており，最適解近傍への収束が確認された．
+一方，\textsc{Naive-PGD} は改善が緩やかであり，
+\textsc{Bi-AC} はさらに不安定な学習を示した．
+この結果は，直接項のみを用いた場合でもリーダー方策は最適解へ接近可能である一方で，ハイパー勾配の間接項が学習をより促進する情報を含んでいることを示唆している．
+
+$R=2$での結果を図~\ref{fig:dicrete_toy_v1_Evaluation_AverageDiscountedTargetReturn_AveStd}に示す．
+この設定では，初期リーダー方策が最適方策 $f^*(0 \mid A) \approx 0.51$ の付近にサンプルされることが多い．
+\textsc{BC-HG} は最適方策の付近に留まることに成功した．
+あるシードでは$f_{\theta}(0 \mid A) \approx 0.53$ を維持し，対応するフォロワーの最適反応が $g^{\theta\dagger}(a \mid S, *) \approx 1$ となったため，$S \to A$ ループと $S \to A \to B$ ループがそれぞれ約 $0.47$，$0.53$ の確率で生じた．
+対照的に，ベースラインでは最適方策との差が増大した．
+あるシードでは$f_{\theta}(0 \mid A) \approx 0.4$ に収束し，$f_{\theta}(0 \mid A)$ が小さすぎるため，フォロワー最適反応が $g^{\theta\dagger}(\cdot \mid S, *) \approx 0, 0.47, 0.53$（それぞれ $s, a, b$）となり，リーダーが報酬を得られない $S \leftrightarrow B$ ループが生じた．
+% この傾向は広い範囲のハイパーパラメータにわたって見られた．
+直接項のみで更新すると最適反応の変化を考慮できないため，初期値や探索領域によっては，リーダーが自身にとって有害な最適反応を誘発する危険行動を学習しうる．
+特に今回のような，特定の最適反応を固定した下ではより高い報酬に繋がる行動（$p$ の減少）が危険行動である場合，この問題は顕著になると考えられる．
+提案手法の性能がハイパーパラメータに対して高いロバスト性を示す様子や，ベースライン手法においてオンポリシー・オフポリシー設定を変更した場合の結果については\cite{kudo2026-arxiv}を参照されたい．
+
+\subsection{2人 MG （連続状態）}\label{sec:experiment_MG_continuous}
+
+\subsubsection{実験設定}
+
+\ref{sec:experiment_Conf-MDP_continuous}では LQR を Conf-MDP へ拡張したタスクを扱った．
+これに対し，本節では LQR タスクを2人 MG へ拡張した MG-LQR タスクを設計する．
+状態遷移は
+$s_{t+1} = A s_{t} + B b_{t} + C a_{t}$
+で与えられる．
+ここで，$s_{t}\in\R^n$ は状態，$b_{t}\in\R^m$ はフォロワー行動，$a_{t}\in\R^k$ はリーダー行動であり，$A \in \R^{n\times n}$，$B \in \R^{n \times m}$，$C \in \R^{n \times k}$ は定数行列である．
+フォロワーの報酬関数は，行列 $\bar{Q}\in\R^{n\times n},\bar{R}\in\R^{m\times m}$ を用いて $r_F(s, a, b) = - s^{\top} \bar{Q} s - b^{\top} \bar{R} b$ と定義する．
+また，リーダー方策は，パラメータ行列 $K_{\theta} \in \R^{k \times n}$ および固定共分散行列 $UU^{\T} \in \R^{k \times k}$ を用いた線形ガウス方策としてモデル化する．
+すなわち，$a_{t}\sim \mathcal{N}(K_{\theta} s_{t}, UU^{\T})$ である．
+このとき，$a_t = K_\theta s_t + w_t,\; w_t \sim \mathcal{N}(0,UU^\top)$ 
+と書けるため，状態遷移は 
+$s_{t+1} = (A + CK_{\theta}) s_{t} + B b_{t} + C w_{t}$ 
+となる．
+したがって，与えられたリーダー方策の下でのフォロワー最適化問題は，\ref{sec:experiment_Conf-MDP_continuous}
+で扱った問題と同様に，ガウスノイズを伴う標準的な LQR に帰着する．
+そのため，フォロワーの最適反応は Riccati 反復で求めることができる．
+リーダーの報酬関数は次のように定義する．
+\begin{equation*}
+    r_L(s, a, b) := \exp\Big( -\frac{1}{2} (s - s^\star)^\top \Sigma (s - s^\star) \Big)
+\end{equation*}
+ここで $\Sigma \in \R^{n \times n}$ は報酬分布の鋭さを表す．
+リーダーの目的はフォロワーを $s^\star \in \mathcal{S}$ に訪問させることである．
+
+状態次元および各プレイヤーの行動次元をそれぞれ $n=2$, $m=1$, $k=1$ とし，各種行列は特定の値に設定した．
+また，各手法について20個の乱数シードを用いてハイパーパラメータ（リーダー更新反復ごとの actor 更新回数）のグリッドサーチを行った．
+
+\subsubsection{ベースライン}
+
+今までと同様にオンポリシーサンプルで勾配推定した \textsc{Naive-PGD (on-policy)} と，オフポリシーサンプルを用いた \textsc{Naive-PGD (off-policy)} の2つと比較した．
+
+\subsubsection{結果}
+
+図~\ref{fig:lqr}に結果を示す．
+\textsc{BC-HG} はベースラインを上回った．
+\textsc{BC-HG} の性能の分散が大きいが，原因としては，累積報酬が高いリーダー方策ほど累積報酬の分散も大きくなる傾向があるためと考えられる（図~\ref{fig:lqr_hist}）．
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}{\hsize}
+        \centering
+        \includegraphics[width=0.8\hsize,clip,trim=10 5 10 5]{images/MaxEntLQR/Evaluation_AverageDiscountedTargetReturn_AveStd.pdf}
+        \caption{リーダー性能の比較}
+        \label{fig:lqr}
+    \end{subfigure}
+    
+    \begin{subfigure}{\hsize}
+        \centering
+        \includegraphics[width=0.8\hsize]{images/MaxEntLQR/lqr_reward_hist.pdf}%
+        \caption{得られたリーダー方策の下で軌跡を1000個生成した時のリーダー累積報酬のヒストグラム．各手法について，最良の乱数シードでのリーダー方策を使用している．}
+        \label{fig:lqr_hist}
+    \end{subfigure}
+    \caption{MG-LQRタスクでの結果}
+    \label{}
+\end{figure}
+
+\subsection{準最適フォロワー下での評価 (Four-Rooms)}\label{sec:exp_subopt_Conf-MDP_dicrete}
+
+\begin{figure*}[t]
+    \centering
+
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 29]{images/FourRooms/subopt2_reset_q/UL_initial_value_opt_proposal_5_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt.pdf}
+        \caption{\textsc{BC-HG}}
+        \label{fig:subopt_Conf-MDP_resetQ_BCHG_performance}
+    \end{subfigure}
+    \hspace{0.02\linewidth}
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 29]{images/FourRooms/subopt2_reset_q/UL_initial_value_opt_oracle_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt.pdf}
+        \caption{\textsc{HPGD (oracle)}}
+        \label{fig:subopt_Conf-MDP_resetQ_oracle_performance}
+    \end{subfigure}
+
+    \hspace{0.015\linewidth}
+    \begin{subfigure}[t]{0.42\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 29]{images/FourRooms/subopt2_reset_q/optimality_kl_gap_proposal_5_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt.pdf}
+        \caption{\textsc{BC-HG}}
+        \label{fig:subopt_Conf-MDP_resetQ_BCHG_optgap}
+    \end{subfigure}
+    \hspace{0.05\linewidth}
+    \begin{subfigure}[t]{0.42\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 29]{images/FourRooms/subopt2_reset_q/optimality_kl_gap_oracle_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt.pdf}
+        \caption{\textsc{HPGD (oracle)}}
+        \label{fig:subopt_Conf-MDP_resetQ_oracle_optgap}
+    \end{subfigure}
+
+    \caption{上段：リーダー性能，下段：KL最適性ギャップ．異なる $\eta$ における結果（Four-Rooms タスク，Reset-Q 設定）}
+    \label{fig:subopt_Conf-MDP_resetQ}
+\end{figure*}
+
+多くの実問題では，フォロワーが利用可能な学習リソースには制限が存在する．
+例えば，フォロワーが強化学習によって Q 関数を更新する場合，現在のリーダー変数に対する最適反応へ到達するには，広範な探索と多数回の更新が必要となることが多い．
+したがって，このような状況では，フォロワーが最適反応へ十分収束する前にリーダー変数を更新する必要がある．
+
+本節では，このような準最適フォロワー下での学習を想定し，フォロワー最適反応の最適性ギャップを段階的に変化させながらリーダー変数を学習する．
+これにより，フォロワー最適性とリーダー学習性能の関係を調査する．
+
+\subsubsection{実験設定}
+
+最適フォロワー条件下での実験（\ref{sec:experiment_Conf-MDP_discrete}）では，リーダー更新ごとに一定回数 ($M=100$) の soft Q-iteration を実行し，フォロワー最適反応を計算していた．
+本実験では，この更新回数 $M$ を最大値として，soft Q-iteration の更新回数 $\eta~(< M)$ を段階的に変化させる．
+なお，soft Q-iteration では，強化学習とは異なり，全状態・行動対に対して作用素更新を適用する．
+そのため，フォロワーの探索能力の限界，すなわち状態訪問や行動選択のランダム性・局所性は考慮されない．
+したがって，本設定はフォロワーの更新速度（更新に利用可能な計算リソース）の制約に着目した評価となる．
+
+リーダー変数 $\theta$ の下で $M$ 回更新した時点のフォロワー方策を最適反応 $g^{\theta\dagger}$ とみなし，$\eta$ 回更新時点のフォロワー方策 $g$ との KL 最適性ギャップ
+を，次の式で定義する．
+\begin{equation*}
+    \mathrm{Gap}_{\theta}^{\mathrm{KL}}(g)
+    :=
+    \dfrac{1}{|\mathcal{S}|}
+    \sum_{s\in\mathcal{S}}
+    \mathrm{KL}\!\left(
+        g(\cdot\mid s)
+        \,\Vert\,
+        g^{\theta\dag}(\cdot\mid s)
+    \right)
+\end{equation*}
+$\theta$ の評価には，対応する最適反応 $g^{\theta^\dagger}$ の下で評価したリーダー目的関数値を用いる．
+これは，得られた $\theta$ が環境に固定された後も，フォロワーが学習を継続し，最終的に最適反応へ到達する状況を想定した評価指標である．
+
+フォロワーの更新回数 $\eta$ は，$\{1,2,5,10,20,50\}$の値で変化させた．
+また，フォロワー更新方式として，Q テーブルを各リーダー更新反復で初期化する \emph{Reset-Q} 設定と，Q テーブルを反復間で引き継ぐ \emph{Carry-Q} 設定の2種類を用意した．
+Reset-Q 設定では，各リーダー更新反復の開始時に，フォロワーの Q テーブルをホワイトノイズで初期化した後，$\eta$ 回の soft Q-iteration を実行する．
+一方，Carry-Q 設定では，現在の Q テーブルを初期値として $\eta$ 回更新を行い，更新後の Q テーブルを次のリーダー更新反復へ引き継ぐ．
+なお，Carry-Q 設定におけるホワイトノイズ初期化は，学習開始時に1回のみ行う．
+
+両設定について，各 $\eta$ の条件でリーダー変数を学習した．
+エントロピー正則化係数およびその他のハイパーパラメータには，各手法について\ref{fig:fourrooms}で用いた設定を使用した．
+また，20個の乱数シードでの平均性能を評価した．
+
+\subsubsection{結果}
+
+\begin{figure*}[t]
+    \centering
+
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 5]{images/FourRooms/subopt2/UL_initial_value_opt_proposal_5_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt.pdf}
+        \caption{\textsc{BC-HG}}
+        \label{fig:subopt_Conf-MDP_carryQ_BCHG_performance}
+    \end{subfigure}
+    \hspace{0.02\linewidth}
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 5]{images/FourRooms/subopt2/UL_initial_value_opt_oracle_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt.pdf}
+        \caption{\textsc{HPGD (oracle)}}
+        \label{fig:subopt_Conf-MDP_carryQ_oracle_performance}
+    \end{subfigure}
+
+    \hspace{0.0\linewidth}
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 5]{images/FourRooms/subopt2/optimality_kl_gap_proposal_5_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt_logscale.pdf}
+        \caption{\textsc{BC-HG}}
+        \label{fig:subopt_Conf-MDP_carryQ_BCHG_optgap}
+    \end{subfigure}
+    \hspace{0.02\linewidth}
+    \begin{subfigure}[t]{0.45\linewidth}
+        \centering
+        \includegraphics[width=\linewidth,clip,trim=5 10 5 5]{images/FourRooms/subopt2/optimality_kl_gap_oracle_grid_search_reg_lambda_5_beta_0_003_total_steps_100_subopt_logscale.pdf}
+        \caption{\textsc{HPGD (oracle)}}
+        \label{fig:subopt_Conf-MDP_carryQ_oracle_optgap}
+    \end{subfigure}
+    \hspace{0.0\linewidth}
+
+    \caption{上段：リーダー性能，下段：KL最適性ギャップ．異なる $\eta$ における結果（Four-Rooms タスク，Carry-Q 設定）}
+    \label{fig:subopt_Conf-MDP_carryQ}
+\end{figure*}
+
+
+Reset-Q 設定での結果を\ref{fig:subopt_Conf-MDP_resetQ}に示す．
+KL 最適性ギャップは $\eta$ が小さいほど大きく，また学習を通じて一定程度の値を維持した．
+これは，Q テーブルを各更新時に初期化しているため，$\eta$ に応じた KL 最適性ギャップが継続的に生じたためだと考えられる．
+リーダーの目的関数値（上段）を見ると，いずれの手法も $\eta=50$ のとき最も速く収束し，かつ最も高い性能に到達した．
+一方，$\eta$ が小さくなるにつれて，収束性能は低下する傾向が見られた．
+また，同程度の性能へ収束する場合でも，$\eta$ が小さいほど収束速度が遅くなる傾向が確認された．
+例えば，\textsc{HPGD (oracle)} の結果（図~\ref{fig:subopt_Conf-MDP_resetQ_oracle_performance}）を見ると，$\eta=20$ の場合を除き，$\eta$ が大きいほど高い収束性能を示している．
+さらに，最終的な性能が同程度である $\eta=10$ と $\eta=5$ を比較すると，$\eta=10$ の方が立ち上がりが速い．
+
+以上の結果より，\textsc{HPGD (oracle)} が理想的なハイパー勾配更新を実現していると仮定すれば，フォロワー方策が最適反応に近いほど，ハイパー勾配更新によるリーダーの学習性能は向上すると考えられる．
+また，近似手法である \textsc{BC-HG} においても同様の傾向が確認されたことから，提案手法においてもフォロワー方策の最適性が重要であることが示唆される．
+
+Carry-Q 設定での結果を\ref{fig:subopt_Conf-MDP_carryQ}に示す．
+Reset-Q 設定とは対照的に，$\eta$ の違いによる漸近性能の差はほとんど見られず，収束速度の差も比較的小さかった．
+KL最適性ギャップを見ると，$\eta$ が小さいほどギャップが大きい傾向は確認できるものの（縦軸が log スケールであることに注意），いずれの $\eta$ においてもギャップは学習初期に急速に減少し，最終的には $10^{-3}$ 以下へ収束した．
+これは，フォロワーが Q テーブルを継承しながら継続的に更新を行うことで，リーダー変数の変化に伴う最適反応の変化へ追従できたためであると考えられる．
+
+このように，Carry-Q 設定では KL 最適性ギャップが速やかに減少したため，リーダーの学習性能は $\eta$ の影響をほとんど受けなかったと考えられる．
+この結果は，実問題においてフォロワーが強化学習などの標準的な学習アルゴリズムを用いる場合でも，提案手法およびハイパー勾配ベース手法が適切なリーダー変数へ収束しうる可能性を示唆している．
+実際，強化学習では同一の価値関数や方策を継続的に更新することが一般的であり，これは Carry-Q 設定に近い学習過程である．
+
+\subsection{準最適フォロワー下での評価（MG トイタスク）}\label{sec:exp_subopt_MG_dicrete}
+
+\subsubsection{実験設定}
+
+MG トイタスクにおける最適フォロワー条件下での実験（\ref{sec:experiment_MG_discrete}）では，リーダーの更新のたびに最大 $1000$ 回の soft Q-iteration を回して最適反応を計算していた．
+本実験では，フォロワーの soft Q-iteration の最大更新回数を $\eta$ とし，$\eta$ を $\{1,2,5,10,50,100\}$ の値で変化させた．
+また，Reset-Q 設定と Carry-Q 設定の2種類のフォロワーの更新方式を用いて，リーダー方策を学習した．
+MG トイタスクの報酬 $R$ の値は，$R=1$ に設定した．
+エントロピー正則化係数およびその他のハイパーパラメータには，各手法について図~\ref{fig:dicrete_toy_v0_Evaluation_AverageDiscountedTargetReturn_AveStd}で用いた設定を使用した．
+また，20個の乱数シードでの平均性能を評価した．
+
+\subsubsection{結果}
+
+Reset-Q 設定での結果を\ref{fig:subopt_MG_resetQ}に示す．
+いずれの $\eta$ においても KL 最適性ギャップは一定程度の値を維持しており，中でも $\eta=1$ の場合に最も大きく，次いで $\eta=2$，$\eta=5$ の順に大きかった．
+リーダーの目的関数値を見ると，$\eta=1$，$\eta=2$，$\eta=5$ の場合には学習の改善が遅く，特に $\eta=1$ において性能低下が顕著であった．
+この結果は，Four-Rooms タスクと同様に，MG トイタスクにおいても，フォロワー方策が最適反応から乖離している場合には，提案手法によるリーダーの学習性能が低下することを示唆している．
+
+Carry-Q 設定での結果を\ref{fig:subopt_MG_carryQ}に示す．
+KL 最適性ギャップは，$\eta$ が小さいほど大きい傾向を示したものの，いずれの場合も学習初期に速やかに減少し，最終的には $10^{-3}$ 以下へ収束した．
+リーダーの目的関数値の推移を見ると，$\eta$ の違いによる学習性能の差はほとんど確認されず，$\eta=1$ の場合にわずかに改善が遅くなるのみであった．
+これは，Carry-Q 設定ではフォロワーが継続的にQ値を更新することで，リーダーの変化に伴う最適反応の変化へ追従できたためであると考えられる．
+
+以上の結果より，フォロワーが常には最適反応を獲得していない状況であっても，リーダー方策の変化に伴う最適反応の変化へ十分に追従可能であれば，提案手法は適切なリーダー方策へ収束しうることが示唆される．
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[t]{\hsize}%
+        \centering
+        \includegraphics[width=0.85\hsize,clip,trim=5 5 5 5]{images/DiscreteToy/4_1b-v0/subopt2_reset_q/Evaluation_opt_AverageDiscountedTargetReturn_AveStd_BCHG_stop_q_iteration.pdf}
+        \caption{リーダー性能}
+        \label{fig:subopt_MG_resetQ_BCHG_performance}
+    \end{subfigure}%
+
+    \begin{subfigure}[t]{\hsize}%
+        \centering
+        \includegraphics[width=0.85\hsize,clip,trim=5 5 5 0]{images/DiscreteToy/4_1b-v0/subopt2_reset_q/Follower_OptimalityGap_AveStd_BCHG_stop_q_iteration.pdf}%
+        \caption{KL最適性ギャップ}
+        \label{fig:subopt_MG_resetQ_BCHG_optgap}
+    \end{subfigure}%
+    
+    \caption{異なる $\eta$ における結果（MGトイタスク，Reset-Q 設定，\textsc{BC-HG}）}
+    \label{fig:subopt_MG_resetQ}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[t]{\hsize}%
+        \centering
+        \includegraphics[width=0.85\hsize,clip,trim=5 5 5 0]{images/DiscreteToy/4_1b-v0/subopt2/Evaluation_opt_AverageDiscountedTargetReturn_AveStd_BCHG_stop_q_iteration.pdf}
+        \caption{リーダー性能}
+        \label{fig:subopt_MG_carryQ_BCHG_performance}
+    \end{subfigure}%
+
+    \begin{subfigure}[t]{\hsize}%
+        \centering
+        \includegraphics[width=0.9\hsize,clip,trim=5 5 5 0]{images/DiscreteToy/4_1b-v0/subopt2/Follower_OptimalityGap_AveStd_BCHG_stop_q_iteration_logscale.pdf}%
+        \caption{KL最適性ギャップ}
+        \label{fig:subopt_MG_carryQ_BCHG_optgap}
+    \end{subfigure}%
+    
+    \caption{異なる $\eta$ における結果（MGトイタスク，Carry-Q 設定，\textsc{BC-HG}）}
+    \label{fig:subopt_MG_carryQ}
+\end{figure}
+
+\section{結論}
+
+本論文では，フォロワーがエントロピー正則化下で最適反応を学習するバイレベル強化学習問題に対し，ボルツマン共分散トリックに基づくハイパー勾配推定手法を提案した．
+提案手法は，同一状態から始まる複数軌跡を必要とする既存のハイパー勾配推定手法とは異なり，オンラインで収集された少数の軌跡からハイパー勾配を推定可能である．
+Conf-MDP および2人 MG に対してハイパー勾配を導出し，導出したハイパー勾配を用いてリーダー変数・方策を更新するアルゴリズム BC-HG を提案した．
+数値実験では，離散および連続状態空間を持つ Conf-MDP および2人 MG タスクに対して，提案手法が既存のハイパー勾配手法および単純な方策勾配法を上回る学習性能を示すことを確認した．
+さらに，準最適フォロワー下での評価を通じて，フォロワー方策がリーダー変化に伴う最適反応のシフトへ十分に追従可能であれば，フォロワーが常に厳密な最適反応を獲得していない場合でも，提案手法が適切なリーダー方策へ収束しうることを示した．
+
+一方で，フォロワーがホワイトボックスでない設定への拡張は今後の重要な課題である．
+本研究では，フォロワーの方策および価値関数へアクセス可能であることを仮定した．
+しかし，フォロワーが独立した意思決定主体である場合，リーダーがそのような内部情報を利用できない状況はしばしば生じる．
+提案手法をこの設定へ拡張する場合の主な課題は，フォロワーの方策および価値関数を観測軌跡からいかに推定するかにある．
+
+また，大規模連続状態環境への適用も今後の重要な課題である．
+大規模連続状態環境では，リーダー Q 関数の推定の難しさやフォロワー学習の不安定性といった課題が生じるため，これらへ対処しつつハイパー勾配を安定して推定する手法の検討が必要である．
+また，本研究では実験的評価のみ行なったが，推定分散やサンプル効率に関する理論的解析も今後の課題として挙げられる．
+
+
+% \begin{acknowledgment}
+% 謝辞
+% \end{acknowledgment}
+
+\bibliography{sty/mybibliography}
+\bibliographystyle{sty/jsai}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 著者の姓と名の間は半角スペースで区切る
+% 略歴は200字以内
+
+\begin{biography}
+\profile{n}{工藤 ミコト}{2024年筑波大学大学院システム情報工学研究群情報理工学位プログラム博士前期課程修了．現在，同大学院システム情報工学研究群情報理工学位プログラム博士後期課程在学中．バイレベル強化学習の研究に従事．}
+
+\profile{n}{田邊 拓実}{LINEヤフー株式会社機械学習エンジニア．2021年筑波大学情報科学類卒業，2023年同大学大学院システム情報工学研究群情報理工学位プログラム博士前期課程修了．同年LINE株式会社入社．現在，機械学習技術を活用したプロダクト開発および改善に従事．}
+
+\profile{n}{和地 瞭良}{LINEヤフー株式会社上席研究員．2016年東京大学工学部航空宇宙工学科卒業，2018年同大学大学院工学系研究科航空宇宙工学専攻修士課程修了，2021年筑波大学にて博士（工学）を取得．IBM東京基礎研究所，LINE株式会社を経て，現職．強化学習の理論と応用，特に安全性に関する理論的保証をもつ強化学習の研究に従事．}
+
+\profile{m}{秋本 洋平}{筑波大学システム情報系教授．2007年3月東京工業大学工学部情報工学科早期卒業，2008年3月同大学大学院総合理工学研究科知能システム科学専攻修士課程早期修了，2011年3月同博士課程修了．博士（工学）．日本学術振興会特別研究員，フランス国立情報学自動制御研究所（INRIA）研究員，信州大学学術研究院工学系助教，筑波大学システム情報系准教授を経て2025年9月より現職．進化計算および強化学習の理論と応用に関わる研究に従事．}
+\end{biography}
+
+\end{document}
