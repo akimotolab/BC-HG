@@ -1,0 +1,90 @@
+{
+  "reset": {
+    "environment_steps": 900,
+    "evaluation_steps": 7500,
+    "leader": {
+      "actor_steps": 2,
+      "critic_steps": 2,
+      "target_updates": 2
+    },
+    "follower": {
+      "train_calls": 2,
+      "table_sweeps": 4,
+      "oracle_sweeps": 36
+    },
+    "elapsed_seconds": 1.475534439086914,
+    "code": {
+      "revision": "82753d6c4f3bc813158c1819879edcdb5f81f5ac",
+      "diff_sha256": "984773e13d2883a7641901c3f3cac6bd022983374aab360082baf639e8e70d95",
+      "dependencies": {
+        "numpy": "1.23.5",
+        "torch": "1.7.1+cu110",
+        "garage": "2021.3.0",
+        "gym": "0.17.2"
+      }
+    },
+    "buffer_policy": "included in algorithm snapshot; sampler workers recreated",
+    "metrics": {
+      "Evaluation/AverageDiscountedTargetReturn": [
+        0.0,
+        0.1093091024471598
+      ],
+      "Evaluation_opt/AverageDiscountedReturn": [
+        37.61517727721598,
+        38.34402449469417
+      ],
+      "Evaluation/AverageDiscountedReturn": [
+        0.0,
+        33.16454916081248
+      ],
+      "Evaluation_opt/AverageDiscountedTargetReturn": [
+        7.074474166659124,
+        6.557333535766768
+      ]
+    }
+  },
+  "carry": {
+    "environment_steps": 900,
+    "evaluation_steps": 7500,
+    "leader": {
+      "actor_steps": 2,
+      "critic_steps": 2,
+      "target_updates": 2
+    },
+    "follower": {
+      "train_calls": 2,
+      "table_sweeps": 4,
+      "oracle_sweeps": 36
+    },
+    "elapsed_seconds": 1.486252784729004,
+    "code": {
+      "revision": "82753d6c4f3bc813158c1819879edcdb5f81f5ac",
+      "diff_sha256": "984773e13d2883a7641901c3f3cac6bd022983374aab360082baf639e8e70d95",
+      "dependencies": {
+        "numpy": "1.23.5",
+        "torch": "1.7.1+cu110",
+        "garage": "2021.3.0",
+        "gym": "0.17.2"
+      }
+    },
+    "buffer_policy": "included in algorithm snapshot; sampler workers recreated",
+    "metrics": {
+      "Evaluation/AverageDiscountedReturn": [
+        29.76789817703825,
+        36.609062663828006
+      ],
+      "Evaluation_opt/AverageDiscountedTargetReturn": [
+        6.3778348208185,
+        5.655423920339517
+      ],
+      "Evaluation/AverageDiscountedTargetReturn": [
+        29.05049761073378,
+        25.61941800298725
+      ],
+      "Evaluation_opt/AverageDiscountedReturn": [
+        37.70790546887162,
+        38.63733237615816
+      ]
+    }
+  }
+}
